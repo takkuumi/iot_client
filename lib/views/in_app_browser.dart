@@ -34,14 +34,14 @@ class _InAppViewState extends State<InAppView> {
           onPageFinished: (String url) {},
           onWebResourceError: (WebResourceError error) {},
           onNavigationRequest: (NavigationRequest request) {
-            if (request.url.startsWith('https://www.baidu.com/')) {
-              return NavigationDecision.prevent;
-            }
+            // if (request.url.startsWith('https://www.baidu.com/')) {
+            //   return NavigationDecision.prevent;
+            // }
             return NavigationDecision.navigate;
           },
         ),
       )
-      ..loadRequest(Uri.parse('https://flutter.dev'));
+      ..loadRequest(Uri.parse('https://www.baidu.com'));
     // #enddocregion webview_controller
   }
 

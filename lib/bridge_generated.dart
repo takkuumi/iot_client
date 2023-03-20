@@ -92,6 +92,23 @@ class NativeImpl implements Native {
         argNames: ["id"],
       );
 
+  Future<Uint8List> setMode({required int mode, dynamic hint}) {
+    var arg0 = api2wire_u8(mode);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner.wire_set_mode(port_, arg0),
+      parseSuccessData: _wire2api_uint_8_list,
+      constMeta: kSetModeConstMeta,
+      argValues: [mode],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kSetModeConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "set_mode",
+        argNames: ["mode"],
+      );
+
   Future<Uint8List> ndreset({dynamic hint}) {
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_ndreset(port_),
@@ -364,6 +381,22 @@ class NativeWire implements FlutterRustBridgeWireBase {
               ffi.Int64, ffi.Pointer<wire_uint_8_list>)>>('wire_set_ndid');
   late final _wire_set_ndid = _wire_set_ndidPtr
       .asFunction<void Function(int, ffi.Pointer<wire_uint_8_list>)>();
+
+  void wire_set_mode(
+    int port_,
+    int mode,
+  ) {
+    return _wire_set_mode(
+      port_,
+      mode,
+    );
+  }
+
+  late final _wire_set_modePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Uint8)>>(
+          'wire_set_mode');
+  late final _wire_set_mode =
+      _wire_set_modePtr.asFunction<void Function(int, int)>();
 
   void wire_ndreset(
     int port_,

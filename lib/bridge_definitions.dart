@@ -25,6 +25,10 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kSetNdidConstMeta;
 
+  Future<Uint8List> setMode({required int mode, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kSetModeConstMeta;
+
   Future<Uint8List> ndreset({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kNdresetConstMeta;

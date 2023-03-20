@@ -1,10 +1,14 @@
 import 'dart:async';
 
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_scan_bluetooth/flutter_scan_bluetooth.dart';
-import 'package:iot_client/ffi.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../constants.dart';
 
 class Bluetooth extends StatefulWidget {
   const Bluetooth({Key? key}) : super(key: key);
@@ -26,7 +30,7 @@ class _BluetoothState extends State<Bluetooth> {
 
     _bluetooth.devices.listen((device) {
       String name = device.name;
-      if (!devices.contains(name)) {
+      if (name.startsWith('Mesh') && !devices.contains(name)) {
         setState(() {
           devices.add(device.name);
         });
@@ -37,6 +41,30 @@ class _BluetoothState extends State<Bluetooth> {
         _scanning = false;
       });
     });
+  }
+
+  Future<bool?> showSettingDialog() {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("提示"),
+          content: Text("设置此蓝牙为默认直连吗？"),
+          actions: <Widget>[
+            TextButton(
+              child: Text("取消"),
+              onPressed: () => Navigator.of(context).pop(false),
+            ),
+            TextButton(
+              child: Text("确定"),
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -53,22 +81,19 @@ class _BluetoothState extends State<Bluetooth> {
                   title: Text(devices[index]),
                   onTap: () async {
                     final name = devices[index];
-                    if (name.startsWith("Mesh")) {
-                      final prefs = await _prefs;
-                      prefs.setString("mesh", name.substring(5, 9));
+                    bool? result = await showSettingDialog();
+                    if (result != null && result) {
+                      if (name.startsWith("Mesh")) {
+                        final prefs = await _prefs;
+                        bool saved =
+                            await prefs.setString("mesh", name.substring(5, 9));
+                        if (saved) {
+                          showSnackBar("设置成功");
+                        } else {
+                          showSnackBar("设置失败");
+                        }
+                      }
                     }
-
-                    // Uint8List r1 = await api.setNdid(id: "0002");
-                    // debugPrint(String.fromCharCodes(r1));
-                    // Uint8List r2 = await api.ndreset();
-                    // debugPrint(String.fromCharCodes(r2));
-                    // Uint8List r3 = await api.reboot();
-                    // debugPrint(String.fromCharCodes(r3));
-                    Uint8List at = await api.getNdid();
-                    debugPrint(String.fromCharCodes(at));
-                    Uint8List serial = await api.atNdrptTest();
-                    final tt = String.fromCharCodes(serial);
-                    debugPrint(tt);
                   },
                 );
               },
@@ -78,17 +103,19 @@ class _BluetoothState extends State<Bluetooth> {
       ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.radar),
+        tooltip: "扫描",
         onPressed: () async {
+          await checkAndAskPermissions();
           try {
             if (_scanning) {
               await _bluetooth.stopScan();
-              debugPrint("scanning stoped");
+              showSnackBar("scanning stoped");
               setState(() {
                 devices = [];
               });
             } else {
               await _bluetooth.startScan(pairedDevices: false);
-              debugPrint("scanning started");
+              showSnackBar("scanning started");
               setState(() {
                 _scanning = true;
               });
@@ -99,5 +126,28 @@ class _BluetoothState extends State<Bluetooth> {
         },
       ),
     );
+  }
+}
+
+Future<void> checkAndAskPermissions() async {
+  if (defaultTargetPlatform == TargetPlatform.android) {
+    final androidInfo = await DeviceInfoPlugin().androidInfo;
+    if (androidInfo.version.sdkInt < 31) {
+      // location
+      await Permission.locationWhenInUse.request();
+      await Permission.locationAlways.request();
+
+      // bluetooth
+      await Permission.bluetooth.request();
+      await Permission.bluetoothScan.request();
+      await Permission.bluetoothConnect.request();
+    } else {
+      // bluetooth for Android 12 and up
+      await Permission.bluetoothScan.request();
+      await Permission.bluetoothConnect.request();
+    }
+  } else {
+    // bluetooth for iOS 13 and up
+    await Permission.bluetooth.request();
   }
 }

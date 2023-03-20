@@ -34,6 +34,8 @@ void wire_at_ndrpt_test(int64_t port_);
 
 void wire_set_ndid(int64_t port_, struct wire_uint_8_list *id);
 
+void wire_set_mode(int64_t port_, uint8_t mode);
+
 void wire_ndreset(int64_t port_);
 
 void wire_restore(int64_t port_);
@@ -52,6 +54,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_at_ndrpt);
     dummy_var ^= ((int64_t) (void*) wire_at_ndrpt_test);
     dummy_var ^= ((int64_t) (void*) wire_set_ndid);
+    dummy_var ^= ((int64_t) (void*) wire_set_mode);
     dummy_var ^= ((int64_t) (void*) wire_ndreset);
     dummy_var ^= ((int64_t) (void*) wire_restore);
     dummy_var ^= ((int64_t) (void*) wire_reboot);

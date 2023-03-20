@@ -1,14 +1,15 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:iot_client/views/bluetooth.dart';
 import 'package:iot_client/views/in_app_browser.dart';
+import 'package:iot_client/views/setting.dart';
 
+import 'constants.dart';
 import 'views/home.dart';
 
 const int homeTab = 0;
 const int bluetoothTab = 1;
 const int controlTab = 2;
-const int nativeTab = 3;
+const int settingTab = 3;
 // used for app's theme
 const Map<int, Color> primarySwatch = {
   50: Color.fromRGBO(0, 164, 153, .1),
@@ -31,9 +32,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  late final GlobalKey<ScaffoldMessengerState> _scaffoldKey =
-      GlobalKey<ScaffoldMessengerState>(debugLabel: 'main_scaffold');
-
   int _bottomNavigationBarIndex = homeTab;
 
   @override
@@ -47,6 +45,8 @@ class _MyAppState extends State<MyApp> {
       body = const Bluetooth();
     } else if (_bottomNavigationBarIndex == controlTab) {
       body = const InAppView();
+    } else if (_bottomNavigationBarIndex == settingTab) {
+      body = const SettingApp();
     }
 
     return MaterialApp(
@@ -58,7 +58,7 @@ class _MyAppState extends State<MyApp> {
         scaffoldBackgroundColor: Colors.white,
       ),
       home: ScaffoldMessenger(
-        key: _scaffoldKey,
+        key: rootScaffoldMessengerKey,
         child: Scaffold(
           appBar: AppBar(
             title: const Text('深圳市迈锐交通科技有限公司'),
@@ -88,7 +88,7 @@ class _MyAppState extends State<MyApp> {
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.settings),
-                label: 'MyApp',
+                label: '设置',
               ),
             ],
           ),
@@ -100,26 +100,3 @@ class _MyAppState extends State<MyApp> {
 
 void log(Object? msg) =>
     debugPrint('[$MyApp - ${DateTime.now().toIso8601String()}] $msg');
-
-// Future<void> checkAndAskPermissions() async {
-//   if (defaultTargetPlatform == TargetPlatform.android) {
-//     final androidInfo = await DeviceInfoPlugin().androidInfo;
-//     if (androidInfo.version.sdkInt < 31) {
-//       // location
-//       await Permission.locationWhenInUse.request();
-//       await Permission.locationAlways.request();
-
-//       // bluetooth
-//       await Permission.bluetooth.request();
-//       await Permission.bluetoothScan.request();
-//       await Permission.bluetoothConnect.request();
-//     } else {
-//       // bluetooth for Android 12 and up
-//       await Permission.bluetoothScan.request();
-//       await Permission.bluetoothConnect.request();
-//     }
-//   } else {
-//     // bluetooth for iOS 13 and up
-//     await Permission.bluetooth.request();
-//   }
-// }

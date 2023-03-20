@@ -11,3 +11,5 @@ crate-type = ["cdylib", "staticlib"]
 [dependencies]
 anyhow = "1"
 flutter_rust_bridge = "1"
+serialport = "4.2"
+crc = "3.0"

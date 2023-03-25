@@ -1,4 +1,4 @@
-use super::serial::send_serialport;
+use super::serial::{send_serialport, send_serialport2};
 use anyhow::{bail, Result};
 
 mod AtCommand {
@@ -106,12 +106,37 @@ pub fn at_ndrpt(id: &str, data: &[u8]) -> Result<Vec<u8>> {
   Ok(output.to_buffer())
 }
 
+pub fn at_ndrpt2(id: &str, data: &[u8]) -> Result<()> {
+  let size = data.len() + 5;
+
+  let crc_data = super::crc16::crc(data);
+  let crc_data = u16::from_le_bytes(crc_data.to_be_bytes());
+  let mut bytes = Vec::<u8>::new();
+  bytes.extend_from_slice(AtCommand::AT_NDRPT.as_bytes());
+  bytes.push(b'=');
+  bytes.extend_from_slice(id.as_bytes());
+  bytes.push(b',');
+  bytes.extend_from_slice(size.to_string().as_bytes());
+  bytes.push(b',');
+  bytes.push(b'\xc8');
+
+  bytes.extend_from_slice(data);
+  let r = format!("{:04X}", crc_data);
+  bytes.extend_from_slice(r.as_bytes());
+  bytes.extend_from_slice("\r\n".as_bytes());
+
+  let _res = send_serialport2(&bytes)?;
+
+  Ok(())
+}
+
 pub fn at_ndrpt_test() -> Result<Vec<u8>> {
   at_ndrpt("0001", "01050200FF00".as_bytes())
 }
 
 #[cfg(test)]
 mod test {
+  use std::io::BufRead;
 
   #[test]
   pub fn at_test() {
@@ -129,10 +154,19 @@ mod test {
   }
 
   #[test]
+  pub fn at_ndrpt_test3() {
+    let res = super::at_ndrpt("0001", "010502000000".as_bytes());
+    println!("res: {:?}", res);
+    println!("res: {}", String::from_utf8_lossy(&res.unwrap()));
+  }
+
+  #[test]
   pub fn at_ndrpt_test2() {
-    println!("{:04X}", 513);
-    println!("{:04X}", 10);
-    let res = super::at_ndrpt("0001", "01030200000A".as_bytes());
+    // 0101002190
+    let data = "010102000001".as_bytes();
+
+    let res = super::at_ndrpt("0001", data);
+
     println!("res: {:?}", res);
     println!("res: {}", String::from_utf8_lossy(&res.unwrap()));
   }

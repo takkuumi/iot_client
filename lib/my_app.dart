@@ -25,7 +25,8 @@ const Map<int, Color> primarySwatch = {
 };
 
 class MyApp extends StatefulWidget {
-  const MyApp({Key? key}) : super(key: key);
+  final ThemeData theme;
+  const MyApp({Key? key, required this.theme}) : super(key: key);
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -50,13 +51,8 @@ class _MyAppState extends State<MyApp> {
     }
 
     return MaterialApp(
-      theme: ThemeData(
-        brightness: Brightness.light,
-        primarySwatch: const MaterialColor(0xFF00A499, primarySwatch),
-        primaryColor: const Color.fromRGBO(0, 164, 153, 1),
-        primaryColorDark: const Color.fromRGBO(0, 114, 105, 1),
-        scaffoldBackgroundColor: Colors.white,
-      ),
+      debugShowCheckedModeBanner: false,
+      theme: widget.theme,
       home: ScaffoldMessenger(
         key: rootScaffoldMessengerKey,
         child: Scaffold(

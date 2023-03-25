@@ -20,3 +20,25 @@ pub fn send_serialport(data: &[u8], buffer: &mut [u8]) -> Result<usize> {
 
   bail!("failed to wirte data")
 }
+
+pub fn send_serialport2(data: &[u8]) -> Result<usize> {
+  let mut port = open_serialport()?;
+
+  if port.write(data).is_ok() {
+    loop {
+      let mut buffer = [0_u8; 200];
+      match port.read(&mut buffer) {
+        Ok(size) => {
+          println!("size: {}", size);
+          println!("buffer: {:?}", buffer);
+        }
+        Err(err) => {
+          println!("error");
+          return Err(err.into());
+        }
+      };
+    }
+  }
+
+  bail!("failed to wirte data")
+}

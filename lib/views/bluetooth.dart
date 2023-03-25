@@ -1,11 +1,8 @@
 import 'dart:async';
 
-import 'package:device_info_plus/device_info_plus.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_scan_bluetooth/flutter_scan_bluetooth.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:iot_client/utils/ble_scan.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
@@ -17,9 +14,7 @@ class Bluetooth extends StatefulWidget {
   State<Bluetooth> createState() => _BluetoothState();
 }
 
-class _BluetoothState extends State<Bluetooth> {
-  bool _scanning = false;
-  final FlutterScanBluetooth _bluetooth = FlutterScanBluetooth();
+class _BluetoothState extends State<Bluetooth> with BleScan {
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
   List<String> devices = [];
@@ -27,8 +22,8 @@ class _BluetoothState extends State<Bluetooth> {
   @override
   void initState() {
     super.initState();
-
-    _bluetooth.devices.listen((device) {
+    initBluetooth();
+    scanListen((device) {
       String name = device.name;
       if (name.startsWith('Mesh') && !devices.contains(name)) {
         setState(() {
@@ -36,11 +31,18 @@ class _BluetoothState extends State<Bluetooth> {
         });
       }
     });
-    _bluetooth.scanStopped.listen((device) {
+
+    scanStopped((device) {
+      print(device);
       setState(() {
-        _scanning = false;
+        scanning = false;
       });
     });
+  }
+
+  @override
+  void dispose() {
+    close();
   }
 
   Future<bool?> showSettingDialog() {
@@ -74,30 +76,34 @@ class _BluetoothState extends State<Bluetooth> {
         mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
           Expanded(
-            child: ListView.builder(
-              itemCount: devices.length,
-              itemBuilder: (BuildContext context, int index) {
-                return ListTile(
-                  title: Text(devices[index]),
-                  onTap: () async {
-                    final name = devices[index];
-                    bool? result = await showSettingDialog();
-                    if (result != null && result) {
-                      if (name.startsWith("Mesh")) {
-                        final prefs = await _prefs;
-                        bool saved =
-                            await prefs.setString("mesh", name.substring(5, 9));
-                        if (saved) {
-                          showSnackBar("设置成功");
-                        } else {
-                          showSnackBar("设置失败");
-                        }
-                      }
-                    }
-                  },
-                );
-              },
-            ),
+            child: devices.isEmpty
+                ? Center(
+                    child: Text("没有发现设备,请点击扫描按钮进行扫描"),
+                  )
+                : ListView.builder(
+                    itemCount: devices.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return ListTile(
+                        title: Text(devices[index]),
+                        onTap: () async {
+                          final name = devices[index];
+                          bool? result = await showSettingDialog();
+                          if (result != null && result) {
+                            if (name.startsWith("Mesh")) {
+                              final prefs = await _prefs;
+                              bool saved = await prefs.setString(
+                                  "mesh", name.substring(5, 9));
+                              if (saved) {
+                                showSnackBar("设置成功");
+                              } else {
+                                showSnackBar("设置失败");
+                              }
+                            }
+                          }
+                        },
+                      );
+                    },
+                  ),
           ),
         ],
       ),
@@ -107,17 +113,17 @@ class _BluetoothState extends State<Bluetooth> {
         onPressed: () async {
           await checkAndAskPermissions();
           try {
-            if (_scanning) {
-              await _bluetooth.stopScan();
-              showSnackBar("scanning stoped");
+            if (scanning) {
+              await bluetooth.stopScan();
+              showSnackBar("扫描已停止");
               setState(() {
                 devices = [];
               });
             } else {
-              await _bluetooth.startScan(pairedDevices: false);
-              showSnackBar("scanning started");
+              await bluetooth.startScan(pairedDevices: false);
+              showSnackBar("开始扫描");
               setState(() {
-                _scanning = true;
+                scanning = true;
               });
             }
           } on PlatformException catch (e) {
@@ -126,28 +132,5 @@ class _BluetoothState extends State<Bluetooth> {
         },
       ),
     );
-  }
-}
-
-Future<void> checkAndAskPermissions() async {
-  if (defaultTargetPlatform == TargetPlatform.android) {
-    final androidInfo = await DeviceInfoPlugin().androidInfo;
-    if (androidInfo.version.sdkInt < 31) {
-      // location
-      await Permission.locationWhenInUse.request();
-      await Permission.locationAlways.request();
-
-      // bluetooth
-      await Permission.bluetooth.request();
-      await Permission.bluetoothScan.request();
-      await Permission.bluetoothConnect.request();
-    } else {
-      // bluetooth for Android 12 and up
-      await Permission.bluetoothScan.request();
-      await Permission.bluetoothConnect.request();
-    }
-  } else {
-    // bluetooth for iOS 13 and up
-    await Permission.bluetooth.request();
   }
 }

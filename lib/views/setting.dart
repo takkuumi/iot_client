@@ -171,6 +171,14 @@ class _SettingAppState extends State<SettingApp> {
                   },
                 ),
               ),
+              SettingsTile.navigation(
+                leading: Icon(Icons.bluetooth_connected),
+                title: Text('写测试'),
+                onPressed: (context) async {
+                  Uint8List a = await api.atNdrptTest();
+                  showSnackBar(String.fromCharCodes(a));
+                },
+              ),
             ],
           ),
           SettingsSection(

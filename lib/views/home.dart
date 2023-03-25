@@ -1,8 +1,14 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:iot_client/scenes/covi.dart';
 import 'package:iot_client/scenes/lane_indicator.dart';
+import 'package:iot_client/scenes/light_inside.dart';
+import 'package:iot_client/scenes/wind_speed.dart';
 import 'package:iot_client/utils/navigation.dart';
+import 'package:carousel_slider/carousel_slider.dart';
+import 'package:iot_client/views/components/banner.dart';
+import 'package:iot_client/views/components/icons.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -24,157 +30,65 @@ class _HomeState extends State<Home> {
 
   Widget __createGridViewItems(BuildContext context, int position) {
     List<Widget> items = [
-      GestureDetector(
+      createIcon(
+        "车道指示器",
         onTap: () {
           Navigation.navigateTo(
             context: context,
             screen: LaneIndicator(),
           );
         },
-        child: Container(
-          padding: EdgeInsets.all(8),
-          color: Colors.black12,
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.drive_eta,
-                  size: 60,
-                  color: Colors.yellowAccent,
-                ),
-                Text("车道指示器")
-              ],
-            ),
-          ),
-        ),
+        assetIcon: "images/icons/lane indicator_icon@2x.png",
       ),
-      Container(
-        padding: EdgeInsets.all(8),
-        color: Colors.black12,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.traffic,
-                size: 60,
-                color: Colors.redAccent,
-              ),
-              Text("交通信号灯")
-            ],
-          ),
-        ),
+      createIcon(
+        "风速风向",
+        onTap: () {
+          Navigation.navigateTo(
+            context: context,
+            screen: WindSpeed(),
+          );
+        },
+        assetIcon: "images/icons/wind speed and direction@2x.png",
       ),
-      Container(
-        padding: EdgeInsets.all(8),
-        color: Colors.black12,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.storm,
-                size: 60,
-                color: Colors.indigoAccent,
-              ),
-              Text("通风风机")
-            ],
-          ),
-        ),
+      createIcon(
+        "COVI检测",
+        onTap: () {
+          Navigation.navigateTo(
+            context: context,
+            screen: CoVi(),
+          );
+        },
+        assetIcon: "images/icons/environmental testing_icon@2x.png",
       ),
-      Container(
-        padding: EdgeInsets.all(8),
-        color: Colors.black12,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.light_mode,
-                size: 60,
-                color: Colors.amberAccent,
-              ),
-              Text("照明回路")
-            ],
-          ),
-        ),
+      createIcon(
+        "洞内照度",
+        onTap: () {
+          Navigation.navigateTo(
+            context: context,
+            screen: LightInside(),
+          );
+        },
+        assetIcon: "images/icons/lght intensity detection@2x.png",
       ),
-      Container(
-        padding: EdgeInsets.all(8),
-        color: Colors.black12,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.air,
-                size: 60,
-                color: Colors.tealAccent,
-              ),
-              Text("风速风向")
-            ],
-          ),
-        ),
+      createIcon(
+        "交通信号灯",
+        onTap: () {},
+        assetIcon: "images/icons/traffic light_icon@2x.png",
       ),
-      Container(
-        padding: EdgeInsets.all(8),
-        color: Colors.black12,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.double_arrow,
-                size: 60,
-                color: Colors.redAccent,
-              ),
-              Text("横洞指示")
-            ],
-          ),
-        ),
+      createIcon(
+        "通风风机",
+        onTap: () {},
+        assetIcon: "images/icons/yentilation fan_icon@2x.png",
       ),
-      Container(
-        padding: EdgeInsets.all(8),
-        color: Colors.black12,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.dew_point,
-                size: 60,
-                color: Colors.blueAccent,
-              ),
-              Text("水泵液压")
-            ],
-          ),
-        ),
+      createIcon(
+        "横洞指示",
+        onTap: () {},
+        assetIcon: "images/icons/cross hole indication@2x.png",
       ),
-      Container(
-        padding: EdgeInsets.all(8),
-        color: Colors.black12,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.highlight,
-                size: 60,
-                color: Colors.deepOrangeAccent,
-              ),
-              Text("光强检测")
-            ],
-          ),
-        ),
+      createIcon(
+        "水泵液压",
+        onTap: () {},
+        assetIcon: "images/icons/water pump hydraulics@2x.png",
       ),
     ];
     return items[position];
@@ -189,19 +103,15 @@ class _HomeState extends State<Home> {
           mainAxisSize: MainAxisSize.max,
           children: <Widget>[
             Container(
-              height: 200.0,
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: ExactAssetImage('images/banner.jpeg'),
-                  fit: BoxFit.cover,
+              child: CarouselSlider(
+                options: CarouselOptions(
+                  aspectRatio: 16 / 10,
+                  enlargeCenterPage: true,
+                  scrollDirection: Axis.horizontal,
+                  autoPlay: true,
+                  height: 260,
                 ),
-              ),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
-                child: Container(
-                  decoration:
-                      BoxDecoration(color: Colors.white.withOpacity(0.0)),
-                ),
+                items: createImageSliders(),
               ),
             ),
             Container(

@@ -32,7 +32,7 @@ dependencies:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.2
+  cupertino_icons: ^1.0.5
   device_info_plus: ^8.1.0
   ffi: ^2.0.1
   flutter_scan_bluetooth: ^2.1.2
@@ -44,6 +44,9 @@ dependencies:
   webview_flutter: ^4.0.6
   flutter_rust_bridge: ^1.71.1
   freezed_annotation: ^2.2.0
+  carousel_slider: ^4.2.1
+  circular_reveal_animation: ^2.0.1
+  json_theme: ^4.0.0
 
 dev_dependencies:
   flutter_test:
@@ -71,7 +74,50 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
+    - assets/appainter_theme.json
     - images/banner.jpeg
+    - images/banner/img_1.png
+    - images/banner/img_1@2x.png
+    - images/banner/img_2.png
+    - images/banner/img_2@2x.png
+    - images/banner/img_3.png
+    - images/banner/img_3@2x.png
+    - images/icons/bluetooth_after.png
+    - images/icons/bluetooth_after@2x.png
+    - images/icons/bluetooth_before.png
+    - images/icons/bluetooth_before@2x.png
+    - images/icons/cross hole indication.png
+    - images/icons/cross hole indication@2x.png
+    - images/icons/environmental testing_icon.png
+    - images/icons/environmental testing_icon@2x.png
+    - images/icons/equipment_after.png
+    - images/icons/equipment_after@2x.png
+    - images/icons/equipment_before.png
+    - images/icons/equipment_before@2x.png
+    - images/icons/home_after.png
+    - images/icons/home_after@2x.png
+    - images/icons/home_before.png
+    - images/icons/home_before@2x.png
+    - images/icons/lane indicator_icon.png
+    - images/icons/lane indicator_icon@2x.png
+    - images/icons/lght intensity detection.png
+    - images/icons/lght intensity detection@2x.png
+    - images/icons/report an emergency_after.png
+    - images/icons/report an emergency_after@2x.png
+    - images/icons/report an emergency_before.png
+    - images/icons/report an emergency_before@2x.png
+    - images/icons/set_after.png
+    - images/icons/set_after@2x.png
+    - images/icons/set_before.png
+    - images/icons/set_before@2x.png
+    - images/icons/traffic light_icon.png
+    - images/icons/traffic light_icon@2x.png
+    - images/icons/water pump hydraulics.png
+    - images/icons/water pump hydraulics@2x.png
+    - images/icons/wind speed and direction.png
+    - images/icons/wind speed and direction@2x.png
+    - images/icons/yentilation fan_icon.png
+    - images/icons/yentilation fan_icon@2x.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

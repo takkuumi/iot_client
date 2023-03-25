@@ -45,9 +45,6 @@ class _CoViState extends State<CoVi>
 
   @override
   void initState() {
-    super.initState();
-    initBluetooth();
-
     scanListen((device) {
       String name = device.name;
       String address = device.address;
@@ -67,6 +64,7 @@ class _CoViState extends State<CoVi>
     });
 
     scan();
+    super.initState();
   }
 
   Future<void> scan() async {
@@ -123,7 +121,6 @@ class _CoViState extends State<CoVi>
 
   @override
   void dispose() {
-    close();
     super.dispose();
   }
 

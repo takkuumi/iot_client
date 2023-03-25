@@ -47,7 +47,6 @@ class _LaneIndicatorState extends State<LaneIndicator> with BleScan {
   @override
   void initState() {
     super.initState();
-    initBluetooth();
 
     scanListen((device) {
       String name = device.name;
@@ -126,7 +125,6 @@ class _LaneIndicatorState extends State<LaneIndicator> with BleScan {
 
   @override
   void dispose() {
-    close();
     super.dispose();
   }
 

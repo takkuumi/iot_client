@@ -46,7 +46,6 @@ class _LightInsideState extends State<LightInside>
   @override
   void initState() {
     super.initState();
-    initBluetooth();
 
     scanListen((device) {
       String name = device.name;
@@ -123,7 +122,6 @@ class _LightInsideState extends State<LightInside>
 
   @override
   void dispose() {
-    close();
     super.dispose();
   }
 

@@ -48,7 +48,6 @@ class _WindSpeedState extends State<WindSpeed>
   @override
   void initState() {
     super.initState();
-    initBluetooth();
 
     scanListen((device) {
       String name = device.name;
@@ -132,7 +131,6 @@ class _WindSpeedState extends State<WindSpeed>
 
   @override
   void dispose() {
-    close();
     super.dispose();
   }
 

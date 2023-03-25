@@ -22,14 +22,14 @@ class _BluetoothState extends State<Bluetooth> with BleScan {
   @override
   void initState() {
     super.initState();
-    initBluetooth();
     scanListen((device) {
       String name = device.name;
-      if (name.startsWith('Mesh') && !devices.contains(name)) {
-        setState(() {
-          devices.add(device.name);
-        });
-      }
+      setState(() {
+        devices.add(name);
+      });
+      //  if (name.startsWith('Mesh') && !devices.contains(name)) {
+
+      // }
     });
 
     scanStopped((device) {
@@ -38,11 +38,6 @@ class _BluetoothState extends State<Bluetooth> with BleScan {
         scanning = false;
       });
     });
-  }
-
-  @override
-  void dispose() {
-    close();
   }
 
   Future<bool?> showSettingDialog() {

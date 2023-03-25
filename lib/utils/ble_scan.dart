@@ -5,11 +5,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 class BleScan {
   bool scanning = false;
-  late FlutterScanBluetooth bluetooth;
-
-  void initBluetooth() async {
-    bluetooth = FlutterScanBluetooth();
-  }
+  late FlutterScanBluetooth bluetooth = FlutterScanBluetooth();
 
   void scanListen(
     void Function(BluetoothDevice)? onData, {
@@ -37,10 +33,6 @@ class BleScan {
       onDone: onDone,
       cancelOnError: cancelOnError,
     );
-  }
-
-  void close() {
-    bluetooth.close();
   }
 
   Future<void> checkAndAskPermissions() async {

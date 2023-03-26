@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_scan_bluetooth/flutter_scan_bluetooth.dart';
 import 'package:iot_client/device.dart';
-import 'package:iot_client/utils/ble_scan.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
@@ -24,8 +23,10 @@ class _BluetoothState extends State<Bluetooth> {
 
   @override
   void initState() {
-    super.initState();
     bluetooth.requestPermissions();
+
+    bluetooth.startScan(pairedDevices: false);
+
     bluetooth.devices.listen((device) {
       String name = device.name;
       String address = device.address;
@@ -37,8 +38,7 @@ class _BluetoothState extends State<Bluetooth> {
         });
       }
     });
-
-    bluetooth.startScan(pairedDevices: false);
+    super.initState();
   }
 
   @override
@@ -120,10 +120,11 @@ class _BluetoothState extends State<Bluetooth> {
         onPressed: () async {
           await checkAndAskPermissions();
           try {
-            await bluetooth.stopScan();
             setState(() {
               devices = [];
             });
+            await bluetooth.stopScan();
+
             await bluetooth.startScan(pairedDevices: false);
             showSnackBar("开始扫描");
           } on PlatformException catch (e) {

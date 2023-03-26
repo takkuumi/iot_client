@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_scan_bluetooth/flutter_scan_bluetooth.dart';
 import 'package:iot_client/device.dart';
 import 'package:iot_client/ffi.dart';
+import 'package:iot_client/utils/at_parse.dart';
 import 'package:iot_client/utils/tool.dart';
 
 import '../constants.dart';
@@ -16,29 +18,27 @@ class LaneIndicator extends StatefulWidget {
   State<LaneIndicator> createState() => _LaneIndicatorState();
 }
 
+enum Lock { lock, unlock }
+
 class _LaneIndicatorState extends State<LaneIndicator> {
   List<Device> devices = [];
 
   final GlobalKey<ScaffoldMessengerState> key =
       GlobalKey<ScaffoldMessengerState>(debugLabel: 'lane_indicator');
 
-  late FlutterScanBluetooth bluetooth = FlutterScanBluetooth();
+  late FlutterScanBluetooth bluetooth;
 
   bool laneIndicator1 = false;
   bool laneIndicator2 = false;
 
-  Timer? timer;
-
-  void startTimer() {
-    // timer = Timer.periodic(timerDuration, (timer) async {
-    //   await readDevice(atRead("0200"), false);
-    // });
-  }
-
   @override
   void initState() {
-    super.initState();
-    bluetooth.requestPermissions();
+    bluetooth = FlutterScanBluetooth();
+
+    // Future.delayed(const Duration(seconds: 5), bluetooth.stopScan);
+
+    bluetooth.startScan(pairedDevices: false);
+
     bluetooth.devices.listen((device) {
       String name = device.name;
       String address = device.address;
@@ -50,16 +50,7 @@ class _LaneIndicatorState extends State<LaneIndicator> {
         });
       }
     });
-
-    // Future.delayed(const Duration(seconds: 5), bluetooth.stopScan);
-
-    bluetooth.startScan(pairedDevices: false);
-
-    // Timer.periodic(timerDuration, (timer) async {
-    //   await readDevice(atRead("0200"), false);
-    // });
-
-    // startTimer();
+    super.initState();
   }
 
   @override
@@ -82,8 +73,8 @@ class _LaneIndicatorState extends State<LaneIndicator> {
     return "0105${addr}0000";
   }
 
-  Future<void> readDevice(String sdata, bool state) async {
-    timer?.cancel();
+  Future<void> readDevice(
+      String sdata, void Function(int) onReadResponse) async {
     List<Device> selected =
         devices.where((element) => element.isChecked).toList();
 
@@ -93,16 +84,18 @@ class _LaneIndicatorState extends State<LaneIndicator> {
 
     for (final device in selected) {
       String id = getMeshId(device.name);
-      Uint8List data = await api.atNdrpt(id: id, data: sdata);
-      print(data);
+      Uint8List data =
+          await Future.sync(() => api.atNdrpt(id: id, data: sdata));
       String resp = String.fromCharCodes(data);
       print(resp);
+      int? res = getAtReadResult(resp);
+      if (res != null) {
+        onReadResponse(res);
+      }
     }
-    startTimer();
   }
 
-  Future<void> writeDevice(String x0200, String x0201, bool state) async {
-    timer?.cancel();
+  Future<void> writeDevice(String x0200, void Function() onOk) async {
     List<Device> selected =
         devices.where((element) => element.isChecked).toList();
 
@@ -113,27 +106,17 @@ class _LaneIndicatorState extends State<LaneIndicator> {
 
     for (final device in selected) {
       String id = getMeshId(device.name);
-      print("==================${id}");
-      print("==================${x0200}");
-      Uint8List x0200_data =
-          await api.atNdrpt(id: id, data: x0200).timeout(Duration(seconds: 3));
-      Uint8List x0201_data =
-          await api.atNdrpt(id: id, data: x0201).timeout(Duration(seconds: 3));
-      print(x0200_data);
-      String x0200_resp = String.fromCharCodes(x0200_data);
-      print(x0200_data);
-      String x0201_resp = String.fromCharCodes(x0200_data);
+      Uint8List x0200Data =
+          await Future.sync(() => api.atNdrpt(id: id, data: x0200));
+
+      String x0200Resp = String.fromCharCodes(x0200Data);
       // showSnackBar(resp, key);
-      print(x0200_resp);
-      print(x0201_resp);
-      if (x0200_resp.contains("OK") && x0201_resp.contains("OK")) {
-        setState(() {
-          laneIndicator1 = state;
-          laneIndicator2 = !state;
-        });
+      debugPrint(x0200Resp);
+      bool isOk = getAtOk(x0200Resp);
+      if (isOk) {
+        onOk();
       }
     }
-    startTimer();
   }
 
   final BoxShadow boxShadow = BoxShadow(
@@ -215,16 +198,73 @@ class _LaneIndicatorState extends State<LaneIndicator> {
         Container(
           margin: EdgeInsets.only(top: 20),
           child: ElevatedButton(
-            onPressed: () => writeDevice(atOpen("0200"), atClose("0201"), true),
-            child: Text("打开"),
+            onPressed: () async {
+              await writeDevice(atOpen("0200"), () {});
+              sleep(Duration(seconds: 1));
+              await writeDevice(atClose("0201"), () {});
+
+              setState(() {
+                laneIndicator1 = true;
+              });
+              sleep(Duration(seconds: 1));
+
+              await writeDevice(atOpen("0202"), () {});
+              sleep(Duration(seconds: 1));
+              await writeDevice(atClose("0203"), () {});
+
+              setState(() {
+                laneIndicator2 = false;
+              });
+            },
+            child: Text("正行"),
           ),
         ),
         Container(
           margin: EdgeInsets.only(top: 5),
           child: ElevatedButton(
-            onPressed: () =>
-                writeDevice(atClose("0200"), atOpen("0201"), false),
-            child: Text("关闭"),
+            onPressed: () async {
+              await writeDevice(atClose("0200"), () {});
+              sleep(Duration(seconds: 1));
+              await writeDevice(atOpen("0201"), () {});
+
+              setState(() {
+                laneIndicator1 = false;
+              });
+              sleep(Duration(seconds: 1));
+
+              await writeDevice(atClose("0202"), () {});
+              sleep(Duration(seconds: 1));
+              await writeDevice(atOpen("0203"), () {});
+
+              setState(() {
+                laneIndicator2 = true;
+              });
+            },
+            child: Text("逆行"),
+          ),
+        ),
+        Container(
+          margin: EdgeInsets.only(top: 5),
+          child: ElevatedButton(
+            onPressed: () async {
+              await writeDevice(atClose("0200"), () {});
+              sleep(Duration(seconds: 1));
+              await writeDevice(atClose("0201"), () {});
+
+              setState(() {
+                laneIndicator1 = false;
+              });
+              sleep(Duration(seconds: 1));
+
+              await writeDevice(atClose("0202"), () {});
+              sleep(Duration(seconds: 1));
+              await writeDevice(atClose("0203"), () {});
+
+              setState(() {
+                laneIndicator2 = false;
+              });
+            },
+            child: Text("全关"),
           ),
         ),
       ],
@@ -447,6 +487,24 @@ class _LaneIndicatorState extends State<LaneIndicator> {
               ],
             ),
           ),
+        ),
+        floatingActionButton: FloatingActionButton(
+          child: Icon(Icons.radar),
+          tooltip: "扫描",
+          onPressed: () async {
+            await checkAndAskPermissions();
+            try {
+              setState(() {
+                devices = [];
+              });
+              await bluetooth.stopScan();
+
+              await bluetooth.startScan(pairedDevices: false);
+              showSnackBar("开始扫描", key);
+            } on PlatformException catch (e) {
+              debugPrint(e.toString());
+            }
+          },
         ),
       ),
     );

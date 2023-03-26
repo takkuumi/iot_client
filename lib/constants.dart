@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-final Duration timerDuration = Duration(seconds: 10);
+final Duration timerDuration = Duration(seconds: 20);
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>(debugLabel: 'main_scaffold');
 

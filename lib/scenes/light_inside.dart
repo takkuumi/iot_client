@@ -4,8 +4,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_scan_bluetooth/flutter_scan_bluetooth.dart';
+import 'package:iot_client/device.dart';
 import 'package:iot_client/ffi.dart';
-import 'package:iot_client/utils/ble_scan.dart';
+import 'package:iot_client/utils/at_parse.dart';
 import 'package:iot_client/utils/tool.dart';
 
 import '../constants.dart';
@@ -17,27 +18,6 @@ class LightInside extends StatefulWidget {
   State<LightInside> createState() => _LightInsideState();
 }
 
-class Device {
-  String name;
-  String address;
-  bool isChecked;
-  Device(this.name, this.address, this.isChecked);
-
-  bool contains(String name) {
-    return this.name == name;
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-
-    return other is Device && other.name == name;
-  }
-
-  @override
-  int get hashCode => name.hashCode;
-}
-
 class _LightInsideState extends State<LightInside>
     with SingleTickerProviderStateMixin {
   List<Device> devices = [];
@@ -45,20 +25,31 @@ class _LightInsideState extends State<LightInside>
   final GlobalKey<ScaffoldMessengerState> key =
       GlobalKey<ScaffoldMessengerState>(debugLabel: 'light_inside');
 
-  late FlutterScanBluetooth bluetooth = FlutterScanBluetooth();
+  late FlutterScanBluetooth bluetooth;
 
   Timer? timer;
+  late String windSpeed = '';
+
+  void getAtWindSpeed(String resp) {
+    // 0x1000
+    // 亮度值 报警值 故障码
+    setState(() {
+      windSpeed = "亮度值:--\r\n报警值:--\r\n故障码:--";
+    });
+  }
 
   void startTimer() {
-    // timer = Timer.periodic(timerDuration, (timer) async {
-    //   await readDevice(atRead("0200"));
-    // });
+    timer = Timer.periodic(timerDuration, (timer) async {
+      await readDevice("010303E80004", getAtWindSpeed);
+    });
   }
 
   @override
   void initState() {
-    super.initState();
-    bluetooth.requestPermissions();
+    bluetooth = FlutterScanBluetooth();
+
+    bluetooth.startScan(pairedDevices: false);
+
     bluetooth.devices.listen((device) {
       String name = device.name;
       String address = device.address;
@@ -71,24 +62,17 @@ class _LightInsideState extends State<LightInside>
       }
     });
 
-    Future.delayed(const Duration(seconds: 5), bluetooth.stopScan);
-
-    bluetooth.startScan(pairedDevices: false);
+    readDevice("010303F60004", getAtWindSpeed);
+    startTimer();
+    super.initState();
   }
 
   @override
   void dispose() {
-    bluetooth.stopScan();
-    bluetooth.close();
+    timer?.cancel();
+    bluetooth?.stopScan();
+    bluetooth?.close();
     super.dispose();
-  }
-
-  String atOpen(String addr) {
-    return "0105${addr}0001";
-  }
-
-  String atClose(String addr) {
-    return "0105${addr}0000";
   }
 
   Future<void> readAtLightInside(String sdata) async {
@@ -117,7 +101,8 @@ class _LightInsideState extends State<LightInside>
     return "0101${addr}0001";
   }
 
-  Future<void> readDevice(String sdata) async {
+  Future<void> readDevice(
+      String sdata, void Function(String resp) callback) async {
     List<Device> selected =
         devices.where((element) => element.isChecked).toList();
 
@@ -130,7 +115,9 @@ class _LightInsideState extends State<LightInside>
       Uint8List data = await api.atNdrpt(id: id, data: sdata);
       print(data);
       String resp = String.fromCharCodes(data);
-      print(resp);
+      if (getAtOk(resp)) {
+        callback(resp);
+      }
     }
   }
 
@@ -180,7 +167,7 @@ class _LightInsideState extends State<LightInside>
           width: 100,
           height: 100,
           alignment: Alignment.center,
-          child: Text("100.0"),
+          child: Text(windSpeed),
         ),
       ],
     );
@@ -242,6 +229,24 @@ class _LightInsideState extends State<LightInside>
               ],
             ),
           ),
+        ),
+        floatingActionButton: FloatingActionButton(
+          child: Icon(Icons.radar),
+          tooltip: "扫描",
+          onPressed: () async {
+            await checkAndAskPermissions();
+            try {
+              setState(() {
+                devices = [];
+              });
+              await bluetooth.stopScan();
+
+              await bluetooth.startScan(pairedDevices: false);
+              showSnackBar("开始扫描", key);
+            } on PlatformException catch (e) {
+              debugPrint(e.toString());
+            }
+          },
         ),
       ),
     );

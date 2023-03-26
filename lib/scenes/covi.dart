@@ -4,8 +4,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_scan_bluetooth/flutter_scan_bluetooth.dart';
+import 'package:iot_client/device.dart';
 import 'package:iot_client/ffi.dart';
-import 'package:iot_client/utils/ble_scan.dart';
+import 'package:iot_client/utils/at_parse.dart';
 import 'package:iot_client/utils/tool.dart';
 
 import '../constants.dart';
@@ -17,48 +18,38 @@ class CoVi extends StatefulWidget {
   State<CoVi> createState() => _CoViState();
 }
 
-class Device {
-  String name;
-  String address;
-  bool isChecked;
-  Device(this.name, this.address, this.isChecked);
-
-  bool contains(String name) {
-    return this.name == name;
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-
-    return other is Device && other.name == name;
-  }
-
-  @override
-  int get hashCode => name.hashCode;
-}
-
-class _CoViState extends State<CoVi>
-    with BleScan, SingleTickerProviderStateMixin {
+class _CoViState extends State<CoVi> with SingleTickerProviderStateMixin {
   List<Device> devices = [];
 
   final GlobalKey<ScaffoldMessengerState> key =
-      GlobalKey<ScaffoldMessengerState>(debugLabel: 'wind_speed');
+      GlobalKey<ScaffoldMessengerState>(debugLabel: 'covi');
 
-  late FlutterScanBluetooth bluetooth = FlutterScanBluetooth();
+  late FlutterScanBluetooth bluetooth;
 
   Timer? timer;
 
+  late String windSpeed = '';
+
+  void getAtWindSpeed(String resp) {
+    // 0x1014
+    // CO浓度值，VI值,CO报警值，VI报警值
+    setState(() {
+      windSpeed = "CO浓度值:--\r\nVI值:--\r\nCO报警值:--\r\nVI报警值:--";
+    });
+  }
+
   void startTimer() {
     timer = Timer.periodic(timerDuration, (timer) async {
-      await readDevice(atRead("0200"));
+      await readDevice("010303F60004", getAtWindSpeed);
     });
   }
 
   @override
   void initState() {
-    super.initState();
-    bluetooth.requestPermissions();
+    bluetooth = FlutterScanBluetooth();
+
+    bluetooth.startScan(pairedDevices: false);
+
     bluetooth.devices.listen((device) {
       String name = device.name;
       String address = device.address;
@@ -71,57 +62,36 @@ class _CoViState extends State<CoVi>
       }
     });
 
-    Future.delayed(const Duration(seconds: 5), bluetooth.stopScan);
-
-    bluetooth.startScan(pairedDevices: false);
-
     // Timer.periodic(timerDuration, (timer) async {
     //   await readDevice(atRead("0200"), false);
     // });
-
-    // startTimer();
+    readDevice("010303F60004", getAtWindSpeed);
+    startTimer();
+    super.initState();
   }
 
   @override
   void dispose() {
+    timer?.cancel();
     bluetooth.stopScan();
     bluetooth.close();
     super.dispose();
   }
 
-  Future<void> scan() async {
-    await checkAndAskPermissions();
-    try {
-      if (scanning) {
-        await bluetooth.stopScan();
-        showSnackBar("扫描停止", key);
-        setState(() {
-          devices = [];
-        });
-      } else {
-        await bluetooth.startScan(
-          pairedDevices: false,
-        );
-        showSnackBar("正在搜寻蓝牙设备", key);
-        setState(() {
-          scanning = true;
-        });
-      }
-    } on PlatformException catch (e) {
-      showSnackBar(e.toString(), key);
-    }
-  }
-
-  String atRead(String addr) {
-    //01 03 00 01 00 01
-    return "0101${addr}0001";
-  }
-
-  Future<void> readDevice(String sdata) async {
+  Future<void> readDevice(
+      String sdata, void Function(String resp) callback) async {
     List<Device> selected =
         devices.where((element) => element.isChecked).toList();
 
     if (selected.isEmpty) {
+      print(sdata);
+      Uint8List data = await api.atNdrpt(id: "1000", data: sdata);
+      print("==================");
+      print(data);
+      String resp = String.fromCharCodes(data);
+      if (getAtOk(resp)) {
+        callback(resp);
+      }
       return;
     }
 
@@ -130,7 +100,9 @@ class _CoViState extends State<CoVi>
       Uint8List data = await api.atNdrpt(id: id, data: sdata);
       print(data);
       String resp = String.fromCharCodes(data);
-      print(resp);
+      if (getAtOk(resp)) {
+        callback(resp);
+      }
     }
   }
 
@@ -242,6 +214,24 @@ class _CoViState extends State<CoVi>
               ],
             ),
           ),
+        ),
+        floatingActionButton: FloatingActionButton(
+          child: Icon(Icons.radar),
+          tooltip: "扫描",
+          onPressed: () async {
+            await checkAndAskPermissions();
+            try {
+              setState(() {
+                devices = [];
+              });
+              await bluetooth.stopScan();
+
+              await bluetooth.startScan(pairedDevices: false);
+              showSnackBar("开始扫描", key);
+            } on PlatformException catch (e) {
+              debugPrint(e.toString());
+            }
+          },
         ),
       ),
     );

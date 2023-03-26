@@ -1,5 +1,5 @@
 use super::serial::send_serialport;
-use anyhow::Result;
+use anyhow::{Ok, Result};
 
 mod AtCommand {
   pub const AT: &str = "AT"; //串口通讯测试
@@ -31,9 +31,7 @@ pub fn get_ndid() -> Result<Vec<u8>> {
   let res = send_serialport(data.as_bytes(), &mut buffer);
   eprintln!("res: {:?}", res);
 
-  let output = super::SerialResponse(&buffer);
-  eprintln!("buffer: {}", output.to_string());
-  Ok(output.to_buffer())
+  Ok(buffer)
 }
 
 pub fn set_ndid(id: &str) -> Result<Vec<u8>> {
@@ -41,8 +39,7 @@ pub fn set_ndid(id: &str) -> Result<Vec<u8>> {
   let mut buffer = Vec::<u8>::new();
   let _res = send_serialport(data.as_bytes(), &mut buffer)?;
 
-  let output = super::SerialResponse(&buffer);
-  Ok(output.to_buffer())
+  Ok(buffer)
 }
 
 pub fn ndreset() -> Result<Vec<u8>> {
@@ -50,8 +47,7 @@ pub fn ndreset() -> Result<Vec<u8>> {
   let mut buffer = Vec::<u8>::new();
   let _res = send_serialport(data.as_bytes(), &mut buffer)?;
 
-  let output = super::SerialResponse(&buffer);
-  Ok(output.to_buffer())
+  Ok(buffer)
 }
 
 pub fn restore() -> Result<Vec<u8>> {
@@ -59,8 +55,7 @@ pub fn restore() -> Result<Vec<u8>> {
   let mut buffer = Vec::<u8>::new();
   let _res = send_serialport(data.as_bytes(), &mut buffer)?;
 
-  let output = super::SerialResponse(&buffer);
-  Ok(output.to_buffer())
+  Ok(buffer)
 }
 
 pub fn set_mode(mode: u8) -> Result<Vec<u8>> {
@@ -68,17 +63,14 @@ pub fn set_mode(mode: u8) -> Result<Vec<u8>> {
   let mut buffer = Vec::<u8>::new();
   let _res = send_serialport(data.as_bytes(), &mut buffer)?;
 
-  let output = super::SerialResponse(&buffer);
-  Ok(output.to_buffer())
+  Ok(buffer)
 }
 
 pub fn reboot() -> Result<Vec<u8>> {
   let data = format!("{}\r\n", AtCommand::AT_REBOOT);
   let mut buffer = Vec::<u8>::new();
   let _res = send_serialport(data.as_bytes(), &mut buffer)?;
-  let output = super::SerialResponse(&buffer);
-
-  Ok(output.to_buffer())
+  Ok(buffer)
 }
 
 pub fn at_ndrpt(id: &str, data: &[u8]) -> Result<Vec<u8>> {
@@ -102,8 +94,7 @@ pub fn at_ndrpt(id: &str, data: &[u8]) -> Result<Vec<u8>> {
 
   let mut buffer = Vec::<u8>::new();
   let _res = send_serialport(&bytes, &mut buffer)?;
-  let output = super::SerialResponse(&buffer);
-  Ok(output.to_buffer())
+  Ok(buffer)
 }
 
 pub fn at_ndrpt_test() -> Result<Vec<u8>> {
@@ -139,7 +130,13 @@ mod test {
   #[test]
   pub fn at_ndrpt_test2() {
     // 0101002190
-    let data = "010102000001".as_bytes();
+
+    let data = "010100000001".as_bytes();
+
+    let res = super::at_ndrpt("0001", data);
+
+    println!("res: {:?}", res);
+    println!("res: {}", String::from_utf8_lossy(&res.unwrap()));
 
     let res = super::at_ndrpt("0001", data);
 

@@ -4,8 +4,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_scan_bluetooth/flutter_scan_bluetooth.dart';
+import 'package:iot_client/device.dart';
 import 'package:iot_client/ffi.dart';
-import 'package:iot_client/utils/ble_scan.dart';
+import 'package:iot_client/utils/at_parse.dart';
 import 'package:iot_client/utils/tool.dart';
 
 import '../constants.dart';
@@ -17,50 +18,43 @@ class WindSpeed extends StatefulWidget {
   State<WindSpeed> createState() => _WindSpeedState();
 }
 
-class Device {
-  String name;
-  String address;
-  bool isChecked;
-  Device(this.name, this.address, this.isChecked);
-
-  bool contains(String name) {
-    return this.name == name;
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-
-    return other is Device && other.name == name;
-  }
-
-  @override
-  int get hashCode => name.hashCode;
-}
-
 class _WindSpeedState extends State<WindSpeed>
-    with BleScan, SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
   List<Device> devices = [];
 
   final GlobalKey<ScaffoldMessengerState> key =
       GlobalKey<ScaffoldMessengerState>(debugLabel: 'wind_speed');
 
-  late FlutterScanBluetooth bluetooth = FlutterScanBluetooth();
+  late FlutterScanBluetooth bluetooth;
 
   late AnimationController animationController;
 
   Timer? timer;
 
+  late String windSpeed = '';
+
+  void getAtWindSpeed(String resp) {
+    // 风速
+    // 风向
+    // 报警值
+    // 故障码
+    setState(() {
+      windSpeed = "风速:--\r\n风向:--\r\n报警值:--\r\n故障码:--";
+    });
+  }
+
   void startTimer() {
     timer = Timer.periodic(timerDuration, (timer) async {
-      await readDevice(atRead("0200"));
+      await readDevice("010304080004", getAtWindSpeed);
     });
   }
 
   @override
   void initState() {
-    super.initState();
-    bluetooth.requestPermissions();
+    bluetooth = FlutterScanBluetooth();
+
+    bluetooth.startScan(pairedDevices: false);
+
     bluetooth.devices.listen((device) {
       String name = device.name;
       String address = device.address;
@@ -73,20 +67,22 @@ class _WindSpeedState extends State<WindSpeed>
       }
     });
 
-    Future.delayed(const Duration(seconds: 5), bluetooth.stopScan);
-
-    bluetooth.startScan(pairedDevices: false);
-
     animationController = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
     );
 
     animationController.repeat(min: 0.0, max: 1.0);
+
+    readDevice("010304080004", getAtWindSpeed);
+    super.initState();
   }
 
   @override
   void dispose() {
+    debugPrint("wind_speed dispose");
+    timer?.cancel();
+    animationController.dispose();
     bluetooth.stopScan();
     bluetooth.close();
     super.dispose();
@@ -97,7 +93,8 @@ class _WindSpeedState extends State<WindSpeed>
     return "0101${addr}0001";
   }
 
-  Future<void> readDevice(String sdata) async {
+  Future<void> readDevice(
+      String sdata, void Function(String resp) callback) async {
     List<Device> selected =
         devices.where((element) => element.isChecked).toList();
 
@@ -110,30 +107,9 @@ class _WindSpeedState extends State<WindSpeed>
       Uint8List data = await api.atNdrpt(id: id, data: sdata);
       print(data);
       String resp = String.fromCharCodes(data);
-      print(resp);
-    }
-  }
-
-  Future<void> scan() async {
-    await checkAndAskPermissions();
-    try {
-      if (scanning) {
-        await bluetooth.stopScan();
-        showSnackBar("扫描停止", key);
-        setState(() {
-          devices = [];
-        });
-      } else {
-        await bluetooth.startScan(
-          pairedDevices: false,
-        );
-        showSnackBar("正在搜寻蓝牙设备", key);
-        setState(() {
-          scanning = true;
-        });
+      if (getAtOk(resp)) {
+        callback(resp);
       }
-    } on PlatformException catch (e) {
-      showSnackBar(e.toString(), key);
     }
   }
 
@@ -157,6 +133,7 @@ class _WindSpeedState extends State<WindSpeed>
     for (final device in selected) {
       String id = getMeshId(device.name);
       Uint8List data = await api.atNdrpt(id: id, data: sdata);
+      print(data);
       String resp = String.fromCharCodes(data);
       showSnackBar(resp, key);
 
@@ -277,6 +254,24 @@ class _WindSpeedState extends State<WindSpeed>
               ],
             ),
           ),
+        ),
+        floatingActionButton: FloatingActionButton(
+          child: Icon(Icons.radar),
+          tooltip: "扫描",
+          onPressed: () async {
+            await checkAndAskPermissions();
+            try {
+              setState(() {
+                devices = [];
+              });
+              await bluetooth.stopScan();
+
+              await bluetooth.startScan(pairedDevices: false);
+              showSnackBar("开始扫描", key);
+            } on PlatformException catch (e) {
+              debugPrint(e.toString());
+            }
+          },
         ),
       ),
     );

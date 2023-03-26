@@ -42,14 +42,13 @@ class _SettingAppState extends State<SettingApp> {
 
   @override
   void initState() {
-    super.initState();
-
     api.getNdid().then((value) {
       String id = String.fromCharCodes(value);
       setState(() {
         ndid = Future.value(id);
       });
     });
+    super.initState();
   }
 
   void closeAppUsingSystemPop() {

@@ -79,7 +79,7 @@ class _MyAppState extends State<MyApp> {
                 label: '蓝牙',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.interests),
+                icon: Icon(Icons.vpn_lock),
                 label: '监控',
               ),
               BottomNavigationBarItem(

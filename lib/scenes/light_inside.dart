@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -43,10 +44,17 @@ class _LightInsideState extends State<LightInside>
   final GlobalKey<ScaffoldMessengerState> key =
       GlobalKey<ScaffoldMessengerState>(debugLabel: 'wind_speed');
 
+  Timer? timer;
+  Duration timerDuration = Duration(seconds: 3);
+
+  void startTimer() {
+    timer = Timer.periodic(timerDuration, (timer) async {
+      await readDevice(atRead("0200"));
+    });
+  }
+
   @override
   void initState() {
-    super.initState();
-
     scanListen((device) {
       String name = device.name;
       String address = device.address;
@@ -65,7 +73,16 @@ class _LightInsideState extends State<LightInside>
       });
     });
 
+    startTimer();
     scan();
+
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    super.dispose();
   }
 
   Future<void> scan() async {
@@ -73,7 +90,7 @@ class _LightInsideState extends State<LightInside>
     try {
       if (scanning) {
         await bluetooth.stopScan();
-        showSnackBar("scanning stoped", key);
+        showSnackBar("扫描停止", key);
         setState(() {
           devices = [];
         });
@@ -81,7 +98,7 @@ class _LightInsideState extends State<LightInside>
         await bluetooth.startScan(
           pairedDevices: false,
         );
-        showSnackBar("scanning started", key);
+        showSnackBar("正在搜寻蓝牙设备", key);
         setState(() {
           scanning = true;
         });
@@ -120,9 +137,26 @@ class _LightInsideState extends State<LightInside>
     }
   }
 
-  @override
-  void dispose() {
-    super.dispose();
+  String atRead(String addr) {
+    //01 03 00 01 00 01
+    return "0101${addr}0001";
+  }
+
+  Future<void> readDevice(String sdata) async {
+    List<Device> selected =
+        devices.where((element) => element.isChecked).toList();
+
+    if (selected.isEmpty) {
+      return;
+    }
+
+    for (final device in selected) {
+      String id = getMeshId(device.name);
+      Uint8List data = await api.atNdrpt(id: id, data: sdata);
+      print(data);
+      String resp = String.fromCharCodes(data);
+      print(resp);
+    }
   }
 
   final BoxShadow boxShadow = BoxShadow(

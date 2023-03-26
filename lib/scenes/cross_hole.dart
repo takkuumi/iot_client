@@ -9,11 +9,11 @@ import 'package:iot_client/utils/tool.dart';
 
 import '../constants.dart';
 
-class CoVi extends StatefulWidget {
-  const CoVi({Key? key}) : super(key: key);
+class CrossHole extends StatefulWidget {
+  const CrossHole({Key? key}) : super(key: key);
 
   @override
-  State<CoVi> createState() => _CoViState();
+  State<CrossHole> createState() => _CrossHoleState();
 }
 
 class Device {
@@ -37,21 +37,12 @@ class Device {
   int get hashCode => name.hashCode;
 }
 
-class _CoViState extends State<CoVi>
+class _CrossHoleState extends State<CrossHole>
     with BleScan, SingleTickerProviderStateMixin {
   List<Device> devices = [];
 
   final GlobalKey<ScaffoldMessengerState> key =
-      GlobalKey<ScaffoldMessengerState>(debugLabel: 'wind_speed');
-
-  Timer? timer;
-  Duration timerDuration = Duration(seconds: 3);
-
-  void startTimer() {
-    timer = Timer.periodic(timerDuration, (timer) async {
-      await readDevice(atRead("0200"));
-    });
-  }
+      GlobalKey<ScaffoldMessengerState>(debugLabel: 'cross_hole');
 
   @override
   void initState() {
@@ -73,15 +64,13 @@ class _CoViState extends State<CoVi>
       });
     });
 
-    startTimer();
-
     scan();
+
     super.initState();
   }
 
   @override
   void dispose() {
-    timer?.cancel();
     super.dispose();
   }
 
@@ -108,28 +97,6 @@ class _CoViState extends State<CoVi>
     }
   }
 
-  String atRead(String addr) {
-    //01 03 00 01 00 01
-    return "0101${addr}0001";
-  }
-
-  Future<void> readDevice(String sdata) async {
-    List<Device> selected =
-        devices.where((element) => element.isChecked).toList();
-
-    if (selected.isEmpty) {
-      return;
-    }
-
-    for (final device in selected) {
-      String id = getMeshId(device.name);
-      Uint8List data = await api.atNdrpt(id: id, data: sdata);
-      print(data);
-      String resp = String.fromCharCodes(data);
-      print(resp);
-    }
-  }
-
   final BoxShadow boxShadow = BoxShadow(
     color: Colors.grey.withOpacity(0.5),
     spreadRadius: 5,
@@ -144,7 +111,7 @@ class _CoViState extends State<CoVi>
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Container(
-          child: Text("COVI检测"),
+          child: Text("横洞指示"),
           margin: EdgeInsets.symmetric(vertical: 10, horizontal: 5),
         ),
         Container(
@@ -164,11 +131,8 @@ class _CoViState extends State<CoVi>
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset(
-                "images/icons/environmental testing_icon@2x.png",
-                width: 80,
-                height: 80,
-              ),
+              Icon(Icons.double_arrow_sharp,
+                  size: 80, color: Colors.greenAccent)
             ],
           ),
         ),
@@ -176,7 +140,6 @@ class _CoViState extends State<CoVi>
           width: 100,
           height: 100,
           alignment: Alignment.center,
-          child: Text("100.0"),
         ),
       ],
     );
@@ -188,7 +151,7 @@ class _CoViState extends State<CoVi>
       key: key,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('COVI检测'),
+          title: const Text('横洞指示'),
         ),
         body: SingleChildScrollView(
           padding: EdgeInsets.symmetric(vertical: 50),
@@ -226,11 +189,7 @@ class _CoViState extends State<CoVi>
                               subtitle: Text(device.address),
                               value: device.isChecked,
                               dense: true,
-                              onChanged: (bool? value) {
-                                setState(() {
-                                  device.isChecked = value!;
-                                });
-                              },
+                              onChanged: null,
                             );
                           },
                         ),

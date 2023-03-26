@@ -1,5 +1,5 @@
 use anyhow::{bail, Context, Result};
-use serialport::{DataBits, FlowControl, Parity, StopBits};
+use serialport::{DataBits, FlowControl, StopBits};
 
 fn open_serialport() -> Result<Box<dyn serialport::SerialPort>> {
   serialport::new("/dev/ttySWK0", 115200)
@@ -15,6 +15,7 @@ pub fn send_serialport(data: &[u8], buffer: &mut [u8]) -> Result<usize> {
   let mut port = open_serialport()?;
 
   if port.write(data).is_ok() {
+    port.flush()?;
     return port.read(buffer).map_err(Into::into);
   }
 

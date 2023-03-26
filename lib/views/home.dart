@@ -2,8 +2,12 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:iot_client/scenes/covi.dart';
+import 'package:iot_client/scenes/cross_hole.dart';
+import 'package:iot_client/scenes/fan.dart';
 import 'package:iot_client/scenes/lane_indicator.dart';
 import 'package:iot_client/scenes/light_inside.dart';
+import 'package:iot_client/scenes/traffic_light.dart';
+import 'package:iot_client/scenes/water_pump.dart';
 import 'package:iot_client/scenes/wind_speed.dart';
 import 'package:iot_client/utils/navigation.dart';
 import 'package:carousel_slider/carousel_slider.dart';
@@ -72,22 +76,42 @@ class _HomeState extends State<Home> {
       ),
       createIcon(
         "交通信号灯",
-        onTap: () {},
+        onTap: () {
+          Navigation.navigateTo(
+            context: context,
+            screen: TrafficLight(),
+          );
+        },
         assetIcon: "images/icons/traffic light_icon@2x.png",
       ),
       createIcon(
         "通风风机",
-        onTap: () {},
+        onTap: () {
+          Navigation.navigateTo(
+            context: context,
+            screen: Fan(),
+          );
+        },
         assetIcon: "images/icons/yentilation fan_icon@2x.png",
       ),
       createIcon(
         "横洞指示",
-        onTap: () {},
+        onTap: () {
+          Navigation.navigateTo(
+            context: context,
+            screen: CrossHole(),
+          );
+        },
         assetIcon: "images/icons/cross hole indication@2x.png",
       ),
       createIcon(
         "水泵液压",
-        onTap: () {},
+        onTap: () {
+          Navigation.navigateTo(
+            context: context,
+            screen: WaterPump(),
+          );
+        },
         assetIcon: "images/icons/water pump hydraulics@2x.png",
       ),
     ];

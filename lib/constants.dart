@@ -5,13 +5,16 @@ final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
 
 void showSnackBar(String msg, [GlobalKey<ScaffoldMessengerState>? key]) {
   debugPrint(key == null ? 'null' : 'not null');
+  rootScaffoldMessengerKey.currentState?.hideCurrentSnackBar();
   if (key != null) {
     key.currentState?.showSnackBar(SnackBar(
       content: Text(msg),
+      duration: Duration(milliseconds: 260),
     ));
     return;
   }
   rootScaffoldMessengerKey.currentState?.showSnackBar(SnackBar(
     content: Text(msg),
+    duration: Duration(milliseconds: 260),
   ));
 }

@@ -39,7 +39,7 @@ pub fn get_ndid() -> Result<Vec<u8>> {
 pub fn set_ndid(id: &str) -> Result<Vec<u8>> {
   let data = format!("{}={}\r\n", AtCommand::AT_NDID, id);
   let mut buffer = [0; 20];
-  let res = send_serialport(data.as_bytes(), &mut buffer)?;
+  let _res = send_serialport(data.as_bytes(), &mut buffer)?;
 
   let output = super::SerialResponse(&buffer);
   Ok(output.to_buffer())
@@ -48,7 +48,7 @@ pub fn set_ndid(id: &str) -> Result<Vec<u8>> {
 pub fn ndreset() -> Result<Vec<u8>> {
   let data = format!("{}\r\n", AtCommand::AT_NDRESET);
   let mut buffer = [0; 20];
-  let res = send_serialport(data.as_bytes(), &mut buffer)?;
+  let _res = send_serialport(data.as_bytes(), &mut buffer)?;
 
   let output = super::SerialResponse(&buffer);
   Ok(output.to_buffer())
@@ -57,7 +57,7 @@ pub fn ndreset() -> Result<Vec<u8>> {
 pub fn restore() -> Result<Vec<u8>> {
   let data = format!("{}\r\n", AtCommand::AT_RESTORE);
   let mut buffer = [0; 20];
-  let res = send_serialport(data.as_bytes(), &mut buffer)?;
+  let _res = send_serialport(data.as_bytes(), &mut buffer)?;
 
   let output = super::SerialResponse(&buffer);
   Ok(output.to_buffer())
@@ -66,7 +66,7 @@ pub fn restore() -> Result<Vec<u8>> {
 pub fn set_mode(mode: u8) -> Result<Vec<u8>> {
   let data = format!("{}={}\r\n", AtCommand::AT_MODE, mode);
   let mut buffer = [0; 20];
-  let res = send_serialport(data.as_bytes(), &mut buffer)?;
+  let _res = send_serialport(data.as_bytes(), &mut buffer)?;
 
   let output = super::SerialResponse(&buffer);
   Ok(output.to_buffer())
@@ -75,7 +75,7 @@ pub fn set_mode(mode: u8) -> Result<Vec<u8>> {
 pub fn reboot() -> Result<Vec<u8>> {
   let data = format!("{}\r\n", AtCommand::AT_REBOOT);
   let mut buffer = [0; 20];
-  let res = send_serialport(data.as_bytes(), &mut buffer)?;
+  let _res = send_serialport(data.as_bytes(), &mut buffer)?;
   let output = super::SerialResponse(&buffer);
 
   Ok(output.to_buffer())

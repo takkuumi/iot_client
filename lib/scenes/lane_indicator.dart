@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -42,7 +43,17 @@ class _LaneIndicatorState extends State<LaneIndicator> with BleScan {
   final GlobalKey<ScaffoldMessengerState> key =
       GlobalKey<ScaffoldMessengerState>(debugLabel: 'lane_indicator');
 
-  bool openState = false;
+  bool laneIndicator1 = false;
+  bool laneIndicator2 = false;
+
+  Timer? timer;
+  Duration timerDuration = Duration(seconds: 3);
+
+  void startTimer() {
+    timer = Timer.periodic(timerDuration, (timer) async {
+      await readDevice(atRead("0200"), false);
+    });
+  }
 
   @override
   void initState() {
@@ -60,6 +71,8 @@ class _LaneIndicatorState extends State<LaneIndicator> with BleScan {
       }
     });
 
+    startTimer();
+
     scanStopped((device) {
       setState(() {
         scanning = false;
@@ -74,7 +87,7 @@ class _LaneIndicatorState extends State<LaneIndicator> with BleScan {
     try {
       if (scanning) {
         await bluetooth.stopScan();
-        showSnackBar("scanning stoped", key);
+        showSnackBar("扫描停止", key);
         setState(() {
           devices = [];
         });
@@ -82,7 +95,7 @@ class _LaneIndicatorState extends State<LaneIndicator> with BleScan {
         await bluetooth.startScan(
           pairedDevices: false,
         );
-        showSnackBar("scanning started", key);
+        showSnackBar("正在搜寻蓝牙设备", key);
         setState(() {
           scanning = true;
         });
@@ -92,15 +105,38 @@ class _LaneIndicatorState extends State<LaneIndicator> with BleScan {
     }
   }
 
+//
+  String atRead(String addr) {
+    //01 03 00 01 00 01
+    return "0101${addr}0001";
+  }
+
   String atOpen(String addr) {
-    return "0105${addr}0001";
+    return "0105${addr}FF00";
   }
 
   String atClose(String addr) {
     return "0105${addr}0000";
   }
 
-  Future<void> writeDevice(String sdata, bool state) async {
+  Future<void> readDevice(String sdata, bool state) async {
+    List<Device> selected =
+        devices.where((element) => element.isChecked).toList();
+
+    if (selected.isEmpty) {
+      return;
+    }
+
+    for (final device in selected) {
+      String id = getMeshId(device.name);
+      Uint8List data = await api.atNdrpt(id: id, data: sdata);
+      print(data);
+      String resp = String.fromCharCodes(data);
+      print(resp);
+    }
+  }
+
+  Future<void> writeDevice(String x0200, String x0201, bool state) async {
     List<Device> selected =
         devices.where((element) => element.isChecked).toList();
 
@@ -111,13 +147,19 @@ class _LaneIndicatorState extends State<LaneIndicator> with BleScan {
 
     for (final device in selected) {
       String id = getMeshId(device.name);
-      Uint8List data = await api.atNdrpt(id: id, data: sdata);
-      String resp = String.fromCharCodes(data);
-      showSnackBar(resp, key);
-
-      if (resp.contains("OK")) {
+      Uint8List x0200_data = await api.atNdrpt(id: id, data: x0200);
+      Uint8List x0201_data = await api.atNdrpt(id: id, data: x0201);
+      print(x0200_data);
+      String x0200_resp = String.fromCharCodes(x0200_data);
+      print(x0200_data);
+      String x0201_resp = String.fromCharCodes(x0200_data);
+      // showSnackBar(resp, key);
+      print(x0200_resp);
+      print(x0201_resp);
+      if (x0200_resp.contains("OK") && x0201_resp.contains("OK")) {
         setState(() {
-          openState = state;
+          laneIndicator1 = state;
+          laneIndicator2 = !state;
         });
       }
     }
@@ -125,6 +167,7 @@ class _LaneIndicatorState extends State<LaneIndicator> with BleScan {
 
   @override
   void dispose() {
+    timer?.cancel();
     super.dispose();
   }
 
@@ -161,7 +204,7 @@ class _LaneIndicatorState extends State<LaneIndicator> with BleScan {
             color: Colors.white,
             border: Border.all(
               width: 2,
-              color: openState ? Colors.greenAccent : Colors.redAccent,
+              color: laneIndicator1 ? Colors.greenAccent : Colors.redAccent,
             ),
             borderRadius: BorderRadius.circular(50),
             boxShadow: [boxShadow],
@@ -171,9 +214,9 @@ class _LaneIndicatorState extends State<LaneIndicator> with BleScan {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                openState ? Icons.arrow_upward : Icons.clear,
+                laneIndicator1 ? Icons.arrow_upward : Icons.clear,
                 size: 60,
-                color: openState ? Colors.greenAccent : Colors.redAccent,
+                color: laneIndicator1 ? Colors.greenAccent : Colors.redAccent,
               )
             ],
           ),
@@ -187,7 +230,7 @@ class _LaneIndicatorState extends State<LaneIndicator> with BleScan {
             color: Colors.white,
             border: Border.all(
               width: 2,
-              color: openState ? Colors.greenAccent : Colors.redAccent,
+              color: laneIndicator2 ? Colors.greenAccent : Colors.redAccent,
             ),
             borderRadius: BorderRadius.circular(50),
             boxShadow: [boxShadow],
@@ -197,9 +240,9 @@ class _LaneIndicatorState extends State<LaneIndicator> with BleScan {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                openState ? Icons.arrow_upward : Icons.clear,
+                laneIndicator2 ? Icons.arrow_upward : Icons.clear,
                 size: 60,
-                color: openState ? Colors.greenAccent : Colors.redAccent,
+                color: laneIndicator2 ? Colors.greenAccent : Colors.redAccent,
               )
             ],
           ),
@@ -207,14 +250,15 @@ class _LaneIndicatorState extends State<LaneIndicator> with BleScan {
         Container(
           margin: EdgeInsets.only(top: 20),
           child: ElevatedButton(
-            onPressed: () => writeDevice(atOpen("0200"), true),
+            onPressed: () => writeDevice(atOpen("0200"), atClose("0201"), true),
             child: Text("打开"),
           ),
         ),
         Container(
           margin: EdgeInsets.only(top: 5),
           child: ElevatedButton(
-            onPressed: () => writeDevice(atClose("0200"), false),
+            onPressed: () =>
+                writeDevice(atClose("0200"), atOpen("0201"), false),
             child: Text("关闭"),
           ),
         ),
@@ -248,7 +292,7 @@ class _LaneIndicatorState extends State<LaneIndicator> with BleScan {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                openState ? Icons.arrow_upward : Icons.clear,
+                Icons.clear,
                 size: 60,
                 color: disableColor,
               )
@@ -274,7 +318,7 @@ class _LaneIndicatorState extends State<LaneIndicator> with BleScan {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                openState ? Icons.arrow_upward : Icons.clear,
+                Icons.clear,
                 size: 60,
                 color: disableColor,
               )
@@ -327,7 +371,7 @@ class _LaneIndicatorState extends State<LaneIndicator> with BleScan {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                openState ? Icons.arrow_upward : Icons.clear,
+                Icons.clear,
                 size: 60,
                 color: disableColor,
               )
@@ -353,7 +397,7 @@ class _LaneIndicatorState extends State<LaneIndicator> with BleScan {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                openState ? Icons.arrow_upward : Icons.clear,
+                Icons.clear,
                 size: 60,
                 color: disableColor,
               )

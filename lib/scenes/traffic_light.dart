@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -9,11 +8,11 @@ import 'package:iot_client/utils/tool.dart';
 
 import '../constants.dart';
 
-class CoVi extends StatefulWidget {
-  const CoVi({Key? key}) : super(key: key);
+class TrafficLight extends StatefulWidget {
+  const TrafficLight({Key? key}) : super(key: key);
 
   @override
-  State<CoVi> createState() => _CoViState();
+  State<TrafficLight> createState() => _TrafficLightState();
 }
 
 class Device {
@@ -37,21 +36,12 @@ class Device {
   int get hashCode => name.hashCode;
 }
 
-class _CoViState extends State<CoVi>
+class _TrafficLightState extends State<TrafficLight>
     with BleScan, SingleTickerProviderStateMixin {
   List<Device> devices = [];
 
   final GlobalKey<ScaffoldMessengerState> key =
-      GlobalKey<ScaffoldMessengerState>(debugLabel: 'wind_speed');
-
-  Timer? timer;
-  Duration timerDuration = Duration(seconds: 3);
-
-  void startTimer() {
-    timer = Timer.periodic(timerDuration, (timer) async {
-      await readDevice(atRead("0200"));
-    });
-  }
+      GlobalKey<ScaffoldMessengerState>(debugLabel: 'traffic_light');
 
   @override
   void initState() {
@@ -73,16 +63,8 @@ class _CoViState extends State<CoVi>
       });
     });
 
-    startTimer();
-
     scan();
     super.initState();
-  }
-
-  @override
-  void dispose() {
-    timer?.cancel();
-    super.dispose();
   }
 
   Future<void> scan() async {
@@ -108,26 +90,9 @@ class _CoViState extends State<CoVi>
     }
   }
 
-  String atRead(String addr) {
-    //01 03 00 01 00 01
-    return "0101${addr}0001";
-  }
-
-  Future<void> readDevice(String sdata) async {
-    List<Device> selected =
-        devices.where((element) => element.isChecked).toList();
-
-    if (selected.isEmpty) {
-      return;
-    }
-
-    for (final device in selected) {
-      String id = getMeshId(device.name);
-      Uint8List data = await api.atNdrpt(id: id, data: sdata);
-      print(data);
-      String resp = String.fromCharCodes(data);
-      print(resp);
-    }
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   final BoxShadow boxShadow = BoxShadow(
@@ -139,44 +104,98 @@ class _CoViState extends State<CoVi>
 
   final Color disableColor = Color.fromRGBO(221, 221, 221, 1);
 
+  final Widget verticalLine = Container(
+    height: 20,
+    child: VerticalDivider(
+      thickness: 2,
+      color: Color.fromRGBO(192, 192, 192, 1),
+    ),
+  );
+
   Widget createLane1() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Container(
-          child: Text("COVI检测"),
+          child: Text("交通信号灯"),
           margin: EdgeInsets.symmetric(vertical: 10, horizontal: 5),
         ),
         Container(
-          width: 150,
-          height: 150,
+          width: 100,
+          height: 100,
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: Colors.white,
             border: Border.all(
               width: 2,
-              color: Colors.greenAccent,
+              color: disableColor,
             ),
-            borderRadius: BorderRadius.circular(75),
+            borderRadius: BorderRadius.circular(50),
             boxShadow: [boxShadow],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset(
-                "images/icons/environmental testing_icon@2x.png",
-                width: 80,
-                height: 80,
-              ),
+              Icon(
+                Icons.clear,
+                size: 60,
+                color: disableColor,
+              )
             ],
           ),
         ),
+        verticalLine,
         Container(
           width: 100,
           height: 100,
           alignment: Alignment.center,
-          child: Text("100.0"),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border.all(
+              width: 2,
+              color: disableColor,
+            ),
+            borderRadius: BorderRadius.circular(50),
+            boxShadow: [boxShadow],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.clear,
+                size: 60,
+                color: disableColor,
+              )
+            ],
+          ),
+        ),
+        verticalLine,
+        Container(
+          width: 100,
+          height: 100,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border.all(
+              width: 2,
+              color: disableColor,
+            ),
+            borderRadius: BorderRadius.circular(50),
+            boxShadow: [boxShadow],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.clear,
+                size: 60,
+                color: disableColor,
+              )
+            ],
+          ),
         ),
       ],
     );
@@ -188,7 +207,7 @@ class _CoViState extends State<CoVi>
       key: key,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('COVI检测'),
+          title: const Text('交通信号灯'),
         ),
         body: SingleChildScrollView(
           padding: EdgeInsets.symmetric(vertical: 50),
@@ -226,11 +245,7 @@ class _CoViState extends State<CoVi>
                               subtitle: Text(device.address),
                               value: device.isChecked,
                               dense: true,
-                              onChanged: (bool? value) {
-                                setState(() {
-                                  device.isChecked = value!;
-                                });
-                              },
+                              onChanged: null,
                             );
                           },
                         ),

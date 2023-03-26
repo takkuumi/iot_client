@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_scan_bluetooth/flutter_scan_bluetooth.dart';
+import 'package:iot_client/device.dart';
 import 'package:iot_client/utils/ble_scan.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -14,30 +16,36 @@ class Bluetooth extends StatefulWidget {
   State<Bluetooth> createState() => _BluetoothState();
 }
 
-class _BluetoothState extends State<Bluetooth> with BleScan {
+class _BluetoothState extends State<Bluetooth> {
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  late FlutterScanBluetooth bluetooth = FlutterScanBluetooth();
 
-  List<String> devices = [];
+  List<Device> devices = [];
 
   @override
   void initState() {
     super.initState();
-    scanListen((device) {
+    bluetooth.requestPermissions();
+    bluetooth.devices.listen((device) {
       String name = device.name;
-      setState(() {
-        devices.add(name);
-      });
-      //  if (name.startsWith('Mesh') && !devices.contains(name)) {
+      String address = device.address;
 
-      // }
+      Device item = Device(name, address, false);
+      if (name.startsWith('Mesh') && !devices.contains(item)) {
+        setState(() {
+          devices.add(item);
+        });
+      }
     });
 
-    scanStopped((device) {
-      print(device);
-      setState(() {
-        scanning = false;
-      });
-    });
+    bluetooth.startScan(pairedDevices: false);
+  }
+
+  @override
+  void dispose() {
+    bluetooth.stopScan();
+    bluetooth.close();
+    super.dispose();
   }
 
   Future<bool?> showSettingDialog() {
@@ -64,6 +72,10 @@ class _BluetoothState extends State<Bluetooth> with BleScan {
     );
   }
 
+  final Widget emptyWidget = const Center(
+    child: Text("没有发现设备,请点击扫描按钮进行扫描"),
+  );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -72,16 +84,16 @@ class _BluetoothState extends State<Bluetooth> with BleScan {
         children: <Widget>[
           Expanded(
             child: devices.isEmpty
-                ? Center(
-                    child: Text("没有发现设备,请点击扫描按钮进行扫描"),
-                  )
+                ? emptyWidget
                 : ListView.builder(
                     itemCount: devices.length,
                     itemBuilder: (BuildContext context, int index) {
+                      final Device device = devices[index];
                       return ListTile(
-                        title: Text(devices[index]),
+                        title: Text(device.name),
+                        subtitle: Text(device.address),
                         onTap: () async {
-                          final name = devices[index];
+                          final name = device.name;
                           bool? result = await showSettingDialog();
                           if (result != null && result) {
                             if (name.startsWith("Mesh")) {
@@ -108,19 +120,12 @@ class _BluetoothState extends State<Bluetooth> with BleScan {
         onPressed: () async {
           await checkAndAskPermissions();
           try {
-            if (scanning) {
-              await bluetooth.stopScan();
-              showSnackBar("扫描已停止");
-              setState(() {
-                devices = [];
-              });
-            } else {
-              await bluetooth.startScan(pairedDevices: false);
-              showSnackBar("开始扫描");
-              setState(() {
-                scanning = true;
-              });
-            }
+            await bluetooth.stopScan();
+            setState(() {
+              devices = [];
+            });
+            await bluetooth.startScan(pairedDevices: false);
+            showSnackBar("开始扫描");
           } on PlatformException catch (e) {
             debugPrint(e.toString());
           }

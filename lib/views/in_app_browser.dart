@@ -5,6 +5,7 @@
 // ignore_for_file: public_member_api_docs
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class InAppView extends StatefulWidget {
@@ -17,11 +18,11 @@ class InAppView extends StatefulWidget {
 class _InAppViewState extends State<InAppView> {
   late final WebViewController controller;
 
+  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+
   @override
   void initState() {
     super.initState();
-
-    // #docregion webview_controller
     controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0x00000000))
@@ -40,9 +41,21 @@ class _InAppViewState extends State<InAppView> {
             return NavigationDecision.navigate;
           },
         ),
-      )
-      ..loadRequest(Uri.parse('https://www.baidu.com'));
+      );
+    _prefs.then((prefs) {
+      String? url = prefs.getString("network_url");
+
+      if ((url != null) && (url.isNotEmpty)) {
+        controller.loadRequest(Uri.parse(url));
+      }
+    });
+
     // #enddocregion webview_controller
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   // #docregion webview_widget

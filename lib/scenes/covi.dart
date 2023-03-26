@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_scan_bluetooth/flutter_scan_bluetooth.dart';
 import 'package:iot_client/ffi.dart';
 import 'package:iot_client/utils/ble_scan.dart';
 import 'package:iot_client/utils/tool.dart';
@@ -44,8 +45,9 @@ class _CoViState extends State<CoVi>
   final GlobalKey<ScaffoldMessengerState> key =
       GlobalKey<ScaffoldMessengerState>(debugLabel: 'wind_speed');
 
+  late FlutterScanBluetooth bluetooth = FlutterScanBluetooth();
+
   Timer? timer;
-  Duration timerDuration = Duration(seconds: 3);
 
   void startTimer() {
     timer = Timer.periodic(timerDuration, (timer) async {
@@ -55,7 +57,9 @@ class _CoViState extends State<CoVi>
 
   @override
   void initState() {
-    scanListen((device) {
+    super.initState();
+    bluetooth.requestPermissions();
+    bluetooth.devices.listen((device) {
       String name = device.name;
       String address = device.address;
 
@@ -67,21 +71,21 @@ class _CoViState extends State<CoVi>
       }
     });
 
-    scanStopped((device) {
-      setState(() {
-        scanning = false;
-      });
-    });
+    Future.delayed(const Duration(seconds: 5), bluetooth.stopScan);
 
-    startTimer();
+    bluetooth.startScan(pairedDevices: false);
 
-    scan();
-    super.initState();
+    // Timer.periodic(timerDuration, (timer) async {
+    //   await readDevice(atRead("0200"), false);
+    // });
+
+    // startTimer();
   }
 
   @override
   void dispose() {
-    timer?.cancel();
+    bluetooth.stopScan();
+    bluetooth.close();
     super.dispose();
   }
 

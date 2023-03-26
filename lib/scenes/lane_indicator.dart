@@ -1,10 +1,10 @@
 import 'dart:async';
-import 'dart:ui';
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_scan_bluetooth/flutter_scan_bluetooth.dart';
+import 'package:iot_client/device.dart';
 import 'package:iot_client/ffi.dart';
-import 'package:iot_client/utils/ble_scan.dart';
 import 'package:iot_client/utils/tool.dart';
 
 import '../constants.dart';
@@ -16,50 +16,30 @@ class LaneIndicator extends StatefulWidget {
   State<LaneIndicator> createState() => _LaneIndicatorState();
 }
 
-class Device {
-  String name;
-  String address;
-  bool isChecked;
-  Device(this.name, this.address, this.isChecked);
-
-  bool contains(String name) {
-    return this.name == name;
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-
-    return other is Device && other.name == name;
-  }
-
-  @override
-  int get hashCode => name.hashCode;
-}
-
-class _LaneIndicatorState extends State<LaneIndicator> with BleScan {
+class _LaneIndicatorState extends State<LaneIndicator> {
   List<Device> devices = [];
 
   final GlobalKey<ScaffoldMessengerState> key =
       GlobalKey<ScaffoldMessengerState>(debugLabel: 'lane_indicator');
 
+  late FlutterScanBluetooth bluetooth = FlutterScanBluetooth();
+
   bool laneIndicator1 = false;
   bool laneIndicator2 = false;
 
   Timer? timer;
-  Duration timerDuration = Duration(seconds: 3);
 
   void startTimer() {
-    timer = Timer.periodic(timerDuration, (timer) async {
-      await readDevice(atRead("0200"), false);
-    });
+    // timer = Timer.periodic(timerDuration, (timer) async {
+    //   await readDevice(atRead("0200"), false);
+    // });
   }
 
   @override
   void initState() {
     super.initState();
-
-    scanListen((device) {
+    bluetooth.requestPermissions();
+    bluetooth.devices.listen((device) {
       String name = device.name;
       String address = device.address;
 
@@ -71,41 +51,24 @@ class _LaneIndicatorState extends State<LaneIndicator> with BleScan {
       }
     });
 
-    startTimer();
+    // Future.delayed(const Duration(seconds: 5), bluetooth.stopScan);
 
-    scanStopped((device) {
-      setState(() {
-        scanning = false;
-      });
-    });
+    bluetooth.startScan(pairedDevices: false);
 
-    scan();
+    // Timer.periodic(timerDuration, (timer) async {
+    //   await readDevice(atRead("0200"), false);
+    // });
+
+    // startTimer();
   }
 
-  Future<void> scan() async {
-    await checkAndAskPermissions();
-    try {
-      if (scanning) {
-        await bluetooth.stopScan();
-        showSnackBar("扫描停止", key);
-        setState(() {
-          devices = [];
-        });
-      } else {
-        await bluetooth.startScan(
-          pairedDevices: false,
-        );
-        showSnackBar("正在搜寻蓝牙设备", key);
-        setState(() {
-          scanning = true;
-        });
-      }
-    } on PlatformException catch (e) {
-      showSnackBar(e.toString(), key);
-    }
+  @override
+  void dispose() {
+    bluetooth.stopScan();
+    bluetooth.close();
+    super.dispose();
   }
 
-//
   String atRead(String addr) {
     //01 03 00 01 00 01
     return "0101${addr}0001";
@@ -120,6 +83,7 @@ class _LaneIndicatorState extends State<LaneIndicator> with BleScan {
   }
 
   Future<void> readDevice(String sdata, bool state) async {
+    timer?.cancel();
     List<Device> selected =
         devices.where((element) => element.isChecked).toList();
 
@@ -134,9 +98,11 @@ class _LaneIndicatorState extends State<LaneIndicator> with BleScan {
       String resp = String.fromCharCodes(data);
       print(resp);
     }
+    startTimer();
   }
 
   Future<void> writeDevice(String x0200, String x0201, bool state) async {
+    timer?.cancel();
     List<Device> selected =
         devices.where((element) => element.isChecked).toList();
 
@@ -147,8 +113,12 @@ class _LaneIndicatorState extends State<LaneIndicator> with BleScan {
 
     for (final device in selected) {
       String id = getMeshId(device.name);
-      Uint8List x0200_data = await api.atNdrpt(id: id, data: x0200);
-      Uint8List x0201_data = await api.atNdrpt(id: id, data: x0201);
+      print("==================${id}");
+      print("==================${x0200}");
+      Uint8List x0200_data =
+          await api.atNdrpt(id: id, data: x0200).timeout(Duration(seconds: 3));
+      Uint8List x0201_data =
+          await api.atNdrpt(id: id, data: x0201).timeout(Duration(seconds: 3));
       print(x0200_data);
       String x0200_resp = String.fromCharCodes(x0200_data);
       print(x0200_data);
@@ -163,12 +133,7 @@ class _LaneIndicatorState extends State<LaneIndicator> with BleScan {
         });
       }
     }
-  }
-
-  @override
-  void dispose() {
-    timer?.cancel();
-    super.dispose();
+    startTimer();
   }
 
   final BoxShadow boxShadow = BoxShadow(

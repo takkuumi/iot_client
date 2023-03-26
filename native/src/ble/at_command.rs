@@ -1,5 +1,5 @@
-use super::serial::{send_serialport, send_serialport2};
-use anyhow::{bail, Result};
+use super::serial::send_serialport;
+use anyhow::Result;
 
 mod AtCommand {
   pub const AT: &str = "AT"; //串口通讯测试
@@ -27,7 +27,7 @@ mod AtCommand {
 
 pub fn get_ndid() -> Result<Vec<u8>> {
   let data = format!("{}\r\n", AtCommand::AT_NDID);
-  let mut buffer = [0; 20];
+  let mut buffer = Vec::<u8>::new();
   let res = send_serialport(data.as_bytes(), &mut buffer);
   eprintln!("res: {:?}", res);
 
@@ -38,7 +38,7 @@ pub fn get_ndid() -> Result<Vec<u8>> {
 
 pub fn set_ndid(id: &str) -> Result<Vec<u8>> {
   let data = format!("{}={}\r\n", AtCommand::AT_NDID, id);
-  let mut buffer = [0; 20];
+  let mut buffer = Vec::<u8>::new();
   let _res = send_serialport(data.as_bytes(), &mut buffer)?;
 
   let output = super::SerialResponse(&buffer);
@@ -47,7 +47,7 @@ pub fn set_ndid(id: &str) -> Result<Vec<u8>> {
 
 pub fn ndreset() -> Result<Vec<u8>> {
   let data = format!("{}\r\n", AtCommand::AT_NDRESET);
-  let mut buffer = [0; 20];
+  let mut buffer = Vec::<u8>::new();
   let _res = send_serialport(data.as_bytes(), &mut buffer)?;
 
   let output = super::SerialResponse(&buffer);
@@ -56,7 +56,7 @@ pub fn ndreset() -> Result<Vec<u8>> {
 
 pub fn restore() -> Result<Vec<u8>> {
   let data = format!("{}\r\n", AtCommand::AT_RESTORE);
-  let mut buffer = [0; 20];
+  let mut buffer = Vec::<u8>::new();
   let _res = send_serialport(data.as_bytes(), &mut buffer)?;
 
   let output = super::SerialResponse(&buffer);
@@ -65,7 +65,7 @@ pub fn restore() -> Result<Vec<u8>> {
 
 pub fn set_mode(mode: u8) -> Result<Vec<u8>> {
   let data = format!("{}={}\r\n", AtCommand::AT_MODE, mode);
-  let mut buffer = [0; 20];
+  let mut buffer = Vec::<u8>::new();
   let _res = send_serialport(data.as_bytes(), &mut buffer)?;
 
   let output = super::SerialResponse(&buffer);
@@ -74,7 +74,7 @@ pub fn set_mode(mode: u8) -> Result<Vec<u8>> {
 
 pub fn reboot() -> Result<Vec<u8>> {
   let data = format!("{}\r\n", AtCommand::AT_REBOOT);
-  let mut buffer = [0; 20];
+  let mut buffer = Vec::<u8>::new();
   let _res = send_serialport(data.as_bytes(), &mut buffer)?;
   let output = super::SerialResponse(&buffer);
 
@@ -100,34 +100,10 @@ pub fn at_ndrpt(id: &str, data: &[u8]) -> Result<Vec<u8>> {
   bytes.extend_from_slice(r.as_bytes());
   bytes.extend_from_slice("\r\n".as_bytes());
 
-  let mut buffer = [0; 200];
+  let mut buffer = Vec::<u8>::new();
   let _res = send_serialport(&bytes, &mut buffer)?;
   let output = super::SerialResponse(&buffer);
   Ok(output.to_buffer())
-}
-
-pub fn at_ndrpt2(id: &str, data: &[u8]) -> Result<()> {
-  let size = data.len() + 5;
-
-  let crc_data = super::crc16::crc(data);
-  let crc_data = u16::from_le_bytes(crc_data.to_be_bytes());
-  let mut bytes = Vec::<u8>::new();
-  bytes.extend_from_slice(AtCommand::AT_NDRPT.as_bytes());
-  bytes.push(b'=');
-  bytes.extend_from_slice(id.as_bytes());
-  bytes.push(b',');
-  bytes.extend_from_slice(size.to_string().as_bytes());
-  bytes.push(b',');
-  bytes.push(b'\xc8');
-
-  bytes.extend_from_slice(data);
-  let r = format!("{:04X}", crc_data);
-  bytes.extend_from_slice(r.as_bytes());
-  bytes.extend_from_slice("\r\n".as_bytes());
-
-  let _res = send_serialport2(&bytes)?;
-
-  Ok(())
 }
 
 pub fn at_ndrpt_test() -> Result<Vec<u8>> {

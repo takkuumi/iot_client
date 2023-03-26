@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_scan_bluetooth/flutter_scan_bluetooth.dart';
 import 'package:iot_client/ffi.dart';
 import 'package:iot_client/utils/ble_scan.dart';
 import 'package:iot_client/utils/tool.dart';
@@ -38,24 +39,27 @@ class Device {
 }
 
 class _LightInsideState extends State<LightInside>
-    with BleScan, SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
   List<Device> devices = [];
 
   final GlobalKey<ScaffoldMessengerState> key =
-      GlobalKey<ScaffoldMessengerState>(debugLabel: 'wind_speed');
+      GlobalKey<ScaffoldMessengerState>(debugLabel: 'light_inside');
+
+  late FlutterScanBluetooth bluetooth = FlutterScanBluetooth();
 
   Timer? timer;
-  Duration timerDuration = Duration(seconds: 3);
 
   void startTimer() {
-    timer = Timer.periodic(timerDuration, (timer) async {
-      await readDevice(atRead("0200"));
-    });
+    // timer = Timer.periodic(timerDuration, (timer) async {
+    //   await readDevice(atRead("0200"));
+    // });
   }
 
   @override
   void initState() {
-    scanListen((device) {
+    super.initState();
+    bluetooth.requestPermissions();
+    bluetooth.devices.listen((device) {
       String name = device.name;
       String address = device.address;
 
@@ -67,45 +71,16 @@ class _LightInsideState extends State<LightInside>
       }
     });
 
-    scanStopped((device) {
-      setState(() {
-        scanning = false;
-      });
-    });
+    Future.delayed(const Duration(seconds: 5), bluetooth.stopScan);
 
-    startTimer();
-    scan();
-
-    super.initState();
+    bluetooth.startScan(pairedDevices: false);
   }
 
   @override
   void dispose() {
-    timer?.cancel();
+    bluetooth.stopScan();
+    bluetooth.close();
     super.dispose();
-  }
-
-  Future<void> scan() async {
-    await checkAndAskPermissions();
-    try {
-      if (scanning) {
-        await bluetooth.stopScan();
-        showSnackBar("扫描停止", key);
-        setState(() {
-          devices = [];
-        });
-      } else {
-        await bluetooth.startScan(
-          pairedDevices: false,
-        );
-        showSnackBar("正在搜寻蓝牙设备", key);
-        setState(() {
-          scanning = true;
-        });
-      }
-    } on PlatformException catch (e) {
-      showSnackBar(e.toString(), key);
-    }
   }
 
   String atOpen(String addr) {

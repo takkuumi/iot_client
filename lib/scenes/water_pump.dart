@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_scan_bluetooth/flutter_scan_bluetooth.dart';
 import 'package:iot_client/ffi.dart';
 import 'package:iot_client/utils/ble_scan.dart';
 import 'package:iot_client/utils/tool.dart';
@@ -38,15 +39,19 @@ class Device {
 }
 
 class _WaterPumpState extends State<WaterPump>
-    with BleScan, SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
   List<Device> devices = [];
 
   final GlobalKey<ScaffoldMessengerState> key =
       GlobalKey<ScaffoldMessengerState>(debugLabel: 'water_pump');
 
+  late FlutterScanBluetooth bluetooth = FlutterScanBluetooth();
+
   @override
   void initState() {
-    scanListen((device) {
+    super.initState();
+    bluetooth.requestPermissions();
+    bluetooth.devices.listen((device) {
       String name = device.name;
       String address = device.address;
 
@@ -58,43 +63,16 @@ class _WaterPumpState extends State<WaterPump>
       }
     });
 
-    scanStopped((device) {
-      setState(() {
-        scanning = false;
-      });
-    });
+    Future.delayed(const Duration(seconds: 5), bluetooth.stopScan);
 
-    scan();
-
-    super.initState();
+    bluetooth.startScan(pairedDevices: false);
   }
 
   @override
   void dispose() {
+    bluetooth.stopScan();
+    bluetooth.close();
     super.dispose();
-  }
-
-  Future<void> scan() async {
-    await checkAndAskPermissions();
-    try {
-      if (scanning) {
-        await bluetooth.stopScan();
-        showSnackBar("扫描停止", key);
-        setState(() {
-          devices = [];
-        });
-      } else {
-        await bluetooth.startScan(
-          pairedDevices: false,
-        );
-        showSnackBar("正在搜寻蓝牙设备", key);
-        setState(() {
-          scanning = true;
-        });
-      }
-    } on PlatformException catch (e) {
-      showSnackBar(e.toString(), key);
-    }
   }
 
   final BoxShadow boxShadow = BoxShadow(

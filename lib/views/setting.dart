@@ -122,6 +122,58 @@ class _SettingAppState extends State<SettingApp> {
         });
   }
 
+  Future<void> settingNetworkUrlDialog(BuildContext context) async {
+    BuildContext _c = context;
+    return await showDialog(
+        context: context,
+        builder: (context) {
+          bool isChecked = false;
+          return StatefulBuilder(builder: (context, setState) {
+            return AlertDialog(
+              content: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextFormField(
+                        keyboardType: TextInputType.url,
+                        maxLength: 100,
+                        maxLines: 5,
+                        controller: _textEditingController,
+                        validator: (value) {
+                          return value!.isNotEmpty ? null : "请输入服务地址";
+                        },
+                        decoration: InputDecoration(hintText: ""),
+                      ),
+                    ],
+                  )),
+              title: Text('设置服务地址'),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('取消'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    if (_formKey.currentState?.validate() ?? false) {
+                      String url = _textEditingController.text;
+                      SharedPreferences prefs = await _prefs;
+
+                      prefs.setString('network_url', url);
+
+                      Navigator.canPop(_c);
+                    }
+                  },
+                  child: Text('设置'),
+                )
+              ],
+            );
+          });
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -170,6 +222,33 @@ class _SettingAppState extends State<SettingApp> {
                     return Text('NDID=');
                   },
                 ),
+              ),
+            ],
+          ),
+          SettingsSection(
+            title: Text('服务'),
+            tiles: <SettingsTile>[
+              SettingsTile.navigation(
+                leading: Icon(Icons.bluetooth_connected),
+                title: Text('服务地址'),
+                value: FutureBuilder(
+                  future: _prefs.then((SharedPreferences prefs) {
+                    return prefs.getString('network_url');
+                  }),
+                  initialData: '',
+                  builder: (context, AsyncSnapshot<String?> snapshot) {
+                    if (snapshot.hasData &&
+                        snapshot.connectionState == ConnectionState.done) {
+                      String url = snapshot.data ?? '';
+                      return Text(url);
+                    }
+
+                    return Text('');
+                  },
+                ),
+                onPressed: (context) {
+                  settingNetworkUrlDialog(context);
+                },
               ),
             ],
           ),

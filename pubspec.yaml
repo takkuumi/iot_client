@@ -42,7 +42,7 @@ dependencies:
   settings_ui: ^2.0.2
   shared_preferences: ^2.0.18
   webview_flutter: ^4.0.6
-  flutter_rust_bridge: ^1.71.1
+  flutter_rust_bridge: ^1.72.0
   freezed_annotation: ^2.2.0
   carousel_slider: ^4.2.1
   circular_reveal_animation: ^2.0.1

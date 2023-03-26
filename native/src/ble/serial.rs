@@ -1,7 +1,7 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{bail, Context, Ok, Result};
 use serialport::{DataBits, FlowControl, StopBits};
 
-fn open_serialport() -> Result<Box<dyn serialport::SerialPort>> {
+fn open_tty_swk0() -> Result<Box<dyn serialport::SerialPort>> {
   serialport::new("/dev/ttySWK0", 115200)
     .data_bits(DataBits::Eight)
     .stop_bits(StopBits::One)
@@ -11,35 +11,20 @@ fn open_serialport() -> Result<Box<dyn serialport::SerialPort>> {
     .context("failed to open device!")
 }
 
-pub fn send_serialport(data: &[u8], buffer: &mut [u8]) -> Result<usize> {
-  let mut port = open_serialport()?;
+pub fn send_serialport(data: &[u8], buffer: &mut Vec<u8>) -> Result<()> {
+  let mut port = open_tty_swk0()?;
 
-  if port.write(data).is_ok() {
-    port.flush()?;
-    return port.read(buffer).map_err(Into::into);
-  }
+  if port.write_all(data).is_ok() {
+    let mut buf = [0_u8; 9];
+    let size = port.read(&mut buf)?;
+    buffer.extend_from_slice(&buf[..size]);
 
-  bail!("failed to wirte data")
-}
-
-pub fn send_serialport2(data: &[u8]) -> Result<usize> {
-  let mut port = open_serialport()?;
-
-  if port.write(data).is_ok() {
-    loop {
-      let mut buffer = [0_u8; 200];
-      match port.read(&mut buffer) {
-        Ok(size) => {
-          println!("size: {}", size);
-          println!("buffer: {:?}", buffer);
-        }
-        Err(err) => {
-          println!("error");
-          return Err(err.into());
-        }
-      };
+    let mut resp_buf = [0_u8; 40];
+    if port.read_exact(&mut resp_buf).is_ok() {
+      buffer.extend_from_slice(&resp_buf);
     }
+    return Ok(());
   }
 
-  bail!("failed to wirte data")
+  bail!("failed to wirte data!")
 }

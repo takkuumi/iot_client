@@ -28,19 +28,32 @@ class _LightInsideState extends State<LightInside>
   late FlutterScanBluetooth bluetooth;
 
   Timer? timer;
-  late String windSpeed = '';
+  late String windSpeed = '亮度值:--\r\n报警值:--\r\n故障码:--';
+
+  // void getAtWindSpeed(String resp) {
+  //   // 0x1000
+  //   // 亮度值 报警值 故障码
+  //   setState(() {
+  //     windSpeed = "亮度值:--\r\n报警值:--\r\n故障码:--";
+  //   });
+  // }
 
   void getAtWindSpeed(String resp) {
-    // 0x1000
-    // 亮度值 报警值 故障码
+    // 风速
+    // 风向
+    // 报警值
+    // 故障码
+    Random random = Random();
+    int randTemp = random.nextInt(5) + 18;
     setState(() {
-      windSpeed = "亮度值:--\r\n报警值:--\r\n故障码:--";
+      windSpeed = "亮度值:${randTemp}\r\n报警值:300\r\n故障码:1";
     });
   }
 
   void startTimer() {
     timer = Timer.periodic(timerDuration, (timer) async {
-      await readDevice("010303E80004", getAtWindSpeed);
+      //  await readDevice("010303E80004", getAtWindSpeed);
+      getAtWindSpeed("");
     });
   }
 
@@ -62,9 +75,10 @@ class _LightInsideState extends State<LightInside>
       }
     });
 
-    readDevice("010303F60004", getAtWindSpeed);
+    // readDevice("010303F60004", getAtWindSpeed);
     startTimer();
     super.initState();
+    getAtWindSpeed("");
   }
 
   @override

@@ -28,19 +28,25 @@ class _CoViState extends State<CoVi> with SingleTickerProviderStateMixin {
 
   Timer? timer;
 
-  late String windSpeed = '';
+  late String windSpeed = 'CO浓度值:4.1\r\nVI值:0\r\nCO报警值:100\r\nVI报警值:100';
 
   void getAtWindSpeed(String resp) {
-    // 0x1014
-    // CO浓度值，VI值,CO报警值，VI报警值
+    // 风速
+    // 风向
+    // 报警值
+    // 故障码
+    Random random = Random();
+    double randTemp = random.nextDouble() + 4;
+    String temp = randTemp.toStringAsFixed(1);
     setState(() {
-      windSpeed = "CO浓度值:--\r\nVI值:--\r\nCO报警值:--\r\nVI报警值:--";
+      windSpeed = "CO浓度值:${temp}\r\nVI值:0\r\nCO报警值:100\r\nVI报警值:100";
     });
   }
 
   void startTimer() {
     timer = Timer.periodic(timerDuration, (timer) async {
-      await readDevice("010303F60004", getAtWindSpeed);
+      // await readDevice("010303F60004", getAtWindSpeed);
+      getAtWindSpeed("");
     });
   }
 
@@ -65,9 +71,11 @@ class _CoViState extends State<CoVi> with SingleTickerProviderStateMixin {
     // Timer.periodic(timerDuration, (timer) async {
     //   await readDevice(atRead("0200"), false);
     // });
-    readDevice("010303F60004", getAtWindSpeed);
+    // readDevice("010303F60004", getAtWindSpeed);
+
     startTimer();
     super.initState();
+    getAtWindSpeed("");
   }
 
   @override
@@ -152,7 +160,7 @@ class _CoViState extends State<CoVi> with SingleTickerProviderStateMixin {
           width: 100,
           height: 100,
           alignment: Alignment.center,
-          child: Text("100.0"),
+          child: Text(windSpeed),
         ),
       ],
     );

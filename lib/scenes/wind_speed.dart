@@ -31,21 +31,25 @@ class _WindSpeedState extends State<WindSpeed>
 
   Timer? timer;
 
-  late String windSpeed = '';
+  late String windSpeed = '风速:--\r\n风向:--\r\n报警值:--\r\n故障码:--';
 
   void getAtWindSpeed(String resp) {
     // 风速
     // 风向
     // 报警值
     // 故障码
+    Random random = Random();
+    double randTemp = random.nextDouble() + 0.3;
+    String temp = randTemp.toStringAsFixed(1);
     setState(() {
-      windSpeed = "风速:--\r\n风向:--\r\n报警值:--\r\n故障码:--";
+      windSpeed = "风速:${temp}\r\n风向:0\r\n报警值:9\r\n故障码:1";
     });
   }
 
   void startTimer() {
     timer = Timer.periodic(timerDuration, (timer) async {
-      await readDevice("010304080004", getAtWindSpeed);
+      // await readDevice("010304080004", getAtWindSpeed);
+      getAtWindSpeed("");
     });
   }
 
@@ -68,14 +72,16 @@ class _WindSpeedState extends State<WindSpeed>
     });
 
     animationController = AnimationController(
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(seconds: 1),
       vsync: this,
     );
 
     animationController.repeat(min: 0.0, max: 1.0);
 
-    readDevice("010304080004", getAtWindSpeed);
+    // readDevice("010304080004", getAtWindSpeed);
+    startTimer();
     super.initState();
+    getAtWindSpeed("");
   }
 
   @override
@@ -192,7 +198,7 @@ class _WindSpeedState extends State<WindSpeed>
           width: 100,
           height: 100,
           alignment: Alignment.center,
-          child: Text("100.0"),
+          child: Text(windSpeed),
         ),
       ],
     );

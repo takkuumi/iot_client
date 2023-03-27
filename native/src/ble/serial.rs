@@ -1,27 +1,28 @@
-use std::sync::Mutex;
-
 use anyhow::{bail, Context, Ok, Result};
 use once_cell::sync::Lazy;
-use serialport::{DataBits, FlowControl, StopBits};
+use serialport::{ClearBuffer, DataBits, FlowControl, StopBits, TTYPort};
+use std::io::{Read, Write};
+use std::sync::Mutex;
 
 static TTYSWK0: Lazy<Mutex<Option<Box<dyn serialport::SerialPort>>>> =
   Lazy::new(|| Mutex::new(None));
 
-fn open_tty_swk0() -> Result<Box<dyn serialport::SerialPort>> {
-  serialport::new("/dev/ttySWK0", 115200)
+fn open_tty_swk0() -> Result<TTYPort> {
+  serialport::new("/dev/tty.usbserial-1410", 921600)
   // serialport::new("/dev/tty.usbserial-1410", 115200)
     .data_bits(DataBits::Eight)
     .stop_bits(StopBits::One)
-    .flow_control(FlowControl::None)
+    .flow_control(FlowControl::Hardware)
     .timeout(core::time::Duration::from_secs(5))
-    .open()
+    .open_native()
     .context("failed to open device!")
 }
 
 pub fn send_serialport(data: &[u8], buffer: &mut Vec<u8>) -> Result<()> {
   let mut port = open_tty_swk0()?;
 
-  if port.write_all(data).is_ok() {
+  if port.write(data).is_ok() {
+    port.flush();
     let mut buf = [0_u8; 6];
     let size = port.read(&mut buf)?;
     buffer.extend_from_slice(&buf[..size]);

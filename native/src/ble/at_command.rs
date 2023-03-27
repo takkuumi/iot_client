@@ -42,6 +42,14 @@ pub fn set_ndid(id: &str) -> Result<Vec<u8>> {
   Ok(buffer)
 }
 
+pub fn set_baud() -> Result<Vec<u8>> {
+  let data = format!("{}=115200\r\n", AtCommand::AT_BAUD);
+  let mut buffer = Vec::<u8>::new();
+  let _res = send_serialport(data.as_bytes(), &mut buffer)?;
+
+  Ok(buffer)
+}
+
 pub fn ndreset() -> Result<Vec<u8>> {
   let data = format!("{}\r\n", AtCommand::AT_NDRESET);
   let mut buffer = Vec::<u8>::new();
@@ -92,6 +100,8 @@ pub fn at_ndrpt(id: &str, data: &[u8]) -> Result<Vec<u8>> {
   bytes.extend_from_slice(r.as_bytes());
   bytes.extend_from_slice("\r\n".as_bytes());
 
+  eprintln!("bytes: {}", String::from_utf8_lossy(&bytes));
+
   let mut buffer = Vec::<u8>::new();
   let _res = send_serialport(&bytes, &mut buffer)?;
   Ok(buffer)
@@ -115,7 +125,7 @@ mod test {
   //[65, 84, 43, 78, 68, 82, 80, 84, 61, 48, 48, 48, 49, 44, 49, 55, 44, 200, 48, 49, 48, 53, 48, 50, 48, 48, 70, 70, 48, 48, 56, 68, 56, 50, 13, 10]
   #[test]
   pub fn at_ndrpt_test() {
-    let res = super::at_ndrpt("0001", "01050200FF00".as_bytes());
+    let res = super::at_ndrpt("0001", "010502010000".as_bytes());
     println!("res: {:?}", res);
     println!("res: {}", String::from_utf8_lossy(&res.unwrap()));
   }
@@ -128,19 +138,39 @@ mod test {
   }
 
   #[test]
+  pub fn at_ndrpt_test4() {
+    let res = super::at_ndrpt("0001", "010F020000030105".as_bytes());
+    println!("res: {:?}", res);
+    println!("res: {}", String::from_utf8_lossy(&res.unwrap()));
+  }
+
+  #[test]
   pub fn at_ndrpt_test2() {
     // 0101002190
 
-    let data = "010100000001".as_bytes();
+    let mut i = 0;
+    loop {
+      if i > 100 {
+        break;
+      }
+      let res = super::set_baud().unwrap();
+      println!("res: {}", String::from_utf8_lossy(&res));
+      i += 1;
+    }
 
-    let res = super::at_ndrpt("0001", data);
+    // super::reboot().unwrap();
 
-    println!("res: {:?}", res);
-    println!("res: {}", String::from_utf8_lossy(&res.unwrap()));
+    // super::ndreset().unwrap();
+    // let data = "010100000001".as_bytes();
 
-    let res = super::at_ndrpt("0001", data);
+    // let res = super::at_ndrpt("0001", data);
 
-    println!("res: {:?}", res);
-    println!("res: {}", String::from_utf8_lossy(&res.unwrap()));
+    // println!("res: {:?}", res);
+
+    // let res = super::at_ndrpt("0001", data);
+
+    // super::restore().unwrap();
+    // // println!("res: {:?}", res);
+    // println!("res: {}", String::from_utf8_lossy(&res));
   }
 }

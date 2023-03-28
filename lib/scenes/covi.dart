@@ -54,7 +54,7 @@ class _CoViState extends State<CoVi> with SingleTickerProviderStateMixin {
 
   void startTimer() {
     timer = Timer.periodic(timerDuration, (timer) async {
-      String? resp = await readDevice(readAt("1032"));
+      String? resp = await readDevice(readAt("09CA"));
       respHandler(resp);
     });
   }

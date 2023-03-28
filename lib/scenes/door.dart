@@ -12,7 +12,7 @@ class Door extends StatefulWidget {
 
 class _DoorState extends State<Door> with SingleTickerProviderStateMixin {
   final GlobalKey<ScaffoldMessengerState> key =
-      GlobalKey<ScaffoldMessengerState>(debugLabel: 'water_pump');
+      GlobalKey<ScaffoldMessengerState>(debugLabel: 'door');
 
   @override
   void initState() {

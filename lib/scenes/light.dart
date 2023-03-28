@@ -12,7 +12,7 @@ class Light extends StatefulWidget {
 
 class _LightState extends State<Light> with SingleTickerProviderStateMixin {
   final GlobalKey<ScaffoldMessengerState> key =
-      GlobalKey<ScaffoldMessengerState>(debugLabel: 'water_pump');
+      GlobalKey<ScaffoldMessengerState>(debugLabel: 'light');
 
   @override
   void initState() {

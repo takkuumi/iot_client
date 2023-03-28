@@ -42,10 +42,11 @@ List<int> parseWindSpreed(String? response) {
 }
 
 List<int> parseLight(String? response) {
+  debugPrint(response ?? '');
   List<int> result = [0, 0, 0];
   if (response == null) return result;
   bool ok = getAtOk(response);
-  bool checkLen = response.contains(",25,");
+  bool checkLen = response.contains(",23,");
   if (!ok || !checkLen) return result;
 
   int headerIndex = response.indexOf("010306");

@@ -3,16 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:iot_client/scenes/widgets/util.dart';
 import 'package:iot_client/views/components/banner.dart';
 
-class Fan extends StatefulWidget {
-  const Fan({Key? key}) : super(key: key);
+class Door extends StatefulWidget {
+  const Door({Key? key}) : super(key: key);
 
   @override
-  State<Fan> createState() => _FanState();
+  State<Door> createState() => _DoorState();
 }
 
-class _FanState extends State<Fan> with SingleTickerProviderStateMixin {
+class _DoorState extends State<Door> with SingleTickerProviderStateMixin {
   final GlobalKey<ScaffoldMessengerState> key =
-      GlobalKey<ScaffoldMessengerState>(debugLabel: 'fan');
+      GlobalKey<ScaffoldMessengerState>(debugLabel: 'water_pump');
 
   @override
   void initState() {
@@ -55,7 +55,7 @@ class _FanState extends State<Fan> with SingleTickerProviderStateMixin {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Image.asset(
-                "images/icons/yentilation fan_icon@2x.png",
+                "images/icons/door.png",
                 width: 80,
                 height: 80,
               ),
@@ -68,21 +68,14 @@ class _FanState extends State<Fan> with SingleTickerProviderStateMixin {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ElevatedButton(
-                child: Text("正转"),
+                child: Text("开门"),
                 onPressed: () {},
               ),
               Container(
                 width: 15,
               ),
               ElevatedButton(
-                child: Text("反转"),
-                onPressed: () {},
-              ),
-              Container(
-                width: 15,
-              ),
-              ElevatedButton(
-                child: Text("停止"),
+                child: Text("关门"),
                 onPressed: () {},
               ),
             ],
@@ -94,10 +87,9 @@ class _FanState extends State<Fan> with SingleTickerProviderStateMixin {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              createSig('远程信号:', '无'),
-              createSig('正转信号:', '无'),
-              createSig('反转信号:', '无'),
-              createSig('故障信号:', '无'),
+              createSig('开到位信号：', '无'),
+              createSig('关到位信号：', '无'),
+              createSig('故障信号：', '无'),
             ],
           ),
         )
@@ -111,7 +103,7 @@ class _FanState extends State<Fan> with SingleTickerProviderStateMixin {
       key: key,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('通风风机'),
+          title: const Text('卷闸门'),
         ),
         body: SingleChildScrollView(
           child: Container(

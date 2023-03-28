@@ -1,10 +1,12 @@
 import 'dart:async';
 
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:iot_client/device.dart';
 import 'package:iot_client/ffi.dart';
 import 'package:iot_client/utils/at_parse.dart';
+import 'package:iot_client/views/components/banner.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
@@ -26,7 +28,11 @@ class _CoViState extends State<CoVi> with SingleTickerProviderStateMixin {
 
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
-  late String windSpeed = 'CO浓度值:4.1\r\nVI值:0\r\nCO报警值:100\r\nVI报警值:100';
+  late String windSpeed1 = '--';
+  late String windSpeed2 = '--';
+  late String windSpeed3 = '--';
+  late String windSpeed4 = '--';
+
   List<int> recoder = [0, 0, 0, 0];
 
   void respHandler(String? resp) {
@@ -39,8 +45,10 @@ class _CoViState extends State<CoVi> with SingleTickerProviderStateMixin {
     }
 
     setState(() {
-      windSpeed =
-          "CO浓度值:${recoder[0]}\r\nVI值:${recoder[1]}\r\nCO报警值:${recoder[2]}\r\nVI报警值:${recoder[3]}";
+      windSpeed1 = "${recoder[0]} ppm";
+      windSpeed2 = "${recoder[1]} ppm";
+      windSpeed3 = "${recoder[2]} ppm";
+      windSpeed4 = "${recoder[3]} ppm";
     });
   }
 
@@ -108,10 +116,6 @@ class _CoViState extends State<CoVi> with SingleTickerProviderStateMixin {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Container(
-          child: Text("COVI检测"),
-          margin: EdgeInsets.symmetric(vertical: 10, horizontal: 5),
-        ),
-        Container(
           width: 150,
           height: 150,
           alignment: Alignment.center,
@@ -124,23 +128,101 @@ class _CoViState extends State<CoVi> with SingleTickerProviderStateMixin {
             borderRadius: BorderRadius.circular(75),
             boxShadow: [boxShadow],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+          child: Image.asset(
+            "images/icons/environmental testing_icon@2x.png",
+            width: 120,
+            height: 120,
+          ),
+        ),
+        Container(
+          margin: EdgeInsets.symmetric(vertical: 15),
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Image.asset(
-                "images/icons/environmental testing_icon@2x.png",
-                width: 80,
-                height: 80,
-              ),
+              Container(
+                  height: 40,
+                  alignment: Alignment.center,
+                  margin: EdgeInsets.symmetric(horizontal: 10),
+                  child: Row(children: [
+                    Text(
+                      "Co浓度值:",
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                    Text(
+                      windSpeed1,
+                      style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.greenAccent),
+                    ),
+                  ])),
+              Container(
+                  height: 40,
+                  alignment: Alignment.center,
+                  margin: EdgeInsets.symmetric(horizontal: 10),
+                  child: Row(children: [
+                    Text(
+                      "VI值:",
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                    Text(
+                      windSpeed2,
+                      style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.greenAccent),
+                    ),
+                  ])),
             ],
           ),
         ),
         Container(
-          width: 100,
-          height: 100,
-          alignment: Alignment.center,
-          child: Text(windSpeed),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                  height: 40,
+                  alignment: Alignment.center,
+                  margin: EdgeInsets.symmetric(horizontal: 10),
+                  child: Row(children: [
+                    Text(
+                      "Co报警值:",
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                    Text(
+                      windSpeed3,
+                      style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.yellowAccent),
+                    ),
+                  ])),
+              Container(
+                  height: 40,
+                  alignment: Alignment.center,
+                  margin: EdgeInsets.symmetric(horizontal: 10),
+                  child: Row(children: [
+                    Text(
+                      "VI报警值:",
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                    Text(
+                      windSpeed4,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.redAccent,
+                      ),
+                    ),
+                  ])),
+            ],
+          ),
         ),
       ],
     );
@@ -155,7 +237,6 @@ class _CoViState extends State<CoVi> with SingleTickerProviderStateMixin {
           title: const Text('COVI检测'),
         ),
         body: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(vertical: 50),
           child: Container(
             alignment: Alignment.center,
             child: Column(
@@ -163,15 +244,21 @@ class _CoViState extends State<CoVi> with SingleTickerProviderStateMixin {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
-                  width: 480,
-                  padding: EdgeInsets.symmetric(horizontal: 50),
-                  child: Wrap(
-                    alignment: WrapAlignment.spaceEvenly,
-                    spacing: 40,
-                    children: [
-                      createLane1(),
-                    ],
+                  child: CarouselSlider(
+                    options: CarouselOptions(
+                      aspectRatio: 16 / 10,
+                      enlargeCenterPage: true,
+                      scrollDirection: Axis.horizontal,
+                      autoPlay: true,
+                      height: 260,
+                    ),
+                    items: createImageSliders(),
                   ),
+                ),
+                Container(
+                  width: 510,
+                  padding: EdgeInsets.symmetric(vertical: 60),
+                  child: createLane1(),
                 ),
               ],
             ),

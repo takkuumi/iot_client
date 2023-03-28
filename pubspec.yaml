@@ -84,6 +84,8 @@ flutter:
     - images/banner/img_2@2x.png
     - images/banner/img_3.png
     - images/banner/img_3@2x.png
+    - images/fan/banner.png
+    - images/fan/fan.png
     - images/icons/bluetooth_after.png
     - images/icons/bluetooth_after@2x.png
     - images/icons/bluetooth_before.png
@@ -120,6 +122,12 @@ flutter:
     - images/icons/wind speed and direction@2x.png
     - images/icons/yentilation fan_icon.png
     - images/icons/yentilation fan_icon@2x.png
+    - images/icons/door.png
+    - images/icons/sun.png
+    - images/icons/light_outside.png
+    - images/icons/more.png
+    - images/icons/traffic-lights.png
+    - images/light_inside/banner.png
     - images/light_inside/img_3@2x.png
     - images/light_inside/img_2@2x.png
     - images/light_inside/img_1@2x.png

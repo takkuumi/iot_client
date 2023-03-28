@@ -1,9 +1,11 @@
 import 'dart:async';
 
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:iot_client/ffi.dart';
 import 'package:iot_client/utils/at_parse.dart';
+import 'package:iot_client/views/components/banner.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
@@ -26,7 +28,10 @@ class _WindSpeedState extends State<WindSpeed>
 
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
-  late String windSpeed = '风速:--\r\n风向:--\r\n报警值:--\r\n故障码:--';
+  late String windSpeed1 = '--';
+  late String windSpeed2 = '--';
+  late String windSpeed3 = '--';
+  late String windSpeed4 = '--';
 
   List<int> recoder = [0, 0, 0, 0];
 
@@ -40,8 +45,10 @@ class _WindSpeedState extends State<WindSpeed>
     }
 
     setState(() {
-      windSpeed =
-          "风速:${recoder[0]}\r\n风向:${recoder[1]}\r\n报警值:${recoder[2]}\r\n故障码:${recoder[3]}";
+      windSpeed1 = "${recoder[0] / 10} m/s";
+      windSpeed2 = "${recoder[1]}";
+      windSpeed3 = "${recoder[2] / 10} m/s";
+      windSpeed4 = "${recoder[3]}";
     });
   }
 
@@ -118,10 +125,6 @@ class _WindSpeedState extends State<WindSpeed>
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Container(
-          child: Text("风速风向"),
-          margin: EdgeInsets.symmetric(vertical: 10, horizontal: 5),
-        ),
-        Container(
           width: 150,
           height: 150,
           alignment: Alignment.center,
@@ -142,18 +145,102 @@ class _WindSpeedState extends State<WindSpeed>
                 turns: Tween(begin: 0.0, end: 1.0).animate(animationController),
                 child: Image.asset(
                   "images/icons/wind speed and direction@2x.png",
-                  width: 80,
-                  height: 80,
+                  width: 120,
+                  height: 120,
                 ),
               ),
             ],
           ),
         ),
         Container(
-          width: 100,
-          height: 100,
-          alignment: Alignment.center,
-          child: Text(windSpeed),
+          margin: EdgeInsets.symmetric(vertical: 15),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                  height: 40,
+                  alignment: Alignment.center,
+                  margin: EdgeInsets.symmetric(horizontal: 10),
+                  child: Row(children: [
+                    Text(
+                      "风速:",
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                    Text(
+                      windSpeed1,
+                      style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.greenAccent),
+                    ),
+                  ])),
+              Container(
+                  height: 40,
+                  alignment: Alignment.center,
+                  margin: EdgeInsets.symmetric(horizontal: 10),
+                  child: Row(children: [
+                    Text(
+                      "风向:",
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                    Text(
+                      windSpeed2,
+                      style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.greenAccent),
+                    ),
+                  ])),
+            ],
+          ),
+        ),
+        Container(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                  height: 40,
+                  alignment: Alignment.center,
+                  margin: EdgeInsets.symmetric(horizontal: 10),
+                  child: Row(children: [
+                    Text(
+                      "报警值:",
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                    Text(
+                      windSpeed3,
+                      style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.yellowAccent),
+                    ),
+                  ])),
+              Container(
+                  height: 40,
+                  alignment: Alignment.center,
+                  margin: EdgeInsets.symmetric(horizontal: 10),
+                  child: Row(children: [
+                    Text(
+                      "故障码:",
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                    Text(
+                      windSpeed4,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.redAccent,
+                      ),
+                    ),
+                  ])),
+            ],
+          ),
         ),
       ],
     );
@@ -168,7 +255,6 @@ class _WindSpeedState extends State<WindSpeed>
           title: const Text('风速风向'),
         ),
         body: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(vertical: 50),
           child: Container(
             alignment: Alignment.center,
             child: Column(
@@ -176,15 +262,21 @@ class _WindSpeedState extends State<WindSpeed>
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
-                  width: 480,
-                  padding: EdgeInsets.symmetric(horizontal: 50),
-                  child: Wrap(
-                    alignment: WrapAlignment.spaceEvenly,
-                    spacing: 40,
-                    children: [
-                      createLane1(),
-                    ],
+                  child: CarouselSlider(
+                    options: CarouselOptions(
+                      aspectRatio: 16 / 10,
+                      enlargeCenterPage: true,
+                      scrollDirection: Axis.horizontal,
+                      autoPlay: true,
+                      height: 260,
+                    ),
+                    items: createImageSliders(),
                   ),
+                ),
+                Container(
+                  width: 510,
+                  padding: EdgeInsets.symmetric(vertical: 60),
+                  child: createLane1(),
                 ),
               ],
             ),

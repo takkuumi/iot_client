@@ -3,9 +3,12 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:iot_client/scenes/covi.dart';
 import 'package:iot_client/scenes/cross_hole.dart';
+import 'package:iot_client/scenes/door.dart';
 import 'package:iot_client/scenes/fan.dart';
 import 'package:iot_client/scenes/lane_indicator.dart';
+import 'package:iot_client/scenes/light.dart';
 import 'package:iot_client/scenes/light_inside.dart';
+import 'package:iot_client/scenes/light_outside.dart';
 import 'package:iot_client/scenes/traffic_light.dart';
 import 'package:iot_client/scenes/water_pump.dart';
 import 'package:iot_client/scenes/wind_speed.dart';
@@ -65,7 +68,7 @@ class _HomeState extends State<Home> {
         assetIcon: "images/icons/environmental testing_icon@2x.png",
       ),
       createIcon(
-        "洞内照度",
+        "洞内光强",
         onTap: () {
           Navigation.navigateTo(
             context: context,
@@ -73,6 +76,36 @@ class _HomeState extends State<Home> {
           );
         },
         assetIcon: "images/icons/lght intensity detection@2x.png",
+      ),
+      createIcon(
+        "洞外光照",
+        onTap: () {
+          Navigation.navigateTo(
+            context: context,
+            screen: LightOutside(),
+          );
+        },
+        assetIcon: "images/icons/sun.png",
+      ),
+      createIcon(
+        "照明",
+        onTap: () {
+          Navigation.navigateTo(
+            context: context,
+            screen: Light(),
+          );
+        },
+        assetIcon: "images/icons/light_outside.png",
+      ),
+      createIcon(
+        "卷闸门",
+        onTap: () {
+          Navigation.navigateTo(
+            context: context,
+            screen: Door(),
+          );
+        },
+        assetIcon: "images/icons/door.png",
       ),
       createIcon(
         "交通信号灯",
@@ -114,6 +147,11 @@ class _HomeState extends State<Home> {
         },
         assetIcon: "images/icons/water pump hydraulics@2x.png",
       ),
+      createIcon(
+        "更多",
+        onTap: () {},
+        assetIcon: "images/icons/more.png",
+      ),
     ];
     return items[position];
   }
@@ -151,7 +189,7 @@ class _HomeState extends State<Home> {
                     mainAxisSpacing: 10,
                     crossAxisSpacing: 10,
                   ),
-                  itemCount: 8,
+                  itemCount: 12,
                   itemBuilder: (BuildContext context, int position) {
                     return __createGridViewItems(context, position);
                   }),

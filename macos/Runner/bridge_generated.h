@@ -26,9 +26,13 @@ uintptr_t new_dart_opaque(Dart_Handle handle);
 
 intptr_t init_frb_dart_api_dl(void *obj);
 
+void wire_init_tty_swk0(int64_t port_, uint64_t millis);
+
 void wire_get_ndid(int64_t port_);
 
 void wire_at_ndrpt(int64_t port_, struct wire_uint_8_list *id, struct wire_uint_8_list *data);
+
+void wire_at_ndrpt2(int64_t port_, struct wire_uint_8_list *id, struct wire_uint_8_list *data);
 
 void wire_at_ndrpt_test(int64_t port_);
 
@@ -50,8 +54,10 @@ void free_WireSyncReturn(WireSyncReturn ptr);
 
 static int64_t dummy_method_to_enforce_bundling(void) {
     int64_t dummy_var = 0;
+    dummy_var ^= ((int64_t) (void*) wire_init_tty_swk0);
     dummy_var ^= ((int64_t) (void*) wire_get_ndid);
     dummy_var ^= ((int64_t) (void*) wire_at_ndrpt);
+    dummy_var ^= ((int64_t) (void*) wire_at_ndrpt2);
     dummy_var ^= ((int64_t) (void*) wire_at_ndrpt_test);
     dummy_var ^= ((int64_t) (void*) wire_set_ndid);
     dummy_var ^= ((int64_t) (void*) wire_set_mode);

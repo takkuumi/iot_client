@@ -26,6 +26,23 @@ class NativeImpl implements Native {
   factory NativeImpl.wasm(FutureOr<WasmModule> module) =>
       NativeImpl(module as ExternalLibrary);
   NativeImpl.raw(this._platform);
+  Future<void> initTtySwk0({required int millis, dynamic hint}) {
+    var arg0 = _platform.api2wire_u64(millis);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner.wire_init_tty_swk0(port_, arg0),
+      parseSuccessData: _wire2api_unit,
+      constMeta: kInitTtySwk0ConstMeta,
+      argValues: [millis],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kInitTtySwk0ConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "init_tty_swk0",
+        argNames: ["millis"],
+      );
+
   Future<Uint8List> getNdid({dynamic hint}) {
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_get_ndid(port_),
@@ -58,6 +75,25 @@ class NativeImpl implements Native {
   FlutterRustBridgeTaskConstMeta get kAtNdrptConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
         debugName: "at_ndrpt",
+        argNames: ["id", "data"],
+      );
+
+  Future<Uint8List> atNdrpt2(
+      {required String id, required String data, dynamic hint}) {
+    var arg0 = _platform.api2wire_String(id);
+    var arg1 = _platform.api2wire_String(data);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner.wire_at_ndrpt2(port_, arg0, arg1),
+      parseSuccessData: _wire2api_uint_8_list,
+      constMeta: kAtNdrpt2ConstMeta,
+      argValues: [id, data],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kAtNdrpt2ConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "at_ndrpt2",
         argNames: ["id", "data"],
       );
 
@@ -191,6 +227,10 @@ class NativeImpl implements Native {
   Uint8List _wire2api_uint_8_list(dynamic raw) {
     return raw as Uint8List;
   }
+
+  void _wire2api_unit(dynamic raw) {
+    return;
+  }
 }
 
 // Section: api2wire
@@ -210,6 +250,11 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   @protected
   ffi.Pointer<wire_uint_8_list> api2wire_String(String raw) {
     return api2wire_uint_8_list(utf8.encoder.convert(raw));
+  }
+
+  @protected
+  int api2wire_u64(int raw) {
+    return raw;
   }
 
   @protected
@@ -319,6 +364,22 @@ class NativeWire implements FlutterRustBridgeWireBase {
   late final _init_frb_dart_api_dl = _init_frb_dart_api_dlPtr
       .asFunction<int Function(ffi.Pointer<ffi.Void>)>();
 
+  void wire_init_tty_swk0(
+    int port_,
+    int millis,
+  ) {
+    return _wire_init_tty_swk0(
+      port_,
+      millis,
+    );
+  }
+
+  late final _wire_init_tty_swk0Ptr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Uint64)>>(
+          'wire_init_tty_swk0');
+  late final _wire_init_tty_swk0 =
+      _wire_init_tty_swk0Ptr.asFunction<void Function(int, int)>();
+
   void wire_get_ndid(
     int port_,
   ) {
@@ -350,6 +411,26 @@ class NativeWire implements FlutterRustBridgeWireBase {
           ffi.Void Function(ffi.Int64, ffi.Pointer<wire_uint_8_list>,
               ffi.Pointer<wire_uint_8_list>)>>('wire_at_ndrpt');
   late final _wire_at_ndrpt = _wire_at_ndrptPtr.asFunction<
+      void Function(
+          int, ffi.Pointer<wire_uint_8_list>, ffi.Pointer<wire_uint_8_list>)>();
+
+  void wire_at_ndrpt2(
+    int port_,
+    ffi.Pointer<wire_uint_8_list> id,
+    ffi.Pointer<wire_uint_8_list> data,
+  ) {
+    return _wire_at_ndrpt2(
+      port_,
+      id,
+      data,
+    );
+  }
+
+  late final _wire_at_ndrpt2Ptr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Int64, ffi.Pointer<wire_uint_8_list>,
+              ffi.Pointer<wire_uint_8_list>)>>('wire_at_ndrpt2');
+  late final _wire_at_ndrpt2 = _wire_at_ndrpt2Ptr.asFunction<
       void Function(
           int, ffi.Pointer<wire_uint_8_list>, ffi.Pointer<wire_uint_8_list>)>();
 

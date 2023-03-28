@@ -47,7 +47,7 @@ class _FanState extends State<Fan> with SingleTickerProviderStateMixin {
   @override
   void dispose() {
     bluetooth.stopScan();
-    bluetooth.close();
+
     super.dispose();
   }
 

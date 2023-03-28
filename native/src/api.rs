@@ -1,11 +1,18 @@
-use anyhow::{bail, Result};
+use anyhow::Result;
 
+pub fn init_tty_swk0(millis: u64) -> Result<()> {
+  super::ble::serial::init_tty_swk0(millis)
+}
 pub fn get_ndid() -> Result<Vec<u8>> {
   super::ble::at_command::get_ndid()
 }
 
 pub fn at_ndrpt(id: String, data: String) -> Result<Vec<u8>> {
   super::ble::at_command::at_ndrpt(&id, data.as_bytes())
+}
+
+pub fn at_ndrpt2(id: String, data: String) -> Result<Vec<u8>> {
+  super::ble::at_command::at_ndrpt2(&id, data.as_bytes())
 }
 
 pub fn at_ndrpt_test() -> Result<Vec<u8>> {

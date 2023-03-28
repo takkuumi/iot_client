@@ -9,6 +9,10 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:uuid/uuid.dart';
 
 abstract class Native {
+  Future<void> initTtySwk0({required int millis, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kInitTtySwk0ConstMeta;
+
   Future<Uint8List> getNdid({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kGetNdidConstMeta;
@@ -17,6 +21,11 @@ abstract class Native {
       {required String id, required String data, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kAtNdrptConstMeta;
+
+  Future<Uint8List> atNdrpt2(
+      {required String id, required String data, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kAtNdrpt2ConstMeta;
 
   Future<Uint8List> atNdrptTest({dynamic hint});
 

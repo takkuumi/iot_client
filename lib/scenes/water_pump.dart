@@ -45,7 +45,7 @@ class _WaterPumpState extends State<WaterPump>
   @override
   void dispose() {
     bluetooth.stopScan();
-    bluetooth.close();
+
     super.dispose();
   }
 

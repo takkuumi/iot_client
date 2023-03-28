@@ -6,11 +6,11 @@ bool getAtOk(String atResponse) {
 
 int? getAtReadResult(String atResponse) {
   if (getAtOk(atResponse)) {
-    print(atResponse.indexOf("010101"));
-    if (atResponse.contains("010101019048")) {
-      return 1;
-    } else if (atResponse.contains("010101005188")) {
-      return 0;
+    int index = atResponse.indexOf("010101");
+    if (index > 0) {
+      String state = atResponse.substring(index + 6, index + 8);
+      debugPrint(state);
+      return int.parse(state, radix: 16);
     }
   }
 }

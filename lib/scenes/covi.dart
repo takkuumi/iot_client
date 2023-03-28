@@ -82,7 +82,7 @@ class _CoViState extends State<CoVi> with SingleTickerProviderStateMixin {
   void dispose() {
     timer?.cancel();
     bluetooth.stopScan();
-    bluetooth.close();
+
     super.dispose();
   }
 

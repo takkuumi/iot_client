@@ -1,5 +1,6 @@
-use super::serial::send_serialport;
+use super::serial::{init_tty_swk0, open_tty_swk0, send_serialport, send_serialport2};
 use anyhow::{Ok, Result};
+use serialport::SerialPort;
 
 mod AtCommand {
   pub const AT: &str = "AT"; //串口通讯测试
@@ -103,7 +104,33 @@ pub fn at_ndrpt(id: &str, data: &[u8]) -> Result<Vec<u8>> {
   eprintln!("bytes: {}", String::from_utf8_lossy(&bytes));
 
   let mut buffer = Vec::<u8>::new();
-  let _res = send_serialport(&bytes, &mut buffer)?;
+  send_serialport(&bytes, &mut buffer)?;
+  Ok(buffer)
+}
+
+pub fn at_ndrpt2(id: &str, data: &[u8]) -> Result<Vec<u8>> {
+  let size = data.len() + 5;
+
+  let crc_data = super::crc16::crc(data);
+  let crc_data = u16::from_le_bytes(crc_data.to_be_bytes());
+  let mut bytes = Vec::<u8>::new();
+  bytes.extend_from_slice(AtCommand::AT_NDRPT.as_bytes());
+  bytes.push(b'=');
+  bytes.extend_from_slice(id.as_bytes());
+  bytes.push(b',');
+  bytes.extend_from_slice(size.to_string().as_bytes());
+  bytes.push(b',');
+  bytes.push(b'\xc8');
+
+  bytes.extend_from_slice(data);
+  let r = format!("{:04X}", crc_data);
+  bytes.extend_from_slice(r.as_bytes());
+  bytes.extend_from_slice("\r\n".as_bytes());
+
+  eprintln!("bytes: {}", String::from_utf8_lossy(&bytes));
+
+  let mut buffer = Vec::<u8>::new();
+  send_serialport2(&bytes, &mut buffer)?;
   Ok(buffer)
 }
 
@@ -125,14 +152,33 @@ mod test {
   //[65, 84, 43, 78, 68, 82, 80, 84, 61, 48, 48, 48, 49, 44, 49, 55, 44, 200, 48, 49, 48, 53, 48, 50, 48, 48, 70, 70, 48, 48, 56, 68, 56, 50, 13, 10]
   #[test]
   pub fn at_ndrpt_test() {
-    let res = super::at_ndrpt("0001", "010502010000".as_bytes());
-    println!("res: {:?}", res);
-    println!("res: {}", String::from_utf8_lossy(&res.unwrap()));
+    let mut i = 0;
+    let _ = super::init_tty_swk0(70).unwrap();
+    loop {
+      let res = super::at_ndrpt2("0001", "010F020000030105".as_bytes());
+      println!("res: {:?}", res);
+      println!("res: {}", String::from_utf8_lossy(&res.unwrap()));
+
+      i += 1;
+
+      eprintln!("index:{}", i);
+
+      // let res = super::at_ndrpt("0001", "01050200FF00".as_bytes());
+      // println!("res: {:?}", res);
+      // println!("res: {}", String::from_utf8_lossy(&res.unwrap()));
+      let res = super::at_ndrpt2("0001", "010F020000030100".as_bytes());
+      println!("res: {:?}", res);
+      println!("res: {}", String::from_utf8_lossy(&res.unwrap()));
+
+      i += 1;
+
+      eprintln!("index:{}", i);
+    }
   }
 
   #[test]
   pub fn at_ndrpt_test3() {
-    let res = super::at_ndrpt("0001", "010502000000".as_bytes());
+    let res = super::at_ndrpt("0001", "010F020000020104".as_bytes());
     println!("res: {:?}", res);
     println!("res: {}", String::from_utf8_lossy(&res.unwrap()));
   }

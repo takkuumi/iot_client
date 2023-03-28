@@ -2,6 +2,11 @@ use super::*;
 // Section: wire functions
 
 #[no_mangle]
+pub extern "C" fn wire_init_tty_swk0(port_: i64, millis: u64) {
+  wire_init_tty_swk0_impl(port_, millis)
+}
+
+#[no_mangle]
 pub extern "C" fn wire_get_ndid(port_: i64) {
   wire_get_ndid_impl(port_)
 }
@@ -13,6 +18,15 @@ pub extern "C" fn wire_at_ndrpt(
   data: *mut wire_uint_8_list,
 ) {
   wire_at_ndrpt_impl(port_, id, data)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_at_ndrpt2(
+  port_: i64,
+  id: *mut wire_uint_8_list,
+  data: *mut wire_uint_8_list,
+) {
+  wire_at_ndrpt2_impl(port_, id, data)
 }
 
 #[no_mangle]

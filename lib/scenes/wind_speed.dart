@@ -90,7 +90,7 @@ class _WindSpeedState extends State<WindSpeed>
     timer?.cancel();
     animationController.dispose();
     bluetooth.stopScan();
-    bluetooth.close();
+
     super.dispose();
   }
 

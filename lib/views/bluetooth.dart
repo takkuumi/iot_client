@@ -44,7 +44,7 @@ class _BluetoothState extends State<Bluetooth> {
   @override
   void dispose() {
     bluetooth.stopScan();
-    bluetooth.close();
+
     super.dispose();
   }
 

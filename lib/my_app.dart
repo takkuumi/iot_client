@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:iot_client/views/bluetooth.dart';
 import 'package:iot_client/views/in_app_browser.dart';
 import 'package:iot_client/views/setting.dart';
@@ -53,6 +54,7 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: widget.theme,
+      builder: EasyLoading.init(),
       home: ScaffoldMessenger(
         key: rootScaffoldMessengerKey,
         child: Scaffold(

@@ -43,7 +43,7 @@ class _TrafficLightState extends State<TrafficLight>
   @override
   void dispose() {
     bluetooth.stopScan();
-    bluetooth.close();
+
     super.dispose();
   }
 

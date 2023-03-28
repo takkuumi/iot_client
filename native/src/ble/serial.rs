@@ -1,82 +1,146 @@
-use anyhow::{bail, Context, Ok, Result};
-use once_cell::sync::Lazy;
-use serialport::{ClearBuffer, DataBits, FlowControl, StopBits, TTYPort};
-use std::io::{Read, Write};
-use std::sync::Mutex;
+use std::io::ErrorKind;
 
-static TTYSWK0: Lazy<Mutex<Option<Box<dyn serialport::SerialPort>>>> =
-  Lazy::new(|| Mutex::new(None));
+use anyhow::{Context, Result};
+use serialport::{ClearBuffer, DataBits, FlowControl, SerialPort, StopBits};
 
-fn open_tty_swk0() -> Result<TTYPort> {
-  serialport::new("/dev/tty.usbserial-1410", 921600)
-  // serialport::new("/dev/tty.usbserial-1410", 115200)
+static GLOBAL_TTY_SWK0: std::sync::Mutex<Option<Box<dyn serialport::SerialPort>>> =
+  std::sync::Mutex::new(None);
+
+pub fn open_tty_swk0(millis: u64) -> Result<Box<dyn serialport::SerialPort>> {
+  serialport::new("/dev/ttySWK0", 115200)
     .data_bits(DataBits::Eight)
     .stop_bits(StopBits::One)
-    .flow_control(FlowControl::Hardware)
-    .timeout(core::time::Duration::from_secs(5))
-    .open_native()
+    .flow_control(FlowControl::None)
+    .timeout(core::time::Duration::from_millis(millis))
+    .open()
     .context("failed to open device!")
 }
 
+pub fn init_tty_swk0(millis: u64) -> Result<()> {
+  let mut instance = GLOBAL_TTY_SWK0.lock().unwrap();
+  if instance.is_none() {
+    let port = open_tty_swk0(millis)?;
+    port.clear(ClearBuffer::All)?;
+    instance.replace(port);
+  }
+
+  Ok(())
+}
+
+// serialport::new("/dev/tty.usbserial-1410", 115200)
+// ttySWK0
+
 pub fn send_serialport(data: &[u8], buffer: &mut Vec<u8>) -> Result<()> {
-  let mut port = open_tty_swk0()?;
+  let mut port = open_tty_swk0(70)?;
+  let mut retry: u8 = 0;
+  loop {
+    if retry > 5 {
+      return Err(anyhow::Error::msg("蓝牙发送失败"));
+    }
+    let _ = port.clear(ClearBuffer::All);
+    if port.write_all(data).is_ok() {
+      let _ = port.flush();
+      let mut buf = [0_u8; 6];
+      let size = port.read(&mut buf)?;
+      buffer.extend_from_slice(&buf[..size]);
 
-  if port.write(data).is_ok() {
-    port.flush();
-    let mut buf = [0_u8; 6];
-    let size = port.read(&mut buf)?;
-    buffer.extend_from_slice(&buf[..size]);
+      let bt_state = String::from_utf8_lossy(&buf);
 
-    // // read data
+      if bt_state.contains("ERR") {
+        retry += 1;
+        std::thread::sleep(core::time::Duration::from_millis(10));
+        continue;
+      }
 
-    // let mut data_seg = [0_u8; 18];
-    // let size = port.read(&mut data_seg)?;
-    // buffer.extend_from_slice(&data_seg[..size]);
-    // if size < 18 {
-    //   return Ok(());
-    // }
-
-    // let mut count = [0_u8; 2];
-    // let size = port.read(&mut count)?;
-    // buffer.extend_from_slice(&count[..size]);
-    // if size < 2 {
-    //   return Ok(());
-    // }
-
-    // let i = String::from_utf8_lossy(&count);
-    // let capacity = i.parse::<usize>()?;
-
-    // if capacity == 0 {
-    //   port.clear_break()?;
-    //   return Ok(());
-    // }
-    // let mut data = vec![0; capacity];
-    // let size = port.read_exact(&mut data)?;
-    // buffer.extend_from_slice(&data[..]);
-
-    // if size < capacity {
-    //   return Ok(());
-    // }
-
-    loop {
-      let mut resp_buf = [0_u8; 6];
-      match port.read(&mut resp_buf) {
-        Err(e) => {
-          eprintln!("error: {:?}", e);
-          break;
-        }
-        core::result::Result::Ok(size) => {
-          eprintln!("size: {:?}", size);
-          if size < 4 {
+      let mut count: u8 = 0;
+      loop {
+        let mut resp_buf = [0_u8; 6];
+        match port.read(&mut resp_buf) {
+          Err(e) => {
+            if e.kind() == ErrorKind::TimedOut {
+              if count > 3 {
+                break;
+              }
+              count += 1;
+              continue;
+            }
             break;
           }
-          buffer.extend_from_slice(&resp_buf[..size]);
+          Ok(size) => {
+            if size == 0 {
+              break;
+            }
+
+            count = 0;
+            buffer.extend_from_slice(&resp_buf[..size]);
+          }
         }
       }
     }
-
+    let _ = port.clear_break();
+    std::thread::sleep(core::time::Duration::from_millis(5));
     return Ok(());
   }
+}
 
-  bail!("failed to wirte data!")
+pub fn send_serialport2(data: &[u8], buffer: &mut Vec<u8>) -> Result<()> {
+  let mut port = GLOBAL_TTY_SWK0
+    .lock()
+    .unwrap()
+    .as_ref()
+    .unwrap()
+    .try_clone()?;
+  let mut retry: u8 = 0;
+  loop {
+    if retry > 5 {
+      return Err(anyhow::Error::msg("蓝牙发送失败"));
+    }
+
+    if port.write(data).is_ok() {
+      let _ = port.flush();
+      let _ = port.clear(ClearBuffer::Input);
+
+      let mut buf = [0_u8; 6];
+      let size = port.read(&mut buf)?;
+      buffer.extend_from_slice(&buf[..size]);
+
+      let bt_state = String::from_utf8_lossy(&buf);
+
+      if bt_state.contains("ERR") {
+        retry += 1;
+        let _ = port.clear(ClearBuffer::All);
+        let _ = port.flush();
+        std::thread::sleep(core::time::Duration::from_millis(100));
+        continue;
+      }
+
+      let mut count: u8 = 0;
+      loop {
+        let mut resp_buf = [0_u8; 8];
+        match port.read(&mut resp_buf) {
+          Err(e) => {
+            if e.kind() == ErrorKind::TimedOut {
+              if count > 3 {
+                break;
+              }
+              count += 1;
+              continue;
+            }
+            break;
+          }
+          Ok(size) => {
+            if size == 0 {
+              break;
+            }
+
+            count = 0;
+            buffer.extend_from_slice(&resp_buf[..size]);
+          }
+        }
+      }
+    }
+    let _ = port.clear_break();
+    std::thread::sleep(core::time::Duration::from_millis(5));
+    return Ok(());
+  }
 }

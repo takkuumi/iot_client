@@ -48,7 +48,7 @@ class _CrossHoleState extends State<CrossHole>
   @override
   void dispose() {
     bluetooth.stopScan();
-    bluetooth.close();
+
     super.dispose();
   }
 

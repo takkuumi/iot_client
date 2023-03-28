@@ -1,13 +1,14 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_scan_bluetooth/flutter_scan_bluetooth.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:iot_client/device.dart';
 import 'package:iot_client/ffi.dart';
+import 'package:iot_client/scenes/widgets/lane_indicator_components.dart';
 import 'package:iot_client/utils/at_parse.dart';
 import 'package:iot_client/utils/tool.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
 
@@ -18,104 +19,132 @@ class LaneIndicator extends StatefulWidget {
   State<LaneIndicator> createState() => _LaneIndicatorState();
 }
 
-enum Lock { lock, unlock }
+enum LaneIndicatorState { green, red }
 
 class _LaneIndicatorState extends State<LaneIndicator> {
-  List<Device> devices = [];
-
   final GlobalKey<ScaffoldMessengerState> key =
       GlobalKey<ScaffoldMessengerState>(debugLabel: 'lane_indicator');
 
-  late FlutterScanBluetooth bluetooth;
+  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
-  bool laneIndicator1 = false;
-  bool laneIndicator2 = false;
+  LaneIndicatorState state1 = LaneIndicatorState.red;
+  LaneIndicatorState state2 = LaneIndicatorState.red;
 
   @override
   void initState() {
-    bluetooth = FlutterScanBluetooth();
+    Future.sync(() => api.initTtySwk0(millis: 100));
 
-    // Future.delayed(const Duration(seconds: 5), bluetooth.stopScan);
-
-    bluetooth.startScan(pairedDevices: false);
-
-    bluetooth.devices.listen((device) {
-      String name = device.name;
-      String address = device.address;
-
-      Device item = Device(name, address, false);
-      if (name.startsWith('Mesh') && !devices.contains(item)) {
-        setState(() {
-          devices.add(item);
-        });
-      }
-    });
     super.initState();
+
+    readDevice(
+      readAt("0200"),
+      initLaneState,
+      () {
+        debugPrint("error");
+      },
+    );
+  }
+
+  void initLaneState(int? state) {
+    debugPrint("----------------------->$state");
+    if (state == 0) {
+      setState(() {
+        state1 = LaneIndicatorState.red;
+        state2 = LaneIndicatorState.red;
+      });
+    }
+    if (state == 1) {
+      setState(() {
+        state1 = LaneIndicatorState.green;
+        state2 = LaneIndicatorState.red;
+      });
+    }
+    if (state == 4) {
+      setState(() {
+        state1 = LaneIndicatorState.red;
+        state2 = LaneIndicatorState.green;
+      });
+    }
+    if (state == 5) {
+      setState(() {
+        state1 = LaneIndicatorState.green;
+        state2 = LaneIndicatorState.green;
+      });
+    }
   }
 
   @override
   void dispose() {
-    bluetooth.stopScan();
-    bluetooth.close();
     super.dispose();
   }
 
-  String atRead(String addr) {
-    //01 03 00 01 00 01
-    return "0101${addr}0001";
+  Future<String?> getLink() async {
+    final SharedPreferences prefs = await _prefs;
+    return prefs.getString('mesh');
   }
 
-  String atOpen(String addr) {
-    return "0105${addr}FF00";
+  String readAt(String addr) {
+    // 010F020000030105
+    return "0101${addr}0004";
   }
 
-  String atClose(String addr) {
-    return "0105${addr}0000";
+  String sendAt(String addr, LaneIndicatorState state) {
+    // 04 0100
+    //    0001
+    String data = state == LaneIndicatorState.green ? '01' : '00';
+    // 010F020000030105
+    return "010F${addr}000201$data";
   }
 
   Future<void> readDevice(
-      String sdata, void Function(int) onReadResponse) async {
-    List<Device> selected =
-        devices.where((element) => element.isChecked).toList();
+    String sdata,
+    void Function(int) onReadResponse,
+    void Function() onError,
+  ) async {
+    String? meshId = await getLink();
 
-    if (selected.isEmpty) {
+    if (meshId == null || meshId.isEmpty) {
       return;
     }
 
-    for (final device in selected) {
-      String id = getMeshId(device.name);
-      Uint8List data =
-          await Future.sync(() => api.atNdrpt(id: id, data: sdata));
-      String resp = String.fromCharCodes(data);
-      print(resp);
-      int? res = getAtReadResult(resp);
-      if (res != null) {
-        onReadResponse(res);
-      }
+    Uint8List data =
+        await Future.sync(() => api.atNdrpt2(id: meshId, data: sdata));
+    String resp = String.fromCharCodes(data);
+
+    int? res = getAtReadResult(resp);
+    if (res != null) {
+      onReadResponse(res);
+    } else {
+      onError();
     }
   }
 
-  Future<void> writeDevice(String x0200, void Function() onOk) async {
-    List<Device> selected =
-        devices.where((element) => element.isChecked).toList();
+  void syncState() {
+    readDevice(
+      readAt("0200"),
+      initLaneState,
+      () => showSnackBar("操作失败,未收到响应", key),
+    );
+  }
 
-    if (selected.isEmpty) {
-      showSnackBar("未选中任何设备", key);
+  Future<void> writeDevice(
+    String x0200,
+    void Function() onError,
+  ) async {
+    String? meshId = await getLink();
+
+    if (meshId == null || meshId.isEmpty) {
+      showSnackBar("未设置连接设备", key);
       return;
     }
 
-    for (final device in selected) {
-      String id = getMeshId(device.name);
-      Uint8List x0200Data =
-          await Future.sync(() => api.atNdrpt(id: id, data: x0200));
+    Uint8List x0200Data = await api.atNdrpt2(id: meshId, data: x0200);
 
-      String x0200Resp = String.fromCharCodes(x0200Data);
-      // showSnackBar(resp, key);
-      debugPrint(x0200Resp);
-      bool isOk = getAtOk(x0200Resp);
-      if (isOk) {
-        onOk();
-      }
+    String resp = String.fromCharCodes(x0200Data);
+    debugPrint(resp);
+    bool isOk = getAtOk(resp);
+    if (!isOk) {
+      onError();
     }
   }
 
@@ -126,145 +155,140 @@ class _LaneIndicatorState extends State<LaneIndicator> {
     offset: const Offset(0, 3),
   );
 
-  final Widget verticalLine = Container(
-    height: 20,
-    child: VerticalDivider(
-      thickness: 2,
-      color: Color.fromRGBO(192, 192, 192, 1),
-    ),
-  );
-
-  final Color disableColor = Color.fromRGBO(221, 221, 221, 1);
-
   Widget createLane1() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Container(
-          child: Text("车道一"),
-          margin: EdgeInsets.symmetric(vertical: 10, horizontal: 5),
-        ),
-        Container(
-          width: 100,
-          height: 100,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(
-              width: 2,
-              color: laneIndicator1 ? Colors.greenAccent : Colors.redAccent,
+        buildLaneIndictorTitle("车道一"),
+        verticalLine,
+        GestureDetector(
+          onTap: () async {
+            await EasyLoading.show(
+              status: '正在下发操作...',
+              maskType: EasyLoadingMaskType.black,
+            );
+            LaneIndicatorState nextState = state1 == LaneIndicatorState.green
+                ? LaneIndicatorState.red
+                : LaneIndicatorState.green;
+
+            String data = sendAt("0200", nextState);
+            debugPrint(data);
+            await writeDevice(data, () => showSnackBar("操作失败,未收到响应", key));
+            bool failed = false;
+            await Future.delayed(
+              const Duration(milliseconds: 200),
+              () => readDevice(
+                readAt("0200"),
+                initLaneState,
+                () {
+                  failed = true;
+                },
+              ),
+            );
+            if (failed) {
+              await Future.delayed(
+                  const Duration(milliseconds: 200),
+                  () => readDevice(readAt("0200"), initLaneState,
+                      () => showSnackBar("操作失败,未收到响应", key)));
+            }
+            await EasyLoading.dismiss();
+          },
+          child: Container(
+            width: 100,
+            height: 100,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(
+                width: 2,
+                color: state1 == LaneIndicatorState.green
+                    ? Colors.greenAccent
+                    : Colors.redAccent,
+              ),
+              borderRadius: BorderRadius.circular(50),
+              boxShadow: [boxShadow],
             ),
-            borderRadius: BorderRadius.circular(50),
-            boxShadow: [boxShadow],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                laneIndicator1 ? Icons.arrow_upward : Icons.clear,
-                size: 60,
-                color: laneIndicator1 ? Colors.greenAccent : Colors.redAccent,
-              )
-            ],
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  state1 == LaneIndicatorState.green
+                      ? Icons.arrow_upward
+                      : Icons.clear,
+                  size: 60,
+                  color: state1 == LaneIndicatorState.green
+                      ? Colors.greenAccent
+                      : Colors.redAccent,
+                )
+              ],
+            ),
           ),
         ),
         verticalLine,
-        Container(
-          width: 100,
-          height: 100,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(
-              width: 2,
-              color: laneIndicator2 ? Colors.greenAccent : Colors.redAccent,
+        GestureDetector(
+          onTap: () async {
+            await EasyLoading.show(
+              status: '正在下发操作...',
+              maskType: EasyLoadingMaskType.black,
+            );
+            LaneIndicatorState nextState = state2 == LaneIndicatorState.green
+                ? LaneIndicatorState.red
+                : LaneIndicatorState.green;
+
+            String data = sendAt("0202", nextState);
+
+            await writeDevice(data, () => {showSnackBar("操作失败,未收到响应", key)});
+            bool failed = false;
+            await Future.delayed(
+              const Duration(milliseconds: 200),
+              () => readDevice(
+                readAt("0200"),
+                initLaneState,
+                () {
+                  failed = true;
+                },
+              ),
+            );
+            if (failed) {
+              await Future.delayed(
+                  const Duration(milliseconds: 200),
+                  () => readDevice(readAt("0200"), initLaneState,
+                      () => showSnackBar("操作失败,未收到响应", key)));
+            }
+
+            await EasyLoading.dismiss();
+          },
+          child: Container(
+            width: 100,
+            height: 100,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(
+                width: 2,
+                color: state2 == LaneIndicatorState.green
+                    ? Colors.greenAccent
+                    : Colors.redAccent,
+              ),
+              borderRadius: BorderRadius.circular(50),
+              boxShadow: [boxShadow],
             ),
-            borderRadius: BorderRadius.circular(50),
-            boxShadow: [boxShadow],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                laneIndicator2 ? Icons.arrow_upward : Icons.clear,
-                size: 60,
-                color: laneIndicator2 ? Colors.greenAccent : Colors.redAccent,
-              )
-            ],
-          ),
-        ),
-        Container(
-          margin: EdgeInsets.only(top: 20),
-          child: ElevatedButton(
-            onPressed: () async {
-              await writeDevice(atOpen("0200"), () {});
-              sleep(Duration(seconds: 1));
-              await writeDevice(atClose("0201"), () {});
-
-              setState(() {
-                laneIndicator1 = true;
-              });
-              sleep(Duration(seconds: 1));
-
-              await writeDevice(atOpen("0202"), () {});
-              sleep(Duration(seconds: 1));
-              await writeDevice(atClose("0203"), () {});
-
-              setState(() {
-                laneIndicator2 = false;
-              });
-            },
-            child: Text("正行"),
-          ),
-        ),
-        Container(
-          margin: EdgeInsets.only(top: 5),
-          child: ElevatedButton(
-            onPressed: () async {
-              await writeDevice(atClose("0200"), () {});
-              sleep(Duration(seconds: 1));
-              await writeDevice(atOpen("0201"), () {});
-
-              setState(() {
-                laneIndicator1 = false;
-              });
-              sleep(Duration(seconds: 1));
-
-              await writeDevice(atClose("0202"), () {});
-              sleep(Duration(seconds: 1));
-              await writeDevice(atOpen("0203"), () {});
-
-              setState(() {
-                laneIndicator2 = true;
-              });
-            },
-            child: Text("逆行"),
-          ),
-        ),
-        Container(
-          margin: EdgeInsets.only(top: 5),
-          child: ElevatedButton(
-            onPressed: () async {
-              await writeDevice(atClose("0200"), () {});
-              sleep(Duration(seconds: 1));
-              await writeDevice(atClose("0201"), () {});
-
-              setState(() {
-                laneIndicator1 = false;
-              });
-              sleep(Duration(seconds: 1));
-
-              await writeDevice(atClose("0202"), () {});
-              sleep(Duration(seconds: 1));
-              await writeDevice(atClose("0203"), () {});
-
-              setState(() {
-                laneIndicator2 = false;
-              });
-            },
-            child: Text("全关"),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  state2 == LaneIndicatorState.green
+                      ? Icons.arrow_upward
+                      : Icons.clear,
+                  size: 60,
+                  color: state2 == LaneIndicatorState.green
+                      ? Colors.greenAccent
+                      : Colors.redAccent,
+                )
+              ],
+            ),
           ),
         ),
       ],
@@ -275,61 +299,11 @@ class _LaneIndicatorState extends State<LaneIndicator> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Container(
-          child: Text("车道二"),
-          margin: EdgeInsets.symmetric(vertical: 10, horizontal: 5),
-        ),
-        Container(
-          width: 100,
-          height: 100,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(
-              width: 2,
-              color: disableColor,
-            ),
-            borderRadius: BorderRadius.circular(50),
-            boxShadow: [boxShadow],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.clear,
-                size: 60,
-                color: disableColor,
-              )
-            ],
-          ),
-        ),
+        buildLaneIndictorTitle("车道二"),
         verticalLine,
-        Container(
-          width: 100,
-          height: 100,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(
-              width: 2,
-              color: disableColor,
-            ),
-            borderRadius: BorderRadius.circular(50),
-            boxShadow: [boxShadow],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.clear,
-                size: 60,
-                color: disableColor,
-              )
-            ],
-          ),
-        ),
+        buildOffState(),
+        verticalLine,
+        buildOffState(),
         Container(
           margin: EdgeInsets.only(top: 20),
           child: ElevatedButton(
@@ -354,61 +328,11 @@ class _LaneIndicatorState extends State<LaneIndicator> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Container(
-          child: Text("车道二"),
-          margin: EdgeInsets.symmetric(vertical: 10, horizontal: 5),
-        ),
-        Container(
-          width: 100,
-          height: 100,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(
-              width: 2,
-              color: disableColor,
-            ),
-            borderRadius: BorderRadius.circular(50),
-            boxShadow: [boxShadow],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.clear,
-                size: 60,
-                color: disableColor,
-              )
-            ],
-          ),
-        ),
+        buildLaneIndictorTitle("车道三"),
         verticalLine,
-        Container(
-          width: 100,
-          height: 100,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(
-              width: 2,
-              color: disableColor,
-            ),
-            borderRadius: BorderRadius.circular(50),
-            boxShadow: [boxShadow],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.clear,
-                size: 60,
-                color: disableColor,
-              )
-            ],
-          ),
-        ),
+        buildOffState(),
+        verticalLine,
+        buildOffState(),
         Container(
           margin: EdgeInsets.only(top: 20),
           child: ElevatedButton(
@@ -446,11 +370,11 @@ class _LaneIndicatorState extends State<LaneIndicator> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
-                  width: 480,
-                  padding: EdgeInsets.symmetric(horizontal: 50),
+                  width: 600,
+                  padding: EdgeInsets.symmetric(horizontal: 30),
                   child: Wrap(
                     alignment: WrapAlignment.spaceEvenly,
-                    spacing: 40,
+                    spacing: 10,
                     children: [
                       createLane1(),
                       createLane2(),
@@ -458,53 +382,9 @@ class _LaneIndicatorState extends State<LaneIndicator> {
                     ],
                   ),
                 ),
-                Container(
-                  width: 480,
-                  height: 300.0,
-                  padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 50),
-                  child: devices.isEmpty
-                      ? Center(
-                          child: Text("没有发现设备,请点击扫描按钮进行扫描"),
-                        )
-                      : ListView.builder(
-                          itemCount: devices.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            Device device = devices[index];
-                            return CheckboxListTile(
-                              title: Text(device.name),
-                              subtitle: Text(device.address),
-                              value: device.isChecked,
-                              dense: true,
-                              onChanged: (bool? value) {
-                                setState(() {
-                                  device.isChecked = value!;
-                                });
-                              },
-                            );
-                          },
-                        ),
-                ),
               ],
             ),
           ),
-        ),
-        floatingActionButton: FloatingActionButton(
-          child: Icon(Icons.radar),
-          tooltip: "扫描",
-          onPressed: () async {
-            await checkAndAskPermissions();
-            try {
-              setState(() {
-                devices = [];
-              });
-              await bluetooth.stopScan();
-
-              await bluetooth.startScan(pairedDevices: false);
-              showSnackBar("开始扫描", key);
-            } on PlatformException catch (e) {
-              debugPrint(e.toString());
-            }
-          },
         ),
       ),
     );

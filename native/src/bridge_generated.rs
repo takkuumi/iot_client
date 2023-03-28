@@ -21,6 +21,19 @@ use std::sync::Arc;
 
 // Section: wire functions
 
+fn wire_init_tty_swk0_impl(port_: MessagePort, millis: impl Wire2Api<u64> + UnwindSafe) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "init_tty_swk0",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || {
+      let api_millis = millis.wire2api();
+      move |task_callback| init_tty_swk0(api_millis)
+    },
+  )
+}
 fn wire_get_ndid_impl(port_: MessagePort) {
   FLUTTER_RUST_BRIDGE_HANDLER.wrap(
     WrapInfo {
@@ -46,6 +59,24 @@ fn wire_at_ndrpt_impl(
       let api_id = id.wire2api();
       let api_data = data.wire2api();
       move |task_callback| at_ndrpt(api_id, api_data)
+    },
+  )
+}
+fn wire_at_ndrpt2_impl(
+  port_: MessagePort,
+  id: impl Wire2Api<String> + UnwindSafe,
+  data: impl Wire2Api<String> + UnwindSafe,
+) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "at_ndrpt2",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || {
+      let api_id = id.wire2api();
+      let api_data = data.wire2api();
+      move |task_callback| at_ndrpt2(api_id, api_data)
     },
   )
 }
@@ -148,6 +179,11 @@ where
   }
 }
 
+impl Wire2Api<u64> for u64 {
+  fn wire2api(self) -> u64 {
+    self
+  }
+}
 impl Wire2Api<u8> for u8 {
   fn wire2api(self) -> u8 {
     self

@@ -48,6 +48,7 @@ dependencies:
   json_theme: ^4.0.0
   rate_limiter: ^1.0.0
   flutter_easyloading: ^3.0.5
+  sleek_circular_slider: ^2.0.1
 
 dev_dependencies:
   flutter_test:
@@ -119,6 +120,9 @@ flutter:
     - images/icons/wind speed and direction@2x.png
     - images/icons/yentilation fan_icon.png
     - images/icons/yentilation fan_icon@2x.png
+    - images/light_inside/img_3@2x.png
+    - images/light_inside/img_2@2x.png
+    - images/light_inside/img_1@2x.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

@@ -2,35 +2,32 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:iot_client/device.dart';
 import 'package:iot_client/ffi.dart';
 import 'package:iot_client/utils/at_parse.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
 
-class CoVi extends StatefulWidget {
-  const CoVi({Key? key}) : super(key: key);
+class LightOutside extends StatefulWidget {
+  const LightOutside({Key? key}) : super(key: key);
 
   @override
-  State<CoVi> createState() => _CoViState();
+  State<LightOutside> createState() => _LightOutsideState();
 }
 
-class _CoViState extends State<CoVi> with SingleTickerProviderStateMixin {
-  List<Device> devices = [];
-
+class _LightOutsideState extends State<LightOutside>
+    with SingleTickerProviderStateMixin {
   final GlobalKey<ScaffoldMessengerState> key =
-      GlobalKey<ScaffoldMessengerState>(debugLabel: 'covi');
+      GlobalKey<ScaffoldMessengerState>(debugLabel: 'light_outside');
 
   Timer? timer;
-
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  late String windSpeed = '亮度值:--\r\n报警值:--\r\n故障码:--';
 
-  late String windSpeed = 'CO浓度值:4.1\r\nVI值:0\r\nCO报警值:100\r\nVI报警值:100';
-  List<int> recoder = [0, 0, 0, 0];
+  List<int> recoder = [0, 0, 0];
 
   void respHandler(String? resp) {
-    List<int> data = parseWindSpreed(resp);
+    List<int> data = parseLight(resp);
 
     for (int i = 0; i < data.length; i++) {
       if (data[i] != 0) {
@@ -39,14 +36,13 @@ class _CoViState extends State<CoVi> with SingleTickerProviderStateMixin {
     }
 
     setState(() {
-      windSpeed =
-          "CO浓度值:${recoder[0]}\r\nVI值:${recoder[1]}\r\nCO报警值:${recoder[2]}\r\nVI报警值:${recoder[3]}";
+      windSpeed = "亮度值:${data[0]}\r\n报警值:${data[1]}\r\n故障码:${data[2]}";
     });
   }
 
   void startTimer() {
     timer = Timer.periodic(timerDuration, (timer) async {
-      String? resp = await readDevice(readAt("1032"));
+      String? resp = await readDevice(readAt("09C4"));
       respHandler(resp);
     });
   }
@@ -57,7 +53,13 @@ class _CoViState extends State<CoVi> with SingleTickerProviderStateMixin {
 
     super.initState();
     startTimer();
-    readDevice(readAt("09CA")).then(respHandler);
+    readDevice(readAt("09C4")).then(respHandler);
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    super.dispose();
   }
 
   String readAt(String addr) {
@@ -87,13 +89,6 @@ class _CoViState extends State<CoVi> with SingleTickerProviderStateMixin {
     }
   }
 
-  @override
-  void dispose() {
-    timer?.cancel();
-
-    super.dispose();
-  }
-
   final BoxShadow boxShadow = BoxShadow(
     color: Colors.grey.withOpacity(0.5),
     spreadRadius: 5,
@@ -108,7 +103,7 @@ class _CoViState extends State<CoVi> with SingleTickerProviderStateMixin {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Container(
-          child: Text("COVI检测"),
+          child: Text("洞外光照"),
           margin: EdgeInsets.symmetric(vertical: 10, horizontal: 5),
         ),
         Container(
@@ -129,7 +124,7 @@ class _CoViState extends State<CoVi> with SingleTickerProviderStateMixin {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Image.asset(
-                "images/icons/environmental testing_icon@2x.png",
+                "images/icons/lght intensity detection@2x.png",
                 width: 80,
                 height: 80,
               ),
@@ -152,7 +147,7 @@ class _CoViState extends State<CoVi> with SingleTickerProviderStateMixin {
       key: key,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('COVI检测'),
+          title: const Text('洞外光照'),
         ),
         body: SingleChildScrollView(
           padding: EdgeInsets.symmetric(vertical: 50),

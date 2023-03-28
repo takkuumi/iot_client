@@ -3,11 +3,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:iot_client/device.dart';
 import 'package:iot_client/ffi.dart';
 import 'package:iot_client/scenes/widgets/lane_indicator_components.dart';
 import 'package:iot_client/utils/at_parse.dart';
-import 'package:iot_client/utils/tool.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
@@ -107,8 +105,7 @@ class _LaneIndicatorState extends State<LaneIndicator> {
       return;
     }
 
-    Uint8List data =
-        await Future.sync(() => api.atNdrpt2(id: meshId, data: sdata));
+    Uint8List data = await api.atNdrpt2(id: meshId, data: sdata);
     String resp = String.fromCharCodes(data);
 
     int? res = getAtReadResult(resp);
@@ -160,7 +157,7 @@ class _LaneIndicatorState extends State<LaneIndicator> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         buildLaneIndictorTitle("车道一"),
-        verticalLine,
+        verticalLineOnly,
         GestureDetector(
           onTap: () async {
             await EasyLoading.show(
@@ -197,31 +194,10 @@ class _LaneIndicatorState extends State<LaneIndicator> {
             width: 100,
             height: 100,
             alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(
-                width: 2,
-                color: state1 == LaneIndicatorState.green
-                    ? Colors.greenAccent
-                    : Colors.redAccent,
-              ),
-              borderRadius: BorderRadius.circular(50),
-              boxShadow: [boxShadow],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  state1 == LaneIndicatorState.green
-                      ? Icons.arrow_upward
-                      : Icons.clear,
-                  size: 60,
-                  color: state1 == LaneIndicatorState.green
-                      ? Colors.greenAccent
-                      : Colors.redAccent,
-                )
-              ],
+            child: Image.asset(
+              state1 == LaneIndicatorState.green
+                  ? "images/light_inside/img_1@2x.png"
+                  : "images/light_inside/img_3@2x.png",
             ),
           ),
         ),
@@ -263,65 +239,74 @@ class _LaneIndicatorState extends State<LaneIndicator> {
             width: 100,
             height: 100,
             alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(
-                width: 2,
-                color: state2 == LaneIndicatorState.green
-                    ? Colors.greenAccent
-                    : Colors.redAccent,
+            child: Container(
+              width: 100,
+              height: 100,
+              alignment: Alignment.center,
+              child: Image.asset(
+                state2 == LaneIndicatorState.green
+                    ? "images/light_inside/img_1@2x.png"
+                    : "images/light_inside/img_3@2x.png",
               ),
-              borderRadius: BorderRadius.circular(50),
-              boxShadow: [boxShadow],
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  state2 == LaneIndicatorState.green
-                      ? Icons.arrow_upward
-                      : Icons.clear,
-                  size: 60,
-                  color: state2 == LaneIndicatorState.green
-                      ? Colors.greenAccent
-                      : Colors.redAccent,
-                )
-              ],
-            ),
+          ),
+        ),
+        verticalLine2,
+        Container(
+          width: 90,
+          height: 32,
+          decoration: BoxDecoration(
+            color: Color.fromRGBO(0, 84, 216, 1),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            getState(),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+                color: Colors.white, fontSize: 17, fontWeight: FontWeight.w500),
           ),
         ),
       ],
     );
   }
 
+  String getState() {
+    if (state1 == LaneIndicatorState.green &&
+        state2 == LaneIndicatorState.red) {
+      return "正行";
+    }
+    if (state1 == LaneIndicatorState.red &&
+        state2 == LaneIndicatorState.green) {
+      return "逆行";
+    }
+
+    return "禁行";
+  }
+
   Widget createLane2() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        buildLaneIndictorTitle("车道二"),
-        verticalLine,
-        buildOffState(),
-        verticalLine,
-        buildOffState(),
-        Container(
-          margin: EdgeInsets.only(top: 20),
-          child: ElevatedButton(
-            // onPressed: () => writeDevice(atOpen("0200"), true),
-            onPressed: null,
-            child: Text("打开"),
-          ),
+    return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+      buildLaneIndictorTitle("车道二"),
+      verticalLineOnly,
+      buildOffState(),
+      verticalLine,
+      buildOffState(),
+      verticalLine2,
+      Container(
+        width: 90,
+        height: 32,
+        decoration: BoxDecoration(
+          color: Color.fromRGBO(197, 197, 197, 1),
+          borderRadius: BorderRadius.circular(16),
         ),
-        Container(
-          margin: EdgeInsets.only(top: 5),
-          child: ElevatedButton(
-            // onPressed: () => writeDevice(atClose("0200"), false),
-            onPressed: null,
-            child: Text("关闭"),
-          ),
+        alignment: Alignment.center,
+        child: Text(
+          "无",
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500),
         ),
-      ],
-    );
+      ),
+    ]);
   }
 
   Widget createLane3() {
@@ -329,24 +314,23 @@ class _LaneIndicatorState extends State<LaneIndicator> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         buildLaneIndictorTitle("车道三"),
-        verticalLine,
+        verticalLineOnly,
         buildOffState(),
         verticalLine,
         buildOffState(),
+        verticalLine2,
         Container(
-          margin: EdgeInsets.only(top: 20),
-          child: ElevatedButton(
-            // onPressed: () => writeDevice(atOpen("0200"), true),
-            onPressed: null,
-            child: Text("打开"),
+          width: 90,
+          height: 32,
+          decoration: BoxDecoration(
+            color: Color.fromRGBO(197, 197, 197, 1),
+            borderRadius: BorderRadius.circular(16),
           ),
-        ),
-        Container(
-          margin: EdgeInsets.only(top: 5),
-          child: ElevatedButton(
-            // onPressed: () => writeDevice(atClose("0200"), false),
-            onPressed: null,
-            child: Text("关闭"),
+          alignment: Alignment.center,
+          child: Text(
+            "无",
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500),
           ),
         ),
       ],

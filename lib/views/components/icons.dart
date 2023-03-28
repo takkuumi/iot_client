@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
 
+final decoration = BoxDecoration(
+  border: Border.all(
+    width: 1,
+    color: Color.fromRGBO(221, 221, 221, 1),
+  ),
+  borderRadius: BorderRadius.circular(10),
+);
 Widget createIcon(
   String name, {
   required void Function() onTap,
@@ -9,13 +16,7 @@ Widget createIcon(
     onTap: onTap,
     child: Container(
       padding: EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        border: Border.all(
-          width: 1,
-          color: Color.fromRGBO(221, 221, 221, 1),
-        ),
-        borderRadius: BorderRadius.circular(10),
-      ),
+      decoration: decoration,
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

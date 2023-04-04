@@ -45,7 +45,7 @@ dependencies:
   flutter_rust_bridge: ^1.72.0
   carousel_slider: ^4.2.1
   circular_reveal_animation: ^2.0.1
-  json_theme: ^4.0.0
+  json_theme: ^5.0.2+3
   rate_limiter: ^1.0.0
   flutter_easyloading: ^3.0.5
   sleek_circular_slider: ^2.0.1

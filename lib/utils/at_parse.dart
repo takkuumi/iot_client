@@ -13,6 +13,7 @@ int? getAtReadResult(String atResponse) {
       return int.parse(state, radix: 16);
     }
   }
+  return null;
 }
 
 List<int> parseWindSpreed(String? response) {

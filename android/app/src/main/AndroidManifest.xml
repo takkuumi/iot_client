@@ -13,7 +13,7 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
    <application
-        android:label="迈瑞交通运维系统"
+        android:label="迈锐交通运维系统"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

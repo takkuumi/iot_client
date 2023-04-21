@@ -61,8 +61,6 @@ class _WindSpeedState extends State<WindSpeed>
 
   @override
   void initState() {
-    Future.sync(() => api.initTtySwk0(millis: 100));
-
     animationController = AnimationController(
       duration: const Duration(seconds: 1),
       vsync: this,
@@ -104,7 +102,7 @@ class _WindSpeedState extends State<WindSpeed>
     }
 
     try {
-      Uint8List data = await api.atNdrpt2(id: meshId, data: sdata);
+      Uint8List data = await api.atNdrpt(id: meshId, data: sdata);
       return String.fromCharCodes(data);
     } catch (e) {
       debugPrint(e.toString());

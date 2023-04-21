@@ -61,8 +61,6 @@ class _CoViState extends State<CoVi> with SingleTickerProviderStateMixin {
 
   @override
   void initState() {
-    Future.sync(() => api.initTtySwk0(millis: 100));
-
     super.initState();
     startTimer();
     readDevice(readAt("09CA")).then(respHandler);
@@ -88,7 +86,7 @@ class _CoViState extends State<CoVi> with SingleTickerProviderStateMixin {
     }
 
     try {
-      Uint8List data = await api.atNdrpt2(id: meshId, data: sdata);
+      Uint8List data = await api.atNdrpt(id: meshId, data: sdata);
       return String.fromCharCodes(data);
     } catch (e) {
       debugPrint(e.toString());

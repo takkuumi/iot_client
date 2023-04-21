@@ -7,6 +7,7 @@ final decoration = BoxDecoration(
   ),
   borderRadius: BorderRadius.circular(10),
 );
+
 Widget createIcon(
   String name, {
   required void Function() onTap,
@@ -15,7 +16,7 @@ Widget createIcon(
   return GestureDetector(
     onTap: onTap,
     child: Container(
-      padding: EdgeInsets.all(8),
+      padding: EdgeInsets.all(10),
       decoration: decoration,
       child: Center(
         child: Column(

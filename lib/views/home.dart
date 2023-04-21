@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:iot_client/scenes/covi.dart';
 import 'package:iot_client/scenes/cross_hole.dart';

@@ -57,8 +57,6 @@ class _LightOutsideState extends State<LightOutside>
 
   @override
   void initState() {
-    Future.sync(() => api.initTtySwk0(millis: 100));
-
     super.initState();
     startTimer();
     readDevice(readAt("09C4")).then(respHandler);
@@ -90,7 +88,7 @@ class _LightOutsideState extends State<LightOutside>
     }
 
     try {
-      Uint8List data = await api.atNdrpt2(id: meshId, data: sdata);
+      Uint8List data = await api.atNdrpt(id: meshId, data: sdata);
       return String.fromCharCodes(data);
     } catch (e) {
       debugPrint(e.toString());

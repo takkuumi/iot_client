@@ -11,17 +11,17 @@ void main() async {
   final themeJson = jsonDecode(themeStr);
   final theme = ThemeDecoder.decodeThemeData(themeJson)!;
 
-  SystemChrome.setSystemUIOverlayStyle(
-    SystemUiOverlayStyle(
-      systemNavigationBarColor:
-          SystemUiOverlayStyle.dark.systemNavigationBarColor,
-    ),
-  );
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    systemNavigationBarIconBrightness: Brightness.light,
+    statusBarIconBrightness: Brightness.light,
+  ));
   // 强制竖屏
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge,
       overlays: <SystemUiOverlay>[]);
   SystemChrome.setPreferredOrientations(
-      [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]).then((_) {
+    [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown],
+  ).then((_) {
     runApp(MyApp(theme: theme));
   });
 }

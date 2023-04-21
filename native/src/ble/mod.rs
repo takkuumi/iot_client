@@ -1,6 +1,5 @@
 pub mod at_command;
 pub mod crc16;
-// pub mod hex;
 pub mod serial;
 
 pub struct SerialResponse<'s>(&'s [u8]);

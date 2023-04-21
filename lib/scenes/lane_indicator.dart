@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -30,8 +31,6 @@ class _LaneIndicatorState extends State<LaneIndicator> {
 
   @override
   void initState() {
-    Future.sync(() => api.initTtySwk0(millis: 100));
-
     super.initState();
 
     readDevice(
@@ -45,30 +44,46 @@ class _LaneIndicatorState extends State<LaneIndicator> {
 
   void initLaneState(int? state) {
     debugPrint("----------------------->$state");
-    if (state == 0) {
-      setState(() {
-        state1 = LaneIndicatorState.red;
-        state2 = LaneIndicatorState.red;
-      });
-    }
-    if (state == 1) {
-      setState(() {
-        state1 = LaneIndicatorState.green;
-        state2 = LaneIndicatorState.red;
-      });
-    }
-    if (state == 4) {
+    // 0 1 1 0 06
+    if (state == 6) {
       setState(() {
         state1 = LaneIndicatorState.red;
         state2 = LaneIndicatorState.green;
       });
+      return;
     }
+
+    // 1 0 0 1 09
+    if (state == 9) {
+      setState(() {
+        state1 = LaneIndicatorState.green;
+        state2 = LaneIndicatorState.red;
+      });
+      return;
+    }
+
+    // 0 1 0 1  OA
+    if (state == 10) {
+      setState(() {
+        state1 = LaneIndicatorState.red;
+        state2 = LaneIndicatorState.red;
+      });
+      return;
+    }
+
+    // 1 0 1 0
     if (state == 5) {
       setState(() {
         state1 = LaneIndicatorState.green;
         state2 = LaneIndicatorState.green;
       });
+      return;
     }
+
+    setState(() {
+      state1 = LaneIndicatorState.red;
+      state2 = LaneIndicatorState.red;
+    });
   }
 
   @override
@@ -89,7 +104,7 @@ class _LaneIndicatorState extends State<LaneIndicator> {
   String sendAt(String addr, LaneIndicatorState state) {
     // 04 0100
     //    0001
-    String data = state == LaneIndicatorState.green ? '01' : '00';
+    String data = state == LaneIndicatorState.green ? '01' : '02';
     // 010F020000030105
     return "010F${addr}000201$data";
   }
@@ -105,7 +120,7 @@ class _LaneIndicatorState extends State<LaneIndicator> {
       return;
     }
 
-    Uint8List data = await api.atNdrpt2(id: meshId, data: sdata);
+    Uint8List data = await api.atNdrpt(id: meshId, data: sdata);
     String resp = String.fromCharCodes(data);
 
     int? res = getAtReadResult(resp);
@@ -135,7 +150,7 @@ class _LaneIndicatorState extends State<LaneIndicator> {
       return;
     }
 
-    Uint8List x0200Data = await api.atNdrpt2(id: meshId, data: x0200);
+    Uint8List x0200Data = await api.atNdrpt(id: meshId, data: x0200);
 
     String resp = String.fromCharCodes(x0200Data);
     debugPrint(resp);
@@ -171,23 +186,13 @@ class _LaneIndicatorState extends State<LaneIndicator> {
             String data = sendAt("0200", nextState);
             debugPrint(data);
             await writeDevice(data, () => showSnackBar("操作失败,未收到响应", key));
-            bool failed = false;
-            await Future.delayed(
-              const Duration(milliseconds: 200),
-              () => readDevice(
-                readAt("0200"),
-                initLaneState,
-                () {
-                  failed = true;
-                },
-              ),
+            await readDevice(
+              readAt("0200"),
+              initLaneState,
+              () {
+                showSnackBar("操作失败,未收到响应", key);
+              },
             );
-            if (failed) {
-              await Future.delayed(
-                  const Duration(milliseconds: 200),
-                  () => readDevice(readAt("0200"), initLaneState,
-                      () => showSnackBar("操作失败,未收到响应", key)));
-            }
             await EasyLoading.dismiss();
           },
           child: Container(
@@ -215,23 +220,14 @@ class _LaneIndicatorState extends State<LaneIndicator> {
             String data = sendAt("0202", nextState);
 
             await writeDevice(data, () => {showSnackBar("操作失败,未收到响应", key)});
-            bool failed = false;
-            await Future.delayed(
-              const Duration(milliseconds: 200),
-              () => readDevice(
-                readAt("0200"),
-                initLaneState,
-                () {
-                  failed = true;
-                },
-              ),
+
+            await readDevice(
+              readAt("0200"),
+              initLaneState,
+              () {
+                showSnackBar("操作失败,未收到响应", key);
+              },
             );
-            if (failed) {
-              await Future.delayed(
-                  const Duration(milliseconds: 200),
-                  () => readDevice(readAt("0200"), initLaneState,
-                      () => showSnackBar("操作失败,未收到响应", key)));
-            }
 
             await EasyLoading.dismiss();
           },

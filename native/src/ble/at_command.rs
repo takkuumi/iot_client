@@ -33,6 +33,10 @@ fn try_until(data: &[u8], retry: u8) -> SerialResponse {
     }
     let res = send_serialport(data);
     if res.is_err() {
+      let _ = send_serialport(at_command::AT_REBOOT.as_bytes());
+      eprintln!("start reboot...");
+      std::thread::sleep(core::time::Duration::from_millis(100));
+      eprintln!("rebooted!");
       max_retry += 1;
       continue;
     }

@@ -9,7 +9,7 @@ use super::{ResponseState, SerialResponse};
 const BITS_END: &[u8; 2] = b"\r\n";
 
 fn open_tty_swk0(millis: u64) -> Result<Box<dyn serialport::SerialPort>, serialport::Error> {
-  serialport::new("/dev/tty.usbserial-1440", 115_200)
+  serialport::new("/dev/ttySWK0", 115_200)
     .data_bits(DataBits::Eight)
     .stop_bits(StopBits::One)
     .flow_control(FlowControl::None)

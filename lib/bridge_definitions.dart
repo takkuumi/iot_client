@@ -14,7 +14,10 @@ abstract class Native {
   FlutterRustBridgeTaskConstMeta get kGetNdidConstMeta;
 
   Future<SerialResponse> atNdrpt(
-      {required String id, required String data, dynamic hint});
+      {required String id,
+      required String data,
+      required int retry,
+      dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kAtNdrptConstMeta;
 
@@ -52,6 +55,7 @@ enum ResponseState {
   FailedOpenDevice,
   Timeout,
   Unknown,
+  MaxRetry,
   MaxSendRetry,
   ReadResponseError,
 }

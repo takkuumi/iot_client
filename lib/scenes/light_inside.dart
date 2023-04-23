@@ -88,7 +88,8 @@ class _LightInsideState extends State<LightInside>
     }
 
     try {
-      SerialResponse response = await api.atNdrpt(id: meshId, data: sdata);
+      SerialResponse response =
+          await api.atNdrpt(id: meshId, data: sdata, retry: 5);
       Uint8List? data = response.data;
       if (data != null) {
         return String.fromCharCodes(data);

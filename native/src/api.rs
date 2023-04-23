@@ -4,8 +4,8 @@ pub fn get_ndid() -> SerialResponse {
   at_command::get_ndid()
 }
 
-pub fn at_ndrpt(id: String, data: String) -> SerialResponse {
-  at_command::at_ndrpt(&id, data.as_bytes())
+pub fn at_ndrpt(id: String, data: String, retry: u8) -> SerialResponse {
+  at_command::at_ndrpt(&id, data.as_bytes(), retry)
 }
 
 pub fn at_ndrpt_test() -> SerialResponse {

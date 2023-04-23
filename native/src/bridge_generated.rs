@@ -36,6 +36,7 @@ fn wire_at_ndrpt_impl(
   port_: MessagePort,
   id: impl Wire2Api<String> + UnwindSafe,
   data: impl Wire2Api<String> + UnwindSafe,
+  retry: impl Wire2Api<u8> + UnwindSafe,
 ) {
   FLUTTER_RUST_BRIDGE_HANDLER.wrap(
     WrapInfo {
@@ -46,7 +47,8 @@ fn wire_at_ndrpt_impl(
     move || {
       let api_id = id.wire2api();
       let api_data = data.wire2api();
-      move |task_callback| Ok(at_ndrpt(api_id, api_data))
+      let api_retry = retry.wire2api();
+      move |task_callback| Ok(at_ndrpt(api_id, api_data, api_retry))
     },
   )
 }
@@ -164,8 +166,9 @@ impl support::IntoDart for ResponseState {
       Self::FailedOpenDevice => 1,
       Self::Timeout => 2,
       Self::Unknown => 3,
-      Self::MaxSendRetry => 4,
-      Self::ReadResponseError => 5,
+      Self::MaxRetry => 4,
+      Self::MaxSendRetry => 5,
+      Self::ReadResponseError => 6,
     }
     .into_dart()
   }

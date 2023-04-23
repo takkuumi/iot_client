@@ -11,6 +11,7 @@ pub enum ResponseState {
   FailedOpenDevice,
   Timeout,
   Unknown,
+  MaxRetry,
   MaxSendRetry,
   ReadResponseError,
 }
@@ -32,10 +33,20 @@ impl SerialResponse {
     self.data = Some(buf.to_vec());
   }
 
+  #[must_use]
+  pub fn new_err() -> Self {
+    Self {
+      state: ResponseState::MaxRetry,
+      data: None,
+    }
+  }
+
+  #[must_use]
   pub fn is_ok(&self) -> bool {
     self.state == ResponseState::Ok
   }
 
+  #[must_use]
   pub fn is_err(&self) -> bool {
     !self.is_ok()
   }

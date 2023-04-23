@@ -11,8 +11,9 @@ pub extern "C" fn wire_at_ndrpt(
   port_: i64,
   id: *mut wire_uint_8_list,
   data: *mut wire_uint_8_list,
+  retry: u8,
 ) {
-  wire_at_ndrpt_impl(port_, id, data)
+  wire_at_ndrpt_impl(port_, id, data, retry)
 }
 
 #[no_mangle]

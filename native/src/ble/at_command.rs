@@ -1,5 +1,4 @@
 use super::{crc_16, send_serialport, SerialResponse};
-use anyhow::Result;
 
 #[allow(clippy::module_inception)]
 mod at_command {
@@ -24,6 +23,21 @@ mod at_command {
   pub const AT_NDDEVKEY: &str = "AT+NDDEVKEY"; //读/写Mesh网络的设备密钥
   pub const AT_NDADV: &str = "AT+NDADV"; //始能未组网的广播
   pub const AT_LESEND: &str = "AT+LESEND"; //发送数据给GATT直连设备
+}
+
+fn try_until(data: &[u8], retry: u8) -> SerialResponse {
+  let mut max_retry: u8 = 0;
+  loop {
+    if max_retry > retry {
+      return SerialResponse::new_err();
+    }
+    let res = send_serialport(data);
+    if res.is_err() {
+      max_retry += 1;
+      continue;
+    }
+    return res;
+  }
 }
 
 pub fn get_ndid() -> SerialResponse {
@@ -61,7 +75,7 @@ pub fn reboot() -> SerialResponse {
   send_serialport(data.as_bytes())
 }
 
-pub fn at_ndrpt(id: &str, data: &[u8]) -> SerialResponse {
+pub fn at_ndrpt(id: &str, data: &[u8], retry: u8) -> SerialResponse {
   let size = data.len() + 5;
 
   let crc_data = crc_16(data);
@@ -78,11 +92,11 @@ pub fn at_ndrpt(id: &str, data: &[u8]) -> SerialResponse {
   let r = format!("{crc_data:04X}");
   bytes.extend_from_slice(r.as_bytes());
 
-  send_serialport(&bytes)
+  try_until(&bytes, retry)
 }
 
 pub fn at_ndrpt_test() -> SerialResponse {
-  at_ndrpt("0001", "01050200FF00".as_bytes())
+  at_ndrpt("0001", "01050200FF00".as_bytes(), 5)
 }
 
 #[cfg(test)]
@@ -102,7 +116,7 @@ mod test {
   pub fn at_ndrpt_works() {
     let mut i = 0;
     loop {
-      let res = super::at_ndrpt("0001", "010F020000030105".as_bytes());
+      let res = super::at_ndrpt("0001", "010F020000030105".as_bytes(), 5);
       println!("res: {res:?}");
       println!("res: {}", String::from_utf8_lossy(&res.data.unwrap()));
 
@@ -113,7 +127,7 @@ mod test {
       // let res = super::at_ndrpt("0001", "01050200FF00".as_bytes());
       // println!("res: {:?}", res);
       // println!("res: {}", String::from_utf8_lossy(&res.unwrap()));
-      let res = super::at_ndrpt("0001", "010F020000030100".as_bytes());
+      let res = super::at_ndrpt("0001", "010F020000030100".as_bytes(), 5);
       println!("res: {res:?}");
       println!("res: {}", String::from_utf8_lossy(&res.data.unwrap()));
 
@@ -126,27 +140,27 @@ mod test {
   #[test]
   pub fn at_ndrpt_test3() {
     loop {
-      let res = super::at_ndrpt("0001", "010102000004".as_bytes());
+      let res = super::at_ndrpt("0001", "010102000004".as_bytes(), 5);
       println!(
         "------1   res: {}/",
         String::from_utf8_lossy(&res.data.unwrap())
       );
-      let res = super::at_ndrpt("0001", "010F020000020101".as_bytes());
+      let res = super::at_ndrpt("0001", "010F020000020101".as_bytes(), 5);
       println!(
         "------2   res: {}/",
         String::from_utf8_lossy(&res.data.unwrap())
       );
-      let res = super::at_ndrpt("0001", "010F020000020102".as_bytes());
+      let res = super::at_ndrpt("0001", "010F020000020102".as_bytes(), 5);
       println!(
         "------3   res: {}/",
         String::from_utf8_lossy(&res.data.unwrap())
       );
-      let res = super::at_ndrpt("0001", "010F020200020101".as_bytes());
+      let res = super::at_ndrpt("0001", "010F020200020101".as_bytes(), 5);
       println!(
         "------4   res: {}/",
         String::from_utf8_lossy(&res.data.unwrap())
       );
-      let res = super::at_ndrpt("0001", "010F020200020102".as_bytes());
+      let res = super::at_ndrpt("0001", "010F020200020102".as_bytes(), 5);
       println!(
         "------5   res: {}/",
         String::from_utf8_lossy(&res.data.unwrap())
@@ -156,7 +170,7 @@ mod test {
 
   #[test]
   pub fn at_ndrpt_test4() {
-    let res = super::at_ndrpt("0001", "010F020000030105".as_bytes());
+    let res = super::at_ndrpt("0001", "010F020000030105".as_bytes(), 5);
     println!("res: {res:?}");
     println!("res: {}", String::from_utf8_lossy(&res.data.unwrap()));
   }

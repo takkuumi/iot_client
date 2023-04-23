@@ -1,6 +1,6 @@
-use super::{ResponseState, SerialResponse};
-use anyhow::{Context, Result};
 use serialport::{ClearBuffer, DataBits, FlowControl, StopBits};
+
+use super::{ResponseState, SerialResponse};
 
 // serialport::new("/dev/tty.usbserial-1430", 115200)
 // serialport::new("/dev/tty.usbserial-1410", 115200)
@@ -8,50 +8,52 @@ use serialport::{ClearBuffer, DataBits, FlowControl, StopBits};
 
 const BITS_END: &[u8; 2] = b"\r\n";
 
-fn open_tty_swk0(millis: u64) -> Result<Box<dyn serialport::SerialPort>> {
+fn open_tty_swk0(millis: u64) -> Result<Box<dyn serialport::SerialPort>, serialport::Error> {
   serialport::new("/dev/ttySWK0", 115_200)
     .data_bits(DataBits::Eight)
     .stop_bits(StopBits::One)
     .flow_control(FlowControl::None)
     .timeout(core::time::Duration::from_millis(millis))
     .open()
-    .context("failed to open device!")
 }
 
 fn read_serialport(port: &mut Box<dyn serialport::SerialPort>) -> SerialResponse {
   let mut response = SerialResponse::default();
-  let mut count: u8 = 0;
+  let mut retry: u8 = 0;
   let mut buffer = Vec::<u8>::with_capacity(80);
   loop {
     if buffer.len() > 2 && buffer.ends_with(BITS_END) {
+      response.set_ok(&buffer);
       break;
     }
 
-    let mut resp_buf = [0_u8; 10];
+    let mut resp_buf = [0_u8; 6];
     let res = port.read(&mut resp_buf);
     match res {
       Err(ref e) => {
-        if count > 10 {
+        if retry > 5 {
           response.state = ResponseState::ReadResponseError;
-          return response;
+          break;
         }
-        count += 1;
-        std::thread::sleep(core::time::Duration::from_millis(u64::from(count) * 30));
+        retry += 1;
+        let _ = port.clear(ClearBuffer::Output);
+        std::thread::sleep(core::time::Duration::from_millis(u64::from(retry) * 30));
         continue;
       }
       Ok(size) => {
         if size == 0 {
           break;
         }
-        count = 0;
+        retry = 0;
         buffer.extend_from_slice(&resp_buf[..size]);
       }
     }
   }
-  response.set_ok(&buffer);
+
   response
 }
 
+#[must_use]
 pub fn send_serialport(data: &[u8]) -> SerialResponse {
   let mut response = SerialResponse::default();
 
@@ -118,6 +120,6 @@ pub fn send_serialport(data: &[u8]) -> SerialResponse {
     break 'outer;
   }
 
-  std::thread::sleep(core::time::Duration::from_millis(200));
+  std::thread::sleep(core::time::Duration::from_millis(150));
   read_serialport(&mut port)
 }

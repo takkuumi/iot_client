@@ -43,14 +43,19 @@ class NativeImpl implements Native {
       );
 
   Future<SerialResponse> atNdrpt(
-      {required String id, required String data, dynamic hint}) {
+      {required String id,
+      required String data,
+      required int retry,
+      dynamic hint}) {
     var arg0 = _platform.api2wire_String(id);
     var arg1 = _platform.api2wire_String(data);
+    var arg2 = api2wire_u8(retry);
     return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_at_ndrpt(port_, arg0, arg1),
+      callFfi: (port_) =>
+          _platform.inner.wire_at_ndrpt(port_, arg0, arg1, arg2),
       parseSuccessData: _wire2api_serial_response,
       constMeta: kAtNdrptConstMeta,
-      argValues: [id, data],
+      argValues: [id, data, retry],
       hint: hint,
     ));
   }
@@ -58,7 +63,7 @@ class NativeImpl implements Native {
   FlutterRustBridgeTaskConstMeta get kAtNdrptConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
         debugName: "at_ndrpt",
-        argNames: ["id", "data"],
+        argNames: ["id", "data", "retry"],
       );
 
   Future<SerialResponse> atNdrptTest({dynamic hint}) {
@@ -359,21 +364,23 @@ class NativeWire implements FlutterRustBridgeWireBase {
     int port_,
     ffi.Pointer<wire_uint_8_list> id,
     ffi.Pointer<wire_uint_8_list> data,
+    int retry,
   ) {
     return _wire_at_ndrpt(
       port_,
       id,
       data,
+      retry,
     );
   }
 
   late final _wire_at_ndrptPtr = _lookup<
       ffi.NativeFunction<
           ffi.Void Function(ffi.Int64, ffi.Pointer<wire_uint_8_list>,
-              ffi.Pointer<wire_uint_8_list>)>>('wire_at_ndrpt');
+              ffi.Pointer<wire_uint_8_list>, ffi.Uint8)>>('wire_at_ndrpt');
   late final _wire_at_ndrpt = _wire_at_ndrptPtr.asFunction<
-      void Function(
-          int, ffi.Pointer<wire_uint_8_list>, ffi.Pointer<wire_uint_8_list>)>();
+      void Function(int, ffi.Pointer<wire_uint_8_list>,
+          ffi.Pointer<wire_uint_8_list>, int)>();
 
   void wire_at_ndrpt_test(
     int port_,

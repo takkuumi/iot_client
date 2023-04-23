@@ -43,5 +43,8 @@ Future<void> checkAndAskPermissions() async {
   } else {
     // bluetooth for iOS 13 and up
     await Permission.bluetooth.request();
+    await Permission.bluetoothAdvertise.request();
+    await Permission.bluetoothScan.request();
+    await Permission.bluetoothConnect.request();
   }
 }

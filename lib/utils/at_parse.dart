@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 bool getAtOk(String atResponse) {
-  return atResponse.contains('OK') && atResponse.contains('+DATA');
+  return atResponse.contains('+DATA');
 }
 
 int? getAtReadResult(String atResponse) {

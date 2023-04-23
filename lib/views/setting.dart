@@ -43,7 +43,7 @@ class _SettingAppState extends State<SettingApp> {
   @override
   void initState() {
     api.getNdid().then((value) {
-      String id = String.fromCharCodes(value);
+      String id = String.fromCharCodes(value.data!);
       setState(() {
         ndid = Future.value(id);
       });
@@ -101,14 +101,14 @@ class _SettingAppState extends State<SettingApp> {
                     if (_formKey.currentState?.validate() ?? false) {
                       String id = _textEditingController.text;
 
-                      Uint8List r2 = await api.ndreset();
-                      showSnackBar(String.fromCharCodes(r2));
-                      Uint8List r1 = await api.setNdid(id: id);
-                      showSnackBar(String.fromCharCodes(r1));
-                      Uint8List r4 = await api.setMode(mode: 2);
-                      showSnackBar(String.fromCharCodes(r4));
-                      Uint8List r3 = await api.reboot();
-                      showSnackBar(String.fromCharCodes(r3));
+                      SerialResponse r2 = await api.ndreset();
+                      showSnackBar(String.fromCharCodes(r2.data!));
+                      SerialResponse r1 = await api.setNdid(id: id);
+                      showSnackBar(String.fromCharCodes(r1.data!));
+                      SerialResponse r4 = await api.setMode(mode: 2);
+                      showSnackBar(String.fromCharCodes(r4.data!));
+                      SerialResponse r3 = await api.reboot();
+                      showSnackBar(String.fromCharCodes(r3.data!));
 
                       closeAppUsingSystemPop();
                     }

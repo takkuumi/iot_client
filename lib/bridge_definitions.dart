@@ -9,40 +9,59 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:uuid/uuid.dart';
 
 abstract class Native {
-  Future<Uint8List> getNdid({dynamic hint});
+  Future<SerialResponse> getNdid({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kGetNdidConstMeta;
 
-  Future<Uint8List> atNdrpt(
+  Future<SerialResponse> atNdrpt(
       {required String id, required String data, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kAtNdrptConstMeta;
 
-  Future<Uint8List> atNdrptTest({dynamic hint});
+  Future<SerialResponse> atNdrptTest({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kAtNdrptTestConstMeta;
 
-  Future<Uint8List> setNdid({required String id, dynamic hint});
+  Future<SerialResponse> setNdid({required String id, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kSetNdidConstMeta;
 
-  Future<Uint8List> setMode({required int mode, dynamic hint});
+  Future<SerialResponse> setMode({required int mode, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kSetModeConstMeta;
 
-  Future<Uint8List> ndreset({dynamic hint});
+  Future<SerialResponse> ndreset({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kNdresetConstMeta;
 
-  Future<Uint8List> restore({dynamic hint});
+  Future<SerialResponse> restore({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kRestoreConstMeta;
 
-  Future<Uint8List> reboot({dynamic hint});
+  Future<SerialResponse> reboot({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kRebootConstMeta;
 
   Future<String> printA({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kPrintAConstMeta;
+}
+
+enum ResponseState {
+  Ok,
+  FailedOpenDevice,
+  Timeout,
+  Unknown,
+  MaxSendRetry,
+  ReadResponseError,
+}
+
+class SerialResponse {
+  final ResponseState state;
+  final Uint8List? data;
+
+  const SerialResponse({
+    required this.state,
+    this.data,
+  });
 }

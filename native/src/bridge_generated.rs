@@ -18,6 +18,8 @@ use std::{ffi::c_void, sync::Arc};
 
 // Section: imports
 
+use crate::ble::{ResponseState, SerialResponse};
+
 // Section: wire functions
 
 fn wire_get_ndid_impl(port_: MessagePort) {
@@ -27,7 +29,7 @@ fn wire_get_ndid_impl(port_: MessagePort) {
       port: Some(port_),
       mode: FfiCallMode::Normal,
     },
-    move || move |task_callback| get_ndid(),
+    move || move |task_callback| Ok(get_ndid()),
   )
 }
 fn wire_at_ndrpt_impl(
@@ -44,7 +46,7 @@ fn wire_at_ndrpt_impl(
     move || {
       let api_id = id.wire2api();
       let api_data = data.wire2api();
-      move |task_callback| at_ndrpt(api_id, api_data)
+      move |task_callback| Ok(at_ndrpt(api_id, api_data))
     },
   )
 }
@@ -55,7 +57,7 @@ fn wire_at_ndrpt_test_impl(port_: MessagePort) {
       port: Some(port_),
       mode: FfiCallMode::Normal,
     },
-    move || move |task_callback| at_ndrpt_test(),
+    move || move |task_callback| Ok(at_ndrpt_test()),
   )
 }
 fn wire_set_ndid_impl(port_: MessagePort, id: impl Wire2Api<String> + UnwindSafe) {
@@ -67,7 +69,7 @@ fn wire_set_ndid_impl(port_: MessagePort, id: impl Wire2Api<String> + UnwindSafe
     },
     move || {
       let api_id = id.wire2api();
-      move |task_callback| set_ndid(api_id)
+      move |task_callback| Ok(set_ndid(api_id))
     },
   )
 }
@@ -80,7 +82,7 @@ fn wire_set_mode_impl(port_: MessagePort, mode: impl Wire2Api<u8> + UnwindSafe) 
     },
     move || {
       let api_mode = mode.wire2api();
-      move |task_callback| set_mode(api_mode)
+      move |task_callback| Ok(set_mode(api_mode))
     },
   )
 }
@@ -91,7 +93,7 @@ fn wire_ndreset_impl(port_: MessagePort) {
       port: Some(port_),
       mode: FfiCallMode::Normal,
     },
-    move || move |task_callback| ndreset(),
+    move || move |task_callback| Ok(ndreset()),
   )
 }
 fn wire_restore_impl(port_: MessagePort) {
@@ -101,7 +103,7 @@ fn wire_restore_impl(port_: MessagePort) {
       port: Some(port_),
       mode: FfiCallMode::Normal,
     },
-    move || move |task_callback| restore(),
+    move || move |task_callback| Ok(restore()),
   )
 }
 fn wire_reboot_impl(port_: MessagePort) {
@@ -111,7 +113,7 @@ fn wire_reboot_impl(port_: MessagePort) {
       port: Some(port_),
       mode: FfiCallMode::Normal,
     },
-    move || move |task_callback| reboot(),
+    move || move |task_callback| Ok(reboot()),
   )
 }
 fn wire_print_a_impl(port_: MessagePort) {
@@ -154,6 +156,27 @@ impl Wire2Api<u8> for u8 {
 }
 
 // Section: impl IntoDart
+
+impl support::IntoDart for ResponseState {
+  fn into_dart(self) -> support::DartAbi {
+    match self {
+      Self::Ok => 0,
+      Self::FailedOpenDevice => 1,
+      Self::Timeout => 2,
+      Self::Unknown => 3,
+      Self::MaxSendRetry => 4,
+      Self::ReadResponseError => 5,
+    }
+    .into_dart()
+  }
+}
+impl support::IntoDartExceptPrimitive for ResponseState {}
+impl support::IntoDart for SerialResponse {
+  fn into_dart(self) -> support::DartAbi {
+    vec![self.state.into_dart(), self.data.into_dart()].into_dart()
+  }
+}
+impl support::IntoDartExceptPrimitive for SerialResponse {}
 
 // Section: executor
 

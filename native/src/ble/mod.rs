@@ -1,17 +1,42 @@
 pub mod at_command;
-pub mod crc16;
-pub mod serial;
+mod crc16;
+mod serial;
 
-pub struct SerialResponse<'s>(&'s [u8]);
+use crc16::crc_16;
+use serial::send_serialport;
 
-impl<'s> SerialResponse<'s> {
-  pub fn to_buffer(&self) -> Vec<u8> {
-    self.0.to_vec()
-  }
+#[derive(Debug, PartialEq)]
+pub enum ResponseState {
+  Ok,
+  FailedOpenDevice,
+  Timeout,
+  Unknown,
+  MaxSendRetry,
+  ReadResponseError,
 }
 
-impl<'s> ToString for SerialResponse<'s> {
-  fn to_string(&self) -> String {
-    String::from_utf8_lossy(self.0).to_string()
+impl Default for ResponseState {
+  fn default() -> Self {
+    Self::Unknown
+  }
+}
+#[derive(Debug, Default)]
+pub struct SerialResponse {
+  pub state: ResponseState,
+  pub data: Option<Vec<u8>>,
+}
+
+impl SerialResponse {
+  pub fn set_ok(&mut self, buf: &[u8]) {
+    self.state = ResponseState::Ok;
+    self.data = Some(buf.to_vec());
+  }
+
+  pub fn is_ok(&self) -> bool {
+    self.state == ResponseState::Ok
+  }
+
+  pub fn is_err(&self) -> bool {
+    !self.is_ok()
   }
 }

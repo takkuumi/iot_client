@@ -26,10 +26,10 @@ class NativeImpl implements Native {
   factory NativeImpl.wasm(FutureOr<WasmModule> module) =>
       NativeImpl(module as ExternalLibrary);
   NativeImpl.raw(this._platform);
-  Future<Uint8List> getNdid({dynamic hint}) {
+  Future<SerialResponse> getNdid({dynamic hint}) {
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_get_ndid(port_),
-      parseSuccessData: _wire2api_uint_8_list,
+      parseSuccessData: _wire2api_serial_response,
       constMeta: kGetNdidConstMeta,
       argValues: [],
       hint: hint,
@@ -42,13 +42,13 @@ class NativeImpl implements Native {
         argNames: [],
       );
 
-  Future<Uint8List> atNdrpt(
+  Future<SerialResponse> atNdrpt(
       {required String id, required String data, dynamic hint}) {
     var arg0 = _platform.api2wire_String(id);
     var arg1 = _platform.api2wire_String(data);
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_at_ndrpt(port_, arg0, arg1),
-      parseSuccessData: _wire2api_uint_8_list,
+      parseSuccessData: _wire2api_serial_response,
       constMeta: kAtNdrptConstMeta,
       argValues: [id, data],
       hint: hint,
@@ -61,10 +61,10 @@ class NativeImpl implements Native {
         argNames: ["id", "data"],
       );
 
-  Future<Uint8List> atNdrptTest({dynamic hint}) {
+  Future<SerialResponse> atNdrptTest({dynamic hint}) {
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_at_ndrpt_test(port_),
-      parseSuccessData: _wire2api_uint_8_list,
+      parseSuccessData: _wire2api_serial_response,
       constMeta: kAtNdrptTestConstMeta,
       argValues: [],
       hint: hint,
@@ -77,11 +77,11 @@ class NativeImpl implements Native {
         argNames: [],
       );
 
-  Future<Uint8List> setNdid({required String id, dynamic hint}) {
+  Future<SerialResponse> setNdid({required String id, dynamic hint}) {
     var arg0 = _platform.api2wire_String(id);
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_set_ndid(port_, arg0),
-      parseSuccessData: _wire2api_uint_8_list,
+      parseSuccessData: _wire2api_serial_response,
       constMeta: kSetNdidConstMeta,
       argValues: [id],
       hint: hint,
@@ -94,11 +94,11 @@ class NativeImpl implements Native {
         argNames: ["id"],
       );
 
-  Future<Uint8List> setMode({required int mode, dynamic hint}) {
+  Future<SerialResponse> setMode({required int mode, dynamic hint}) {
     var arg0 = api2wire_u8(mode);
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_set_mode(port_, arg0),
-      parseSuccessData: _wire2api_uint_8_list,
+      parseSuccessData: _wire2api_serial_response,
       constMeta: kSetModeConstMeta,
       argValues: [mode],
       hint: hint,
@@ -111,10 +111,10 @@ class NativeImpl implements Native {
         argNames: ["mode"],
       );
 
-  Future<Uint8List> ndreset({dynamic hint}) {
+  Future<SerialResponse> ndreset({dynamic hint}) {
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_ndreset(port_),
-      parseSuccessData: _wire2api_uint_8_list,
+      parseSuccessData: _wire2api_serial_response,
       constMeta: kNdresetConstMeta,
       argValues: [],
       hint: hint,
@@ -127,10 +127,10 @@ class NativeImpl implements Native {
         argNames: [],
       );
 
-  Future<Uint8List> restore({dynamic hint}) {
+  Future<SerialResponse> restore({dynamic hint}) {
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_restore(port_),
-      parseSuccessData: _wire2api_uint_8_list,
+      parseSuccessData: _wire2api_serial_response,
       constMeta: kRestoreConstMeta,
       argValues: [],
       hint: hint,
@@ -143,10 +143,10 @@ class NativeImpl implements Native {
         argNames: [],
       );
 
-  Future<Uint8List> reboot({dynamic hint}) {
+  Future<SerialResponse> reboot({dynamic hint}) {
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_reboot(port_),
-      parseSuccessData: _wire2api_uint_8_list,
+      parseSuccessData: _wire2api_serial_response,
       constMeta: kRebootConstMeta,
       argValues: [],
       hint: hint,
@@ -182,6 +182,28 @@ class NativeImpl implements Native {
 
   String _wire2api_String(dynamic raw) {
     return raw as String;
+  }
+
+  int _wire2api_i32(dynamic raw) {
+    return raw as int;
+  }
+
+  Uint8List? _wire2api_opt_uint_8_list(dynamic raw) {
+    return raw == null ? null : _wire2api_uint_8_list(raw);
+  }
+
+  ResponseState _wire2api_response_state(dynamic raw) {
+    return ResponseState.values[raw];
+  }
+
+  SerialResponse _wire2api_serial_response(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return SerialResponse(
+      state: _wire2api_response_state(arr[0]),
+      data: _wire2api_opt_uint_8_list(arr[1]),
+    );
   }
 
   int _wire2api_u8(dynamic raw) {

@@ -1,5 +1,5 @@
-use super::serial::send_serialport;
-use anyhow::{Ok, Result};
+use super::{crc_16, send_serialport, SerialResponse};
+use anyhow::Result;
 
 #[allow(clippy::module_inception)]
 mod at_command {
@@ -26,67 +26,45 @@ mod at_command {
   pub const AT_LESEND: &str = "AT+LESEND"; //发送数据给GATT直连设备
 }
 
-pub fn get_ndid() -> Result<Vec<u8>> {
+pub fn get_ndid() -> SerialResponse {
   let data = format!("{}", at_command::AT_NDID);
-  let mut buffer = Vec::<u8>::new();
-  let res = send_serialport(data.as_bytes(), &mut buffer);
-  eprintln!("res: {res:?}");
-
-  Ok(buffer)
+  send_serialport(data.as_bytes())
 }
 
-pub fn set_ndid(id: &str) -> Result<Vec<u8>> {
+pub fn set_ndid(id: &str) -> SerialResponse {
   let data = format!("{}={}", at_command::AT_NDID, id);
-  let mut buffer = Vec::<u8>::new();
-  send_serialport(data.as_bytes(), &mut buffer)?;
-
-  Ok(buffer)
+  send_serialport(data.as_bytes())
 }
 
-pub fn set_baud() -> Result<Vec<u8>> {
+pub fn set_baud() -> SerialResponse {
   let data = format!("{}=115200", at_command::AT_BAUD);
-  let mut buffer = Vec::<u8>::new();
-  send_serialport(data.as_bytes(), &mut buffer)?;
-
-  Ok(buffer)
+  send_serialport(data.as_bytes())
 }
 
-pub fn ndreset() -> Result<Vec<u8>> {
+pub fn ndreset() -> SerialResponse {
   let data = format!("{}", at_command::AT_NDRESET);
-  let mut buffer = Vec::<u8>::new();
-  send_serialport(data.as_bytes(), &mut buffer)?;
-
-  Ok(buffer)
+  send_serialport(data.as_bytes())
 }
 
-pub fn restore() -> Result<Vec<u8>> {
+pub fn restore() -> SerialResponse {
   let data = format!("{}", at_command::AT_RESTORE);
-  let mut buffer = Vec::<u8>::new();
-  send_serialport(data.as_bytes(), &mut buffer)?;
-
-  Ok(buffer)
+  send_serialport(data.as_bytes())
 }
 
-pub fn set_mode(mode: u8) -> Result<Vec<u8>> {
+pub fn set_mode(mode: u8) -> SerialResponse {
   let data = format!("{}={}", at_command::AT_MODE, mode);
-  let mut buffer = Vec::<u8>::new();
-  send_serialport(data.as_bytes(), &mut buffer)?;
-
-  Ok(buffer)
+  send_serialport(data.as_bytes())
 }
 
-pub fn reboot() -> Result<Vec<u8>> {
+pub fn reboot() -> SerialResponse {
   let data = format!("{}", at_command::AT_REBOOT);
-  let mut buffer = Vec::<u8>::new();
-  send_serialport(data.as_bytes(), &mut buffer)?;
-  Ok(buffer)
+  send_serialport(data.as_bytes())
 }
 
-pub fn at_ndrpt(id: &str, data: &[u8]) -> Result<Vec<u8>> {
+pub fn at_ndrpt(id: &str, data: &[u8]) -> SerialResponse {
   let size = data.len() + 5;
 
-  let crc_data = super::crc16::crc(data);
-  let crc_data = u16::from_le_bytes(crc_data.to_be_bytes());
+  let crc_data = crc_16(data);
   let mut bytes = Vec::<u8>::new();
   bytes.extend_from_slice(at_command::AT_NDRPT.as_bytes());
   bytes.push(b'=');
@@ -100,14 +78,10 @@ pub fn at_ndrpt(id: &str, data: &[u8]) -> Result<Vec<u8>> {
   let r = format!("{crc_data:04X}");
   bytes.extend_from_slice(r.as_bytes());
 
-  eprintln!("bytes: {}", String::from_utf8_lossy(&bytes));
-
-  let mut buffer = Vec::<u8>::new();
-  send_serialport(&bytes, &mut buffer)?;
-  Ok(buffer)
+  send_serialport(&bytes)
 }
 
-pub fn at_ndrpt_test() -> Result<Vec<u8>> {
+pub fn at_ndrpt_test() -> SerialResponse {
   at_ndrpt("0001", "01050200FF00".as_bytes())
 }
 
@@ -115,20 +89,22 @@ pub fn at_ndrpt_test() -> Result<Vec<u8>> {
 mod test {
 
   #[test]
-  pub fn at_test() {
+  pub fn at_works() {
     let res = super::get_ndid();
     assert!(res.is_ok());
   }
 
-  //[65, 84, 43, 78, 68, 82, 80, 84, 61, 48, 48, 48, 49, 44, 17, 44, 200, 48, 49, 48, 53, 48, 50, 48, 48, 70, 70, 48, 48, 56, 68, 56, 50, 13, 10]
-  //[65, 84, 43, 78, 68, 82, 80, 84, 61, 48, 48, 48, 49, 44, 49, 55, 44, 200, 48, 49, 48, 53, 48, 50, 48, 48, 70, 70, 48, 48, 56, 68, 56, 50, 13, 10]
+  //[65, 84, 43, 78, 68, 82, 80, 84, 61, 48, 48, 48, 49, 44, 17, 44, 200, 48, 49,
+  //[65, 48, 53, 48, 50, 48, 48, 70, 70, 48, 48, 56, 68, 56, 50, 13, 10] 84, 43,
+  //[65, 78, 68, 82, 80, 84, 61, 48, 48, 48, 49, 44, 49, 55, 44, 200, 48, 49, 48,
+  //[65, 53, 48, 50, 48, 48, 70, 70, 48, 48, 56, 68, 56, 50, 13, 10]
   #[test]
-  pub fn at_ndrpt_test() {
+  pub fn at_ndrpt_works() {
     let mut i = 0;
     loop {
       let res = super::at_ndrpt("0001", "010F020000030105".as_bytes());
       println!("res: {res:?}");
-      println!("res: {}", String::from_utf8_lossy(&res.unwrap()));
+      println!("res: {}", String::from_utf8_lossy(&res.data.unwrap()));
 
       i += 1;
 
@@ -139,7 +115,7 @@ mod test {
       // println!("res: {}", String::from_utf8_lossy(&res.unwrap()));
       let res = super::at_ndrpt("0001", "010F020000030100".as_bytes());
       println!("res: {res:?}");
-      println!("res: {}", String::from_utf8_lossy(&res.unwrap()));
+      println!("res: {}", String::from_utf8_lossy(&res.data.unwrap()));
 
       i += 1;
 
@@ -151,17 +127,30 @@ mod test {
   pub fn at_ndrpt_test3() {
     loop {
       let res = super::at_ndrpt("0001", "010102000004".as_bytes());
-      println!("res: {}", String::from_utf8_lossy(&res.unwrap()));
+      println!(
+        "------1   res: {}/",
+        String::from_utf8_lossy(&res.data.unwrap())
+      );
       let res = super::at_ndrpt("0001", "010F020000020101".as_bytes());
-      println!("res: {}", String::from_utf8_lossy(&res.unwrap()));
+      println!(
+        "------2   res: {}/",
+        String::from_utf8_lossy(&res.data.unwrap())
+      );
       let res = super::at_ndrpt("0001", "010F020000020102".as_bytes());
-      println!("res: {}", String::from_utf8_lossy(&res.unwrap()));
+      println!(
+        "------3   res: {}/",
+        String::from_utf8_lossy(&res.data.unwrap())
+      );
       let res = super::at_ndrpt("0001", "010F020200020101".as_bytes());
-      println!("res: {}", String::from_utf8_lossy(&res.unwrap()));
+      println!(
+        "------4   res: {}/",
+        String::from_utf8_lossy(&res.data.unwrap())
+      );
       let res = super::at_ndrpt("0001", "010F020200020102".as_bytes());
-
-      println!("res: {res:?}");
-      println!("res: {}", String::from_utf8_lossy(&res.unwrap()));
+      println!(
+        "------5   res: {}/",
+        String::from_utf8_lossy(&res.data.unwrap())
+      );
     }
   }
 
@@ -169,7 +158,7 @@ mod test {
   pub fn at_ndrpt_test4() {
     let res = super::at_ndrpt("0001", "010F020000030105".as_bytes());
     println!("res: {res:?}");
-    println!("res: {}", String::from_utf8_lossy(&res.unwrap()));
+    println!("res: {}", String::from_utf8_lossy(&res.data.unwrap()));
   }
 
   #[test]
@@ -181,8 +170,8 @@ mod test {
       if i > 100 {
         break;
       }
-      let res = super::set_baud().unwrap();
-      println!("res: {}", String::from_utf8_lossy(&res));
+      let res = super::set_baud();
+      println!("res: {}", String::from_utf8_lossy(&res.data.unwrap()));
       i += 1;
     }
 

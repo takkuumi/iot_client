@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -120,7 +119,13 @@ class _LaneIndicatorState extends State<LaneIndicator> {
       return;
     }
 
-    Uint8List data = await api.atNdrpt(id: meshId, data: sdata);
+    SerialResponse response = await api.atNdrpt(id: meshId, data: sdata);
+    Uint8List? data = response.data;
+    if (data == null) {
+      onError();
+      return;
+    }
+
     String resp = String.fromCharCodes(data);
 
     int? res = getAtReadResult(resp);
@@ -150,8 +155,12 @@ class _LaneIndicatorState extends State<LaneIndicator> {
       return;
     }
 
-    Uint8List x0200Data = await api.atNdrpt(id: meshId, data: x0200);
-
+    SerialResponse response = await api.atNdrpt(id: meshId, data: x0200);
+    Uint8List? x0200Data = response.data;
+    if (x0200Data == null) {
+      onError();
+      return;
+    }
     String resp = String.fromCharCodes(x0200Data);
     debugPrint(resp);
     bool isOk = getAtOk(resp);

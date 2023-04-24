@@ -1,11 +1,24 @@
 import 'package:flutter/material.dart';
 
 final decoration = BoxDecoration(
-  border: Border.all(
-    width: 1,
-    color: Color.fromRGBO(221, 221, 221, 1),
-  ),
   borderRadius: BorderRadius.circular(10),
+  boxShadow: [
+    BoxShadow(
+      color: Color.fromRGBO(221, 221, 221, 1),
+      offset: const Offset(
+        5.0,
+        5.0,
+      ),
+      blurRadius: 10.0,
+      spreadRadius: 2.0,
+    ), //BoxShadow
+    BoxShadow(
+      color: Colors.white,
+      offset: const Offset(0.0, 0.0),
+      blurRadius: 0.0,
+      spreadRadius: 0.0,
+    ), //BoxShadow
+  ],
 );
 
 Widget createIcon(

@@ -4,36 +4,36 @@
   "buttonTheme": {
     "alignedDropdown": false,
     "colorScheme": {
-      "background": "#fffefbff",
+      "background": "#fffdfcff",
       "brightness": "light",
       "error": "#ffba1a1a",
       "errorContainer": "#ffffdad6",
-      "inversePrimary": "#ffbac3ff",
-      "inverseSurface": "#ff303034",
-      "onBackground": "#ff1b1b1f",
+      "inversePrimary": "#ff9ecaff",
+      "inverseSurface": "#ff2f3033",
+      "onBackground": "#ff1a1c1e",
       "onError": "#ffffffff",
       "onErrorContainer": "#ff410002",
-      "onInverseSurface": "#fff3f0f4",
+      "onInverseSurface": "#fff1f0f4",
       "onPrimary": "#ffffffff",
-      "onPrimaryContainer": "#ff00105c",
+      "onPrimaryContainer": "#ff001d36",
       "onSecondary": "#ffffffff",
-      "onSecondaryContainer": "#ff181a2c",
-      "onSurface": "#ff1b1b1f",
-      "onSurfaceVariant": "#ff46464f",
+      "onSecondaryContainer": "#ff101c2b",
+      "onSurface": "#ff001d35",
+      "onSurfaceVariant": "#ff43474e",
       "onTertiary": "#ffffffff",
-      "onTertiaryContainer": "#ff2d1228",
-      "outline": "#ff767680",
-      "outlineVarient": "#ffc7c5d0",
-      "primary": "#ff4355b9",
-      "primaryContainer": "#ffdee0ff",
-      "secondary": "#ff5b5d72",
-      "secondaryContainer": "#ffe0e1f9",
+      "onTertiaryContainer": "#ff251431",
+      "outline": "#ff73777f",
+      "outlineVariant": "#ffc3c7cf",
+      "primary": "#ff0061a4",
+      "primaryContainer": "#ffd1e4ff",
+      "secondary": "#ff535f70",
+      "secondaryContainer": "#ffd7e3f7",
       "shadow": "#ff000000",
-      "surface": "#fffefbff",
-      "surfaceTint": "#ff4355b9",
-      "surfaceVariant": "#ffe3e1ec",
-      "tertiary": "#ff77536d",
-      "tertiaryContainer": "#ffffd7f1"
+      "surface": "#ff9dcaff",
+      "surfaceTint": "#ff0061a4",
+      "surfaceVariant": "#ffdfe2eb",
+      "tertiary": "#ff6b5778",
+      "tertiaryContainer": "#fff2daff"
     },
     "height": 36,
     "layoutBehavior": "padded",
@@ -78,43 +78,43 @@
     },
     "textTheme": "normal"
   },
-  "canvasColor": "#fffefbff",
-  "cardColor": "#fffefbff",
+  "canvasColor": "#fffdfcff",
+  "cardColor": "#ff9dcaff",
   "colorScheme": {
-    "background": "#fffefbff",
+    "background": "#fffdfcff",
     "brightness": "light",
     "error": "#ffba1a1a",
     "errorContainer": "#ffffdad6",
-    "inversePrimary": "#ffbac3ff",
-    "inverseSurface": "#ff303034",
-    "onBackground": "#ff1b1b1f",
+    "inversePrimary": "#ff9ecaff",
+    "inverseSurface": "#ff2f3033",
+    "onBackground": "#ff1a1c1e",
     "onError": "#ffffffff",
     "onErrorContainer": "#ff410002",
-    "onInverseSurface": "#fff3f0f4",
+    "onInverseSurface": "#fff1f0f4",
     "onPrimary": "#ffffffff",
-    "onPrimaryContainer": "#ff00105c",
+    "onPrimaryContainer": "#ff001d36",
     "onSecondary": "#ffffffff",
-    "onSecondaryContainer": "#ff181a2c",
-    "onSurface": "#ff1b1b1f",
-    "onSurfaceVariant": "#ff46464f",
+    "onSecondaryContainer": "#ff101c2b",
+    "onSurface": "#ff001d35",
+    "onSurfaceVariant": "#ff43474e",
     "onTertiary": "#ffffffff",
-    "onTertiaryContainer": "#ff2d1228",
-    "outline": "#ff767680",
-    "outlineVarient": "#ffc7c5d0",
-    "primary": "#ff4355b9",
-    "primaryContainer": "#ffdee0ff",
-    "secondary": "#ff5b5d72",
-    "secondaryContainer": "#ffe0e1f9",
+    "onTertiaryContainer": "#ff251431",
+    "outline": "#ff73777f",
+    "outlineVariant": "#ffc3c7cf",
+    "primary": "#ff0061a4",
+    "primaryContainer": "#ffd1e4ff",
+    "secondary": "#ff535f70",
+    "secondaryContainer": "#ffd7e3f7",
     "shadow": "#ff000000",
-    "surface": "#fffefbff",
-    "surfaceTint": "#ff4355b9",
-    "surfaceVariant": "#ffe3e1ec",
-    "tertiary": "#ff77536d",
-    "tertiaryContainer": "#ffffd7f1"
+    "surface": "#ff9dcaff",
+    "surfaceTint": "#ff0061a4",
+    "surfaceVariant": "#ffdfe2eb",
+    "tertiary": "#ff6b5778",
+    "tertiaryContainer": "#fff2daff"
   },
-  "dialogBackgroundColor": "#fffefbff",
+  "dialogBackgroundColor": "#fffdfcff",
   "disabledColor": "#61000000",
-  "dividerColor": "#1f1b1b1f",
+  "dividerColor": "#1f001d35",
   "focusColor": "#1f000000",
   "highlightColor": "#66bcbcbc",
   "hintColor": "#99000000",
@@ -133,7 +133,7 @@
   },
   "materialTapTargetSize": "shrinkWrap",
   "platform": "macOS",
-  "primaryColor": "#ff4355b9",
+  "primaryColor": "#ff0061a4",
   "primaryColorDark": "#ff1976d2",
   "primaryColorLight": "#ffbbdefb",
   "primaryIconTheme": {
@@ -143,7 +143,6 @@
     "bodyLarge": {
       "color": "#ffffffff",
       "decoration": "none",
-      "fontFamily": ".AppleSystemUIFont",
       "fontSize": 16,
       "fontWeight": "w400",
       "inherit": false,
@@ -153,7 +152,6 @@
     "bodyMedium": {
       "color": "#ffffffff",
       "decoration": "none",
-      "fontFamily": ".AppleSystemUIFont",
       "fontSize": 14,
       "fontWeight": "w400",
       "inherit": false,
@@ -163,7 +161,6 @@
     "bodySmall": {
       "color": "#b3ffffff",
       "decoration": "none",
-      "fontFamily": ".AppleSystemUIFont",
       "fontSize": 12,
       "fontWeight": "w400",
       "inherit": false,
@@ -173,7 +170,6 @@
     "displayLarge": {
       "color": "#b3ffffff",
       "decoration": "none",
-      "fontFamily": ".AppleSystemUIFont",
       "fontSize": 96,
       "fontWeight": "w300",
       "inherit": false,
@@ -183,7 +179,6 @@
     "displayMedium": {
       "color": "#b3ffffff",
       "decoration": "none",
-      "fontFamily": ".AppleSystemUIFont",
       "fontSize": 60,
       "fontWeight": "w300",
       "inherit": false,
@@ -193,7 +188,6 @@
     "displaySmall": {
       "color": "#b3ffffff",
       "decoration": "none",
-      "fontFamily": ".AppleSystemUIFont",
       "fontSize": 48,
       "fontWeight": "w400",
       "inherit": false,
@@ -203,7 +197,6 @@
     "headlineLarge": {
       "color": "#b3ffffff",
       "decoration": "none",
-      "fontFamily": ".AppleSystemUIFont",
       "fontSize": 40,
       "fontWeight": "w400",
       "inherit": false,
@@ -213,7 +206,6 @@
     "headlineMedium": {
       "color": "#b3ffffff",
       "decoration": "none",
-      "fontFamily": ".AppleSystemUIFont",
       "fontSize": 34,
       "fontWeight": "w400",
       "inherit": false,
@@ -223,7 +215,6 @@
     "headlineSmall": {
       "color": "#ffffffff",
       "decoration": "none",
-      "fontFamily": ".AppleSystemUIFont",
       "fontSize": 24,
       "fontWeight": "w400",
       "inherit": false,
@@ -233,7 +224,6 @@
     "labelLarge": {
       "color": "#ffffffff",
       "decoration": "none",
-      "fontFamily": ".AppleSystemUIFont",
       "fontSize": 14,
       "fontWeight": "w500",
       "inherit": false,
@@ -243,7 +233,6 @@
     "labelMedium": {
       "color": "#ffffffff",
       "decoration": "none",
-      "fontFamily": ".AppleSystemUIFont",
       "fontSize": 11,
       "fontWeight": "w400",
       "inherit": false,
@@ -253,7 +242,6 @@
     "labelSmall": {
       "color": "#ffffffff",
       "decoration": "none",
-      "fontFamily": ".AppleSystemUIFont",
       "fontSize": 10,
       "fontWeight": "w400",
       "inherit": false,
@@ -263,7 +251,6 @@
     "titleLarge": {
       "color": "#ffffffff",
       "decoration": "none",
-      "fontFamily": ".AppleSystemUIFont",
       "fontSize": 20,
       "fontWeight": "w500",
       "inherit": false,
@@ -273,7 +260,6 @@
     "titleMedium": {
       "color": "#ffffffff",
       "decoration": "none",
-      "fontFamily": ".AppleSystemUIFont",
       "fontSize": 16,
       "fontWeight": "w400",
       "inherit": false,
@@ -283,7 +269,6 @@
     "titleSmall": {
       "color": "#ffffffff",
       "decoration": "none",
-      "fontFamily": ".AppleSystemUIFont",
       "fontSize": 14,
       "fontWeight": "w500",
       "inherit": false,
@@ -291,7 +276,7 @@
       "textBaseline": "alphabetic"
     }
   },
-  "scaffoldBackgroundColor": "#fffefbff",
+  "scaffoldBackgroundColor": "#fffdfcff",
   "secondaryHeaderColor": "#ffe3f2fd",
   "shadowColor": "#ff000000",
   "splashColor": "#66c8c8c8",
@@ -300,7 +285,6 @@
     "bodyLarge": {
       "color": "#dd000000",
       "decoration": "none",
-      "fontFamily": ".AppleSystemUIFont",
       "fontSize": 16,
       "fontWeight": "w400",
       "inherit": false,
@@ -310,7 +294,6 @@
     "bodyMedium": {
       "color": "#dd000000",
       "decoration": "none",
-      "fontFamily": ".AppleSystemUIFont",
       "fontSize": 14,
       "fontWeight": "w400",
       "inherit": false,
@@ -320,7 +303,6 @@
     "bodySmall": {
       "color": "#8a000000",
       "decoration": "none",
-      "fontFamily": ".AppleSystemUIFont",
       "fontSize": 12,
       "fontWeight": "w400",
       "inherit": false,
@@ -330,7 +312,6 @@
     "displayLarge": {
       "color": "#8a000000",
       "decoration": "none",
-      "fontFamily": ".AppleSystemUIFont",
       "fontSize": 96,
       "fontWeight": "w300",
       "inherit": false,
@@ -340,7 +321,6 @@
     "displayMedium": {
       "color": "#8a000000",
       "decoration": "none",
-      "fontFamily": ".AppleSystemUIFont",
       "fontSize": 60,
       "fontWeight": "w300",
       "inherit": false,
@@ -350,7 +330,6 @@
     "displaySmall": {
       "color": "#8a000000",
       "decoration": "none",
-      "fontFamily": ".AppleSystemUIFont",
       "fontSize": 48,
       "fontWeight": "w400",
       "inherit": false,
@@ -360,7 +339,6 @@
     "headlineLarge": {
       "color": "#8a000000",
       "decoration": "none",
-      "fontFamily": ".AppleSystemUIFont",
       "fontSize": 40,
       "fontWeight": "w400",
       "inherit": false,
@@ -370,7 +348,6 @@
     "headlineMedium": {
       "color": "#8a000000",
       "decoration": "none",
-      "fontFamily": ".AppleSystemUIFont",
       "fontSize": 34,
       "fontWeight": "w400",
       "inherit": false,
@@ -380,7 +357,6 @@
     "headlineSmall": {
       "color": "#dd000000",
       "decoration": "none",
-      "fontFamily": ".AppleSystemUIFont",
       "fontSize": 24,
       "fontWeight": "w400",
       "inherit": false,
@@ -390,7 +366,6 @@
     "labelLarge": {
       "color": "#dd000000",
       "decoration": "none",
-      "fontFamily": ".AppleSystemUIFont",
       "fontSize": 14,
       "fontWeight": "w500",
       "inherit": false,
@@ -400,7 +375,6 @@
     "labelMedium": {
       "color": "#ff000000",
       "decoration": "none",
-      "fontFamily": ".AppleSystemUIFont",
       "fontSize": 11,
       "fontWeight": "w400",
       "inherit": false,
@@ -410,7 +384,6 @@
     "labelSmall": {
       "color": "#ff000000",
       "decoration": "none",
-      "fontFamily": ".AppleSystemUIFont",
       "fontSize": 10,
       "fontWeight": "w400",
       "inherit": false,
@@ -420,7 +393,6 @@
     "titleLarge": {
       "color": "#dd000000",
       "decoration": "none",
-      "fontFamily": ".AppleSystemUIFont",
       "fontSize": 20,
       "fontWeight": "w500",
       "inherit": false,
@@ -430,7 +402,6 @@
     "titleMedium": {
       "color": "#dd000000",
       "decoration": "none",
-      "fontFamily": ".AppleSystemUIFont",
       "fontSize": 16,
       "fontWeight": "w400",
       "inherit": false,
@@ -440,7 +411,6 @@
     "titleSmall": {
       "color": "#ff000000",
       "decoration": "none",
-      "fontFamily": ".AppleSystemUIFont",
       "fontSize": 14,
       "fontWeight": "w500",
       "inherit": false,
@@ -453,91 +423,76 @@
       "bodyLarge": {
         "color": "#dd000000",
         "decoration": "none",
-        "fontFamily": ".AppleSystemUIFont",
         "inherit": true
       },
       "bodyMedium": {
         "color": "#dd000000",
         "decoration": "none",
-        "fontFamily": ".AppleSystemUIFont",
         "inherit": true
       },
       "bodySmall": {
         "color": "#8a000000",
         "decoration": "none",
-        "fontFamily": ".AppleSystemUIFont",
         "inherit": true
       },
       "displayLarge": {
         "color": "#8a000000",
         "decoration": "none",
-        "fontFamily": ".AppleSystemUIFont",
         "inherit": true
       },
       "displayMedium": {
         "color": "#8a000000",
         "decoration": "none",
-        "fontFamily": ".AppleSystemUIFont",
         "inherit": true
       },
       "displaySmall": {
         "color": "#8a000000",
         "decoration": "none",
-        "fontFamily": ".AppleSystemUIFont",
         "inherit": true
       },
       "headlineLarge": {
         "color": "#8a000000",
         "decoration": "none",
-        "fontFamily": ".AppleSystemUIFont",
         "inherit": true
       },
       "headlineMedium": {
         "color": "#8a000000",
         "decoration": "none",
-        "fontFamily": ".AppleSystemUIFont",
         "inherit": true
       },
       "headlineSmall": {
         "color": "#dd000000",
         "decoration": "none",
-        "fontFamily": ".AppleSystemUIFont",
         "inherit": true
       },
       "labelLarge": {
         "color": "#dd000000",
         "decoration": "none",
-        "fontFamily": ".AppleSystemUIFont",
         "inherit": true
       },
       "labelMedium": {
         "color": "#ff000000",
         "decoration": "none",
-        "fontFamily": ".AppleSystemUIFont",
         "inherit": true
       },
       "labelSmall": {
         "color": "#ff000000",
         "decoration": "none",
-        "fontFamily": ".AppleSystemUIFont",
         "inherit": true
       },
       "titleLarge": {
         "color": "#dd000000",
         "decoration": "none",
-        "fontFamily": ".AppleSystemUIFont",
         "inherit": true
       },
       "titleMedium": {
         "color": "#dd000000",
         "decoration": "none",
-        "fontFamily": ".AppleSystemUIFont",
         "inherit": true
       },
       "titleSmall": {
         "color": "#ff000000",
         "decoration": "none",
-        "fontFamily": ".AppleSystemUIFont",
         "inherit": true
       }
     },
@@ -823,96 +778,81 @@
       "bodyLarge": {
         "color": "#ffffffff",
         "decoration": "none",
-        "fontFamily": ".AppleSystemUIFont",
         "inherit": true
       },
       "bodyMedium": {
         "color": "#ffffffff",
         "decoration": "none",
-        "fontFamily": ".AppleSystemUIFont",
         "inherit": true
       },
       "bodySmall": {
         "color": "#b3ffffff",
         "decoration": "none",
-        "fontFamily": ".AppleSystemUIFont",
         "inherit": true
       },
       "displayLarge": {
         "color": "#b3ffffff",
         "decoration": "none",
-        "fontFamily": ".AppleSystemUIFont",
         "inherit": true
       },
       "displayMedium": {
         "color": "#b3ffffff",
         "decoration": "none",
-        "fontFamily": ".AppleSystemUIFont",
         "inherit": true
       },
       "displaySmall": {
         "color": "#b3ffffff",
         "decoration": "none",
-        "fontFamily": ".AppleSystemUIFont",
         "inherit": true
       },
       "headlineLarge": {
         "color": "#b3ffffff",
         "decoration": "none",
-        "fontFamily": ".AppleSystemUIFont",
         "inherit": true
       },
       "headlineMedium": {
         "color": "#b3ffffff",
         "decoration": "none",
-        "fontFamily": ".AppleSystemUIFont",
         "inherit": true
       },
       "headlineSmall": {
         "color": "#ffffffff",
         "decoration": "none",
-        "fontFamily": ".AppleSystemUIFont",
         "inherit": true
       },
       "labelLarge": {
         "color": "#ffffffff",
         "decoration": "none",
-        "fontFamily": ".AppleSystemUIFont",
         "inherit": true
       },
       "labelMedium": {
         "color": "#ffffffff",
         "decoration": "none",
-        "fontFamily": ".AppleSystemUIFont",
         "inherit": true
       },
       "labelSmall": {
         "color": "#ffffffff",
         "decoration": "none",
-        "fontFamily": ".AppleSystemUIFont",
         "inherit": true
       },
       "titleLarge": {
         "color": "#ffffffff",
         "decoration": "none",
-        "fontFamily": ".AppleSystemUIFont",
         "inherit": true
       },
       "titleMedium": {
         "color": "#ffffffff",
         "decoration": "none",
-        "fontFamily": ".AppleSystemUIFont",
         "inherit": true
       },
       "titleSmall": {
         "color": "#ffffffff",
         "decoration": "none",
-        "fontFamily": ".AppleSystemUIFont",
         "inherit": true
       }
     }
   },
   "unselectedWidgetColor": "#8a000000",
-  "useMaterial3": false,
+  "useMaterial3": true,
   "visualDensity": "compact"
 }

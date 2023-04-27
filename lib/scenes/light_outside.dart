@@ -89,7 +89,7 @@ class _LightOutsideState extends State<LightOutside>
 
     try {
       SerialResponse response =
-          await api.atNdrpt(id: meshId, data: sdata, retry: 5);
+          await api.bleAtNdrpt(id: meshId, data: sdata, retry: 5);
       Uint8List? data = response.data;
       if (data != null) {
         return String.fromCharCodes(data);

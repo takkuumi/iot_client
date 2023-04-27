@@ -9,45 +9,41 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:uuid/uuid.dart';
 
 abstract class Native {
-  Future<SerialResponse> getNdid({dynamic hint});
+  Future<SerialResponse> bleGetNdid({dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta get kGetNdidConstMeta;
+  FlutterRustBridgeTaskConstMeta get kBleGetNdidConstMeta;
 
-  Future<SerialResponse> atNdrpt(
+  Future<SerialResponse> bleAtNdrpt(
       {required String id,
       required String data,
       required int retry,
       dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta get kAtNdrptConstMeta;
+  FlutterRustBridgeTaskConstMeta get kBleAtNdrptConstMeta;
 
-  Future<SerialResponse> atNdrptTest({dynamic hint});
+  Future<SerialResponse> bleAtNdrptTest({dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta get kAtNdrptTestConstMeta;
+  FlutterRustBridgeTaskConstMeta get kBleAtNdrptTestConstMeta;
 
-  Future<SerialResponse> setNdid({required String id, dynamic hint});
+  Future<SerialResponse> bleSetNdid({required String id, dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta get kSetNdidConstMeta;
+  FlutterRustBridgeTaskConstMeta get kBleSetNdidConstMeta;
 
-  Future<SerialResponse> setMode({required int mode, dynamic hint});
+  Future<SerialResponse> bleSetMode({required int mode, dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta get kSetModeConstMeta;
+  FlutterRustBridgeTaskConstMeta get kBleSetModeConstMeta;
 
-  Future<SerialResponse> ndreset({dynamic hint});
+  Future<SerialResponse> bleNdreset({dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta get kNdresetConstMeta;
+  FlutterRustBridgeTaskConstMeta get kBleNdresetConstMeta;
 
-  Future<SerialResponse> restore({dynamic hint});
+  Future<SerialResponse> bleRestore({dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta get kRestoreConstMeta;
+  FlutterRustBridgeTaskConstMeta get kBleRestoreConstMeta;
 
-  Future<SerialResponse> reboot({dynamic hint});
+  Future<SerialResponse> bleReboot({dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta get kRebootConstMeta;
-
-  Future<String> printA({dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kPrintAConstMeta;
+  FlutterRustBridgeTaskConstMeta get kBleRebootConstMeta;
 }
 
 enum ResponseState {

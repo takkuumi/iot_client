@@ -2,53 +2,48 @@ use super::*;
 // Section: wire functions
 
 #[no_mangle]
-pub extern "C" fn wire_get_ndid(port_: i64) {
-  wire_get_ndid_impl(port_)
+pub extern "C" fn wire_ble__get_ndid(port_: i64) {
+  wire_ble__get_ndid_impl(port_)
 }
 
 #[no_mangle]
-pub extern "C" fn wire_at_ndrpt(
+pub extern "C" fn wire_ble__at_ndrpt(
   port_: i64,
   id: *mut wire_uint_8_list,
   data: *mut wire_uint_8_list,
   retry: u8,
 ) {
-  wire_at_ndrpt_impl(port_, id, data, retry)
+  wire_ble__at_ndrpt_impl(port_, id, data, retry)
 }
 
 #[no_mangle]
-pub extern "C" fn wire_at_ndrpt_test(port_: i64) {
-  wire_at_ndrpt_test_impl(port_)
+pub extern "C" fn wire_ble__at_ndrpt_test(port_: i64) {
+  wire_ble__at_ndrpt_test_impl(port_)
 }
 
 #[no_mangle]
-pub extern "C" fn wire_set_ndid(port_: i64, id: *mut wire_uint_8_list) {
-  wire_set_ndid_impl(port_, id)
+pub extern "C" fn wire_ble__set_ndid(port_: i64, id: *mut wire_uint_8_list) {
+  wire_ble__set_ndid_impl(port_, id)
 }
 
 #[no_mangle]
-pub extern "C" fn wire_set_mode(port_: i64, mode: u8) {
-  wire_set_mode_impl(port_, mode)
+pub extern "C" fn wire_ble__set_mode(port_: i64, mode: u8) {
+  wire_ble__set_mode_impl(port_, mode)
 }
 
 #[no_mangle]
-pub extern "C" fn wire_ndreset(port_: i64) {
-  wire_ndreset_impl(port_)
+pub extern "C" fn wire_ble__ndreset(port_: i64) {
+  wire_ble__ndreset_impl(port_)
 }
 
 #[no_mangle]
-pub extern "C" fn wire_restore(port_: i64) {
-  wire_restore_impl(port_)
+pub extern "C" fn wire_ble__restore(port_: i64) {
+  wire_ble__restore_impl(port_)
 }
 
 #[no_mangle]
-pub extern "C" fn wire_reboot(port_: i64) {
-  wire_reboot_impl(port_)
-}
-
-#[no_mangle]
-pub extern "C" fn wire_print_a(port_: i64) {
-  wire_print_a_impl(port_)
+pub extern "C" fn wire_ble__reboot(port_: i64) {
+  wire_ble__reboot_impl(port_)
 }
 
 // Section: allocate functions

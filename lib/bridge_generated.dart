@@ -26,23 +26,23 @@ class NativeImpl implements Native {
   factory NativeImpl.wasm(FutureOr<WasmModule> module) =>
       NativeImpl(module as ExternalLibrary);
   NativeImpl.raw(this._platform);
-  Future<SerialResponse> getNdid({dynamic hint}) {
+  Future<SerialResponse> bleGetNdid({dynamic hint}) {
     return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_get_ndid(port_),
+      callFfi: (port_) => _platform.inner.wire_ble__get_ndid(port_),
       parseSuccessData: _wire2api_serial_response,
-      constMeta: kGetNdidConstMeta,
+      constMeta: kBleGetNdidConstMeta,
       argValues: [],
       hint: hint,
     ));
   }
 
-  FlutterRustBridgeTaskConstMeta get kGetNdidConstMeta =>
+  FlutterRustBridgeTaskConstMeta get kBleGetNdidConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
-        debugName: "get_ndid",
+        debugName: "ble__get_ndid",
         argNames: [],
       );
 
-  Future<SerialResponse> atNdrpt(
+  Future<SerialResponse> bleAtNdrpt(
       {required String id,
       required String data,
       required int retry,
@@ -52,131 +52,115 @@ class NativeImpl implements Native {
     var arg2 = api2wire_u8(retry);
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) =>
-          _platform.inner.wire_at_ndrpt(port_, arg0, arg1, arg2),
+          _platform.inner.wire_ble__at_ndrpt(port_, arg0, arg1, arg2),
       parseSuccessData: _wire2api_serial_response,
-      constMeta: kAtNdrptConstMeta,
+      constMeta: kBleAtNdrptConstMeta,
       argValues: [id, data, retry],
       hint: hint,
     ));
   }
 
-  FlutterRustBridgeTaskConstMeta get kAtNdrptConstMeta =>
+  FlutterRustBridgeTaskConstMeta get kBleAtNdrptConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
-        debugName: "at_ndrpt",
+        debugName: "ble__at_ndrpt",
         argNames: ["id", "data", "retry"],
       );
 
-  Future<SerialResponse> atNdrptTest({dynamic hint}) {
+  Future<SerialResponse> bleAtNdrptTest({dynamic hint}) {
     return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_at_ndrpt_test(port_),
+      callFfi: (port_) => _platform.inner.wire_ble__at_ndrpt_test(port_),
       parseSuccessData: _wire2api_serial_response,
-      constMeta: kAtNdrptTestConstMeta,
+      constMeta: kBleAtNdrptTestConstMeta,
       argValues: [],
       hint: hint,
     ));
   }
 
-  FlutterRustBridgeTaskConstMeta get kAtNdrptTestConstMeta =>
+  FlutterRustBridgeTaskConstMeta get kBleAtNdrptTestConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
-        debugName: "at_ndrpt_test",
+        debugName: "ble__at_ndrpt_test",
         argNames: [],
       );
 
-  Future<SerialResponse> setNdid({required String id, dynamic hint}) {
+  Future<SerialResponse> bleSetNdid({required String id, dynamic hint}) {
     var arg0 = _platform.api2wire_String(id);
     return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_set_ndid(port_, arg0),
+      callFfi: (port_) => _platform.inner.wire_ble__set_ndid(port_, arg0),
       parseSuccessData: _wire2api_serial_response,
-      constMeta: kSetNdidConstMeta,
+      constMeta: kBleSetNdidConstMeta,
       argValues: [id],
       hint: hint,
     ));
   }
 
-  FlutterRustBridgeTaskConstMeta get kSetNdidConstMeta =>
+  FlutterRustBridgeTaskConstMeta get kBleSetNdidConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
-        debugName: "set_ndid",
+        debugName: "ble__set_ndid",
         argNames: ["id"],
       );
 
-  Future<SerialResponse> setMode({required int mode, dynamic hint}) {
+  Future<SerialResponse> bleSetMode({required int mode, dynamic hint}) {
     var arg0 = api2wire_u8(mode);
     return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_set_mode(port_, arg0),
+      callFfi: (port_) => _platform.inner.wire_ble__set_mode(port_, arg0),
       parseSuccessData: _wire2api_serial_response,
-      constMeta: kSetModeConstMeta,
+      constMeta: kBleSetModeConstMeta,
       argValues: [mode],
       hint: hint,
     ));
   }
 
-  FlutterRustBridgeTaskConstMeta get kSetModeConstMeta =>
+  FlutterRustBridgeTaskConstMeta get kBleSetModeConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
-        debugName: "set_mode",
+        debugName: "ble__set_mode",
         argNames: ["mode"],
       );
 
-  Future<SerialResponse> ndreset({dynamic hint}) {
+  Future<SerialResponse> bleNdreset({dynamic hint}) {
     return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_ndreset(port_),
+      callFfi: (port_) => _platform.inner.wire_ble__ndreset(port_),
       parseSuccessData: _wire2api_serial_response,
-      constMeta: kNdresetConstMeta,
+      constMeta: kBleNdresetConstMeta,
       argValues: [],
       hint: hint,
     ));
   }
 
-  FlutterRustBridgeTaskConstMeta get kNdresetConstMeta =>
+  FlutterRustBridgeTaskConstMeta get kBleNdresetConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
-        debugName: "ndreset",
+        debugName: "ble__ndreset",
         argNames: [],
       );
 
-  Future<SerialResponse> restore({dynamic hint}) {
+  Future<SerialResponse> bleRestore({dynamic hint}) {
     return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_restore(port_),
+      callFfi: (port_) => _platform.inner.wire_ble__restore(port_),
       parseSuccessData: _wire2api_serial_response,
-      constMeta: kRestoreConstMeta,
+      constMeta: kBleRestoreConstMeta,
       argValues: [],
       hint: hint,
     ));
   }
 
-  FlutterRustBridgeTaskConstMeta get kRestoreConstMeta =>
+  FlutterRustBridgeTaskConstMeta get kBleRestoreConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
-        debugName: "restore",
+        debugName: "ble__restore",
         argNames: [],
       );
 
-  Future<SerialResponse> reboot({dynamic hint}) {
+  Future<SerialResponse> bleReboot({dynamic hint}) {
     return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_reboot(port_),
+      callFfi: (port_) => _platform.inner.wire_ble__reboot(port_),
       parseSuccessData: _wire2api_serial_response,
-      constMeta: kRebootConstMeta,
+      constMeta: kBleRebootConstMeta,
       argValues: [],
       hint: hint,
     ));
   }
 
-  FlutterRustBridgeTaskConstMeta get kRebootConstMeta =>
+  FlutterRustBridgeTaskConstMeta get kBleRebootConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
-        debugName: "reboot",
-        argNames: [],
-      );
-
-  Future<String> printA({dynamic hint}) {
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_print_a(port_),
-      parseSuccessData: _wire2api_String,
-      constMeta: kPrintAConstMeta,
-      argValues: [],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kPrintAConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "print_a",
+        debugName: "ble__reboot",
         argNames: [],
       );
 
@@ -184,10 +168,6 @@ class NativeImpl implements Native {
     _platform.dispose();
   }
 // Section: wire2api
-
-  String _wire2api_String(dynamic raw) {
-    return raw as String;
-  }
 
   int _wire2api_i32(dynamic raw) {
     return raw as int;
@@ -346,27 +326,27 @@ class NativeWire implements FlutterRustBridgeWireBase {
   late final _init_frb_dart_api_dl = _init_frb_dart_api_dlPtr
       .asFunction<int Function(ffi.Pointer<ffi.Void>)>();
 
-  void wire_get_ndid(
+  void wire_ble__get_ndid(
     int port_,
   ) {
-    return _wire_get_ndid(
+    return _wire_ble__get_ndid(
       port_,
     );
   }
 
-  late final _wire_get_ndidPtr =
+  late final _wire_ble__get_ndidPtr =
       _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>(
-          'wire_get_ndid');
-  late final _wire_get_ndid =
-      _wire_get_ndidPtr.asFunction<void Function(int)>();
+          'wire_ble__get_ndid');
+  late final _wire_ble__get_ndid =
+      _wire_ble__get_ndidPtr.asFunction<void Function(int)>();
 
-  void wire_at_ndrpt(
+  void wire_ble__at_ndrpt(
     int port_,
     ffi.Pointer<wire_uint_8_list> id,
     ffi.Pointer<wire_uint_8_list> data,
     int retry,
   ) {
-    return _wire_at_ndrpt(
+    return _wire_ble__at_ndrpt(
       port_,
       id,
       data,
@@ -374,108 +354,102 @@ class NativeWire implements FlutterRustBridgeWireBase {
     );
   }
 
-  late final _wire_at_ndrptPtr = _lookup<
+  late final _wire_ble__at_ndrptPtr = _lookup<
       ffi.NativeFunction<
           ffi.Void Function(ffi.Int64, ffi.Pointer<wire_uint_8_list>,
-              ffi.Pointer<wire_uint_8_list>, ffi.Uint8)>>('wire_at_ndrpt');
-  late final _wire_at_ndrpt = _wire_at_ndrptPtr.asFunction<
+              ffi.Pointer<wire_uint_8_list>, ffi.Uint8)>>('wire_ble__at_ndrpt');
+  late final _wire_ble__at_ndrpt = _wire_ble__at_ndrptPtr.asFunction<
       void Function(int, ffi.Pointer<wire_uint_8_list>,
           ffi.Pointer<wire_uint_8_list>, int)>();
 
-  void wire_at_ndrpt_test(
+  void wire_ble__at_ndrpt_test(
     int port_,
   ) {
-    return _wire_at_ndrpt_test(
+    return _wire_ble__at_ndrpt_test(
       port_,
     );
   }
 
-  late final _wire_at_ndrpt_testPtr =
+  late final _wire_ble__at_ndrpt_testPtr =
       _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>(
-          'wire_at_ndrpt_test');
-  late final _wire_at_ndrpt_test =
-      _wire_at_ndrpt_testPtr.asFunction<void Function(int)>();
+          'wire_ble__at_ndrpt_test');
+  late final _wire_ble__at_ndrpt_test =
+      _wire_ble__at_ndrpt_testPtr.asFunction<void Function(int)>();
 
-  void wire_set_ndid(
+  void wire_ble__set_ndid(
     int port_,
     ffi.Pointer<wire_uint_8_list> id,
   ) {
-    return _wire_set_ndid(
+    return _wire_ble__set_ndid(
       port_,
       id,
     );
   }
 
-  late final _wire_set_ndidPtr = _lookup<
+  late final _wire_ble__set_ndidPtr = _lookup<
       ffi.NativeFunction<
           ffi.Void Function(
-              ffi.Int64, ffi.Pointer<wire_uint_8_list>)>>('wire_set_ndid');
-  late final _wire_set_ndid = _wire_set_ndidPtr
+              ffi.Int64, ffi.Pointer<wire_uint_8_list>)>>('wire_ble__set_ndid');
+  late final _wire_ble__set_ndid = _wire_ble__set_ndidPtr
       .asFunction<void Function(int, ffi.Pointer<wire_uint_8_list>)>();
 
-  void wire_set_mode(
+  void wire_ble__set_mode(
     int port_,
     int mode,
   ) {
-    return _wire_set_mode(
+    return _wire_ble__set_mode(
       port_,
       mode,
     );
   }
 
-  late final _wire_set_modePtr =
+  late final _wire_ble__set_modePtr =
       _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Uint8)>>(
-          'wire_set_mode');
-  late final _wire_set_mode =
-      _wire_set_modePtr.asFunction<void Function(int, int)>();
+          'wire_ble__set_mode');
+  late final _wire_ble__set_mode =
+      _wire_ble__set_modePtr.asFunction<void Function(int, int)>();
 
-  void wire_ndreset(
+  void wire_ble__ndreset(
     int port_,
   ) {
-    return _wire_ndreset(
+    return _wire_ble__ndreset(
       port_,
     );
   }
 
-  late final _wire_ndresetPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>('wire_ndreset');
-  late final _wire_ndreset = _wire_ndresetPtr.asFunction<void Function(int)>();
+  late final _wire_ble__ndresetPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>(
+          'wire_ble__ndreset');
+  late final _wire_ble__ndreset =
+      _wire_ble__ndresetPtr.asFunction<void Function(int)>();
 
-  void wire_restore(
+  void wire_ble__restore(
     int port_,
   ) {
-    return _wire_restore(
+    return _wire_ble__restore(
       port_,
     );
   }
 
-  late final _wire_restorePtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>('wire_restore');
-  late final _wire_restore = _wire_restorePtr.asFunction<void Function(int)>();
+  late final _wire_ble__restorePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>(
+          'wire_ble__restore');
+  late final _wire_ble__restore =
+      _wire_ble__restorePtr.asFunction<void Function(int)>();
 
-  void wire_reboot(
+  void wire_ble__reboot(
     int port_,
   ) {
-    return _wire_reboot(
+    return _wire_ble__reboot(
       port_,
     );
   }
 
-  late final _wire_rebootPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>('wire_reboot');
-  late final _wire_reboot = _wire_rebootPtr.asFunction<void Function(int)>();
-
-  void wire_print_a(
-    int port_,
-  ) {
-    return _wire_print_a(
-      port_,
-    );
-  }
-
-  late final _wire_print_aPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>('wire_print_a');
-  late final _wire_print_a = _wire_print_aPtr.asFunction<void Function(int)>();
+  late final _wire_ble__rebootPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>(
+          'wire_ble__reboot');
+  late final _wire_ble__reboot =
+      _wire_ble__rebootPtr.asFunction<void Function(int)>();
 
   ffi.Pointer<wire_uint_8_list> new_uint_8_list_0(
     int len,

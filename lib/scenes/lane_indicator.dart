@@ -120,7 +120,7 @@ class _LaneIndicatorState extends State<LaneIndicator> {
     }
 
     SerialResponse response =
-        await api.atNdrpt(id: meshId, data: sdata, retry: 5);
+        await api.bleAtNdrpt(id: meshId, data: sdata, retry: 5);
     Uint8List? data = response.data;
     if (data == null) {
       onError();
@@ -157,7 +157,7 @@ class _LaneIndicatorState extends State<LaneIndicator> {
     }
 
     SerialResponse response =
-        await api.atNdrpt(id: meshId, data: x0200, retry: 5);
+        await api.bleAtNdrpt(id: meshId, data: x0200, retry: 5);
     Uint8List? x0200Data = response.data;
     if (x0200Data == null) {
       onError();

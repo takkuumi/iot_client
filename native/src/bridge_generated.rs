@@ -22,17 +22,17 @@ use crate::ble::{ResponseState, SerialResponse};
 
 // Section: wire functions
 
-fn wire_get_ndid_impl(port_: MessagePort) {
+fn wire_ble__get_ndid_impl(port_: MessagePort) {
   FLUTTER_RUST_BRIDGE_HANDLER.wrap(
     WrapInfo {
-      debug_name: "get_ndid",
+      debug_name: "ble__get_ndid",
       port: Some(port_),
       mode: FfiCallMode::Normal,
     },
-    move || move |task_callback| Ok(get_ndid()),
+    move || move |task_callback| Ok(ble__get_ndid()),
   )
 }
-fn wire_at_ndrpt_impl(
+fn wire_ble__at_ndrpt_impl(
   port_: MessagePort,
   id: impl Wire2Api<String> + UnwindSafe,
   data: impl Wire2Api<String> + UnwindSafe,
@@ -40,7 +40,7 @@ fn wire_at_ndrpt_impl(
 ) {
   FLUTTER_RUST_BRIDGE_HANDLER.wrap(
     WrapInfo {
-      debug_name: "at_ndrpt",
+      debug_name: "ble__at_ndrpt",
       port: Some(port_),
       mode: FfiCallMode::Normal,
     },
@@ -48,84 +48,74 @@ fn wire_at_ndrpt_impl(
       let api_id = id.wire2api();
       let api_data = data.wire2api();
       let api_retry = retry.wire2api();
-      move |task_callback| Ok(at_ndrpt(api_id, api_data, api_retry))
+      move |task_callback| Ok(ble__at_ndrpt(api_id, api_data, api_retry))
     },
   )
 }
-fn wire_at_ndrpt_test_impl(port_: MessagePort) {
+fn wire_ble__at_ndrpt_test_impl(port_: MessagePort) {
   FLUTTER_RUST_BRIDGE_HANDLER.wrap(
     WrapInfo {
-      debug_name: "at_ndrpt_test",
+      debug_name: "ble__at_ndrpt_test",
       port: Some(port_),
       mode: FfiCallMode::Normal,
     },
-    move || move |task_callback| Ok(at_ndrpt_test()),
+    move || move |task_callback| Ok(ble__at_ndrpt_test()),
   )
 }
-fn wire_set_ndid_impl(port_: MessagePort, id: impl Wire2Api<String> + UnwindSafe) {
+fn wire_ble__set_ndid_impl(port_: MessagePort, id: impl Wire2Api<String> + UnwindSafe) {
   FLUTTER_RUST_BRIDGE_HANDLER.wrap(
     WrapInfo {
-      debug_name: "set_ndid",
+      debug_name: "ble__set_ndid",
       port: Some(port_),
       mode: FfiCallMode::Normal,
     },
     move || {
       let api_id = id.wire2api();
-      move |task_callback| Ok(set_ndid(api_id))
+      move |task_callback| Ok(ble__set_ndid(api_id))
     },
   )
 }
-fn wire_set_mode_impl(port_: MessagePort, mode: impl Wire2Api<u8> + UnwindSafe) {
+fn wire_ble__set_mode_impl(port_: MessagePort, mode: impl Wire2Api<u8> + UnwindSafe) {
   FLUTTER_RUST_BRIDGE_HANDLER.wrap(
     WrapInfo {
-      debug_name: "set_mode",
+      debug_name: "ble__set_mode",
       port: Some(port_),
       mode: FfiCallMode::Normal,
     },
     move || {
       let api_mode = mode.wire2api();
-      move |task_callback| Ok(set_mode(api_mode))
+      move |task_callback| Ok(ble__set_mode(api_mode))
     },
   )
 }
-fn wire_ndreset_impl(port_: MessagePort) {
+fn wire_ble__ndreset_impl(port_: MessagePort) {
   FLUTTER_RUST_BRIDGE_HANDLER.wrap(
     WrapInfo {
-      debug_name: "ndreset",
+      debug_name: "ble__ndreset",
       port: Some(port_),
       mode: FfiCallMode::Normal,
     },
-    move || move |task_callback| Ok(ndreset()),
+    move || move |task_callback| Ok(ble__ndreset()),
   )
 }
-fn wire_restore_impl(port_: MessagePort) {
+fn wire_ble__restore_impl(port_: MessagePort) {
   FLUTTER_RUST_BRIDGE_HANDLER.wrap(
     WrapInfo {
-      debug_name: "restore",
+      debug_name: "ble__restore",
       port: Some(port_),
       mode: FfiCallMode::Normal,
     },
-    move || move |task_callback| Ok(restore()),
+    move || move |task_callback| Ok(ble__restore()),
   )
 }
-fn wire_reboot_impl(port_: MessagePort) {
+fn wire_ble__reboot_impl(port_: MessagePort) {
   FLUTTER_RUST_BRIDGE_HANDLER.wrap(
     WrapInfo {
-      debug_name: "reboot",
+      debug_name: "ble__reboot",
       port: Some(port_),
       mode: FfiCallMode::Normal,
     },
-    move || move |task_callback| Ok(reboot()),
-  )
-}
-fn wire_print_a_impl(port_: MessagePort) {
-  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
-    WrapInfo {
-      debug_name: "print_a",
-      port: Some(port_),
-      mode: FfiCallMode::Normal,
-    },
-    move || move |task_callback| Ok(print_a()),
+    move || move |task_callback| Ok(ble__reboot()),
   )
 }
 // Section: wrapper structs

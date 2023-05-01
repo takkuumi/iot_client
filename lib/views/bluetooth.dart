@@ -7,6 +7,7 @@ import 'package:iot_client/device.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
+import '../futs/hal.dart';
 
 class Bluetooth extends StatefulWidget {
   const Bluetooth({Key? key}) : super(key: key);
@@ -27,12 +28,16 @@ class _BluetoothState extends State<Bluetooth> {
 
     bluetooth.startScan(pairedDevices: false);
 
-    bluetooth.devices.listen((device) {
+    bluetooth.devices.listen((device) async {
       String name = device.name;
       String address = device.address;
 
       Device item = Device(name, address, false);
       if (name.startsWith('Mesh') && !devices.contains(item)) {
+        String meshId = name.substring(5, 9);
+        List<int> ipData = await getHoldings(meshId, 2247, 4);
+        String hexIp = ipData.join('.');
+        item.address += '\r\nIP地址:$hexIp';
         setState(() {
           devices.add(item);
         });

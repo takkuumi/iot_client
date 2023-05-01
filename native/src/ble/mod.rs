@@ -154,7 +154,7 @@ impl<'s> BytesParse<'s> {
     Some(result)
   }
 
-  pub fn parse_u16(&self, unit_id: u8, tr_id: u16) -> Option<Vec<u16>> {
+  pub fn parse_u16(&self, unit_id: u8) -> Option<u16> {
     if !self.validate() {
       return None;
     }
@@ -164,30 +164,12 @@ impl<'s> BytesParse<'s> {
     let rang_e = self.deref().len() - 2;
     let sub = &self.deref()[rang_s..rang_e];
 
-    let mut mreq = ModbusRequest::new(1, ModbusProto::TcpUdp);
-    mreq.tr_id = 2;
-
     let text = String::from_utf8_lossy(sub);
-    eprintln!("sub: {:?}", text);
-
     let buf = hex::decode(text.as_ref()).unwrap();
-    eprintln!("buf: {:?}", buf);
 
-    let mut resp = Vec::<u8>::new();
-    resp.extend_from_slice(&[0, 2, 0, 0, 0, 14]);
-    resp.extend_from_slice(&buf);
+    let value = u16::from_be_bytes([buf[3], buf[4]]);
 
-    let a = hex::encode(&resp);
-    eprintln!("resp: {:?}", a);
-
-    let v = hex::decode(a).unwrap();
-    let mut result = Vec::new();
-    if let Err(e) = mreq.parse_u16(&v, &mut result) {
-      eprintln!("parse_string error: {:?}", e);
-      return None;
-    }
-
-    Some(result)
+    Some(value)
   }
 
   pub fn get_from(&self) -> Option<String> {
@@ -226,7 +208,7 @@ mod test {
     let res = pa.validate();
     eprintln!("{:?}", res);
     if res {
-      let res = pa.parse_u16(1, 2);
+      let res = pa.parse_u16(1);
       eprintln!("{:?}", res);
     }
   }

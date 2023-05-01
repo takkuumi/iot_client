@@ -130,24 +130,23 @@ impl LogicControl {
     request
   }
 
-  pub fn t1(&self) -> Vec<u8> {
+  pub fn generate_set_holding(unit_id: u8, reg: u16, value: u16) -> Vec<u8> {
     // create request object
-    let mut mreq = ModbusRequest::new(1, ModbusProto::Rtu);
-    mreq.tr_id = 2; // just for test, default tr_id is 1
+    let mut mreq = ModbusRequest::new(unit_id, ModbusProto::Rtu);
 
-    let values = vec![100];
     let mut request = Vec::<u8>::new();
-    mreq.generate_set_holding(2300, 1, &mut request).unwrap();
+    mreq.generate_set_holding(reg, value, &mut request).unwrap();
     request
   }
 
-  pub fn t2() -> Vec<u8> {
+  pub fn generate_get_holdings(unit_id: u8, reg: u16, count: u16) -> Vec<u8> {
     // create request object
-    let mut mreq = ModbusRequest::new(1, ModbusProto::Rtu);
-    mreq.tr_id = 2; // just for test, default tr_id is 1
+    let mut mreq = ModbusRequest::new(unit_id, ModbusProto::Rtu);
 
     let mut request = Vec::<u8>::new();
-    mreq.generate_get_holdings(2300, 2, &mut request).unwrap();
+    mreq
+      .generate_get_holdings(reg, count, &mut request)
+      .unwrap();
     request
   }
 }
@@ -195,7 +194,7 @@ mod test {
       com_out: super::Com::default(),
     };
 
-    let data = lc.t1();
+    let data = LogicControl::generate_set_holding(1, 2300, 1);
 
     let hex_str = hex::encode_upper(data);
 
@@ -203,7 +202,7 @@ mod test {
 
     at_command::at_ndrpt_data("0001", hex_str.as_bytes(), 5);
 
-    let hex_str = hex::encode_upper(LogicControl::t2());
+    let hex_str = hex::encode_upper(LogicControl::generate_get_holdings(1, 2300, 1));
     eprintln!("{:?}", hex_str);
     let res = at_command::at_ndrpt_data("0001", hex_str.as_bytes(), 5);
 

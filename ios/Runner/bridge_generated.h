@@ -30,12 +30,21 @@ uintptr_t new_dart_opaque(Dart_Handle handle);
 
 intptr_t init_frb_dart_api_dl(void *obj);
 
+void wire_ble_validate_response(int64_t port_, struct wire_uint_8_list *data);
+
+void wire_ble_response_parse_u16(int64_t port_, struct wire_uint_8_list *data, uint8_t unit_id);
+
 void wire_ble_get_ndid(int64_t port_);
 
 void wire_ble_at_ndrpt(int64_t port_,
                        struct wire_uint_8_list *id,
                        struct wire_uint_8_list *data,
                        uint8_t retry);
+
+void wire_ble_at_ndrpt_data(int64_t port_,
+                            struct wire_uint_8_list *id,
+                            struct wire_uint_8_list *data,
+                            uint8_t retry);
 
 void wire_ble_at_ndrpt_test(int64_t port_);
 
@@ -48,6 +57,14 @@ void wire_ble_ndreset(int64_t port_);
 void wire_ble_restore(int64_t port_);
 
 void wire_ble_reboot(int64_t port_);
+
+void wire_hal_generate_get_holdings(int64_t port_, uint8_t unit_id, uint16_t reg, uint16_t count);
+
+void wire_hal_generate_set_holding(int64_t port_, uint8_t unit_id, uint16_t reg, uint16_t value);
+
+void wire_hex_encode(int64_t port_, struct wire_uint_8_list *data);
+
+void wire_hex_decode(int64_t port_, struct wire_uint_8_list *data);
 
 void wire_hal_new_control(int64_t port_,
                           struct wire_uint_8_list *id,
@@ -70,14 +87,21 @@ void free_WireSyncReturn(WireSyncReturn ptr);
 
 static int64_t dummy_method_to_enforce_bundling(void) {
     int64_t dummy_var = 0;
+    dummy_var ^= ((int64_t) (void*) wire_ble_validate_response);
+    dummy_var ^= ((int64_t) (void*) wire_ble_response_parse_u16);
     dummy_var ^= ((int64_t) (void*) wire_ble_get_ndid);
     dummy_var ^= ((int64_t) (void*) wire_ble_at_ndrpt);
+    dummy_var ^= ((int64_t) (void*) wire_ble_at_ndrpt_data);
     dummy_var ^= ((int64_t) (void*) wire_ble_at_ndrpt_test);
     dummy_var ^= ((int64_t) (void*) wire_ble_set_ndid);
     dummy_var ^= ((int64_t) (void*) wire_ble_set_mode);
     dummy_var ^= ((int64_t) (void*) wire_ble_ndreset);
     dummy_var ^= ((int64_t) (void*) wire_ble_restore);
     dummy_var ^= ((int64_t) (void*) wire_ble_reboot);
+    dummy_var ^= ((int64_t) (void*) wire_hal_generate_get_holdings);
+    dummy_var ^= ((int64_t) (void*) wire_hal_generate_set_holding);
+    dummy_var ^= ((int64_t) (void*) wire_hex_encode);
+    dummy_var ^= ((int64_t) (void*) wire_hex_decode);
     dummy_var ^= ((int64_t) (void*) wire_hal_new_control);
     dummy_var ^= ((int64_t) (void*) wire_hal_read_logic_control);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_com_0);

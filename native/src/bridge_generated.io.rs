@@ -2,6 +2,20 @@ use super::*;
 // Section: wire functions
 
 #[no_mangle]
+pub extern "C" fn wire_ble_validate_response(port_: i64, data: *mut wire_uint_8_list) {
+  wire_ble_validate_response_impl(port_, data)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_ble_response_parse_u16(
+  port_: i64,
+  data: *mut wire_uint_8_list,
+  unit_id: u8,
+) {
+  wire_ble_response_parse_u16_impl(port_, data, unit_id)
+}
+
+#[no_mangle]
 pub extern "C" fn wire_ble_get_ndid(port_: i64) {
   wire_ble_get_ndid_impl(port_)
 }
@@ -14,6 +28,16 @@ pub extern "C" fn wire_ble_at_ndrpt(
   retry: u8,
 ) {
   wire_ble_at_ndrpt_impl(port_, id, data, retry)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_ble_at_ndrpt_data(
+  port_: i64,
+  id: *mut wire_uint_8_list,
+  data: *mut wire_uint_8_list,
+  retry: u8,
+) {
+  wire_ble_at_ndrpt_data_impl(port_, id, data, retry)
 }
 
 #[no_mangle]
@@ -44,6 +68,26 @@ pub extern "C" fn wire_ble_restore(port_: i64) {
 #[no_mangle]
 pub extern "C" fn wire_ble_reboot(port_: i64) {
   wire_ble_reboot_impl(port_)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_hal_generate_get_holdings(port_: i64, unit_id: u8, reg: u16, count: u16) {
+  wire_hal_generate_get_holdings_impl(port_, unit_id, reg, count)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_hal_generate_set_holding(port_: i64, unit_id: u8, reg: u16, value: u16) {
+  wire_hal_generate_set_holding_impl(port_, unit_id, reg, value)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_hex_encode(port_: i64, data: *mut wire_uint_8_list) {
+  wire_hex_encode_impl(port_, data)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_hex_decode(port_: i64, data: *mut wire_uint_8_list) {
+  wire_hex_decode_impl(port_, data)
 }
 
 #[no_mangle]

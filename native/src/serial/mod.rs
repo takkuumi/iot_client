@@ -9,49 +9,6 @@ use serialport::{ClearBuffer, DataBits, FlowControl, StopBits};
 const BITS_END: &[u8; 2] = b"\r\n";
 
 #[derive(Debug, PartialEq)]
-pub struct BytesParse<'s>(pub &'s [u8]);
-
-impl<'s> Deref for BytesParse<'s> {
-  type Target = [u8];
-
-  fn deref(&self) -> &Self::Target {
-    self.0
-  }
-}
-
-impl<'s> BytesParse<'s> {
-  pub fn new(bytes: &'s [u8]) -> Self {
-    Self(bytes)
-  }
-
-  pub fn validate(&self) -> bool {
-    let bytes = self.deref();
-    if bytes.len() <= 4 {
-      return false;
-    }
-    if bytes.starts_with(BITS_END) && bytes.ends_with(BITS_END) {
-      return false;
-    }
-
-    
-
-    true
-  }
-
-  pub fn get_from(&self) -> Option<String> {
-    None
-  }
-
-  pub fn get_target(&self) -> Option<String> {
-    None
-  }
-
-  pub fn get_value(&self) -> Option<(u8, u8, u16, Vec<u16>, u16)> {
-    None
-  }
-}
-
-#[derive(Debug, PartialEq)]
 pub enum ResponseState {
   Ok,
   FailedOpenDevice,
@@ -102,7 +59,7 @@ impl SerialResponse {
 // ttySWK0
 
 fn open_tty_swk0(millis: u64) -> Result<Box<dyn serialport::SerialPort>, serialport::Error> {
-  serialport::new("/dev/tty.usbserial-1410", 115_200)
+  serialport::new("/dev/ttySWK0", 115_200)
     .data_bits(DataBits::Eight)
     .stop_bits(StopBits::One)
     .flow_control(FlowControl::None)

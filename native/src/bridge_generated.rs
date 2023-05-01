@@ -25,6 +25,37 @@ use crate::{
 
 // Section: wire functions
 
+fn wire_ble_validate_response_impl(port_: MessagePort, data: impl Wire2Api<Vec<u8>> + UnwindSafe) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "ble_validate_response",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || {
+      let api_data = data.wire2api();
+      move |task_callback| Ok(ble_validate_response(api_data))
+    },
+  )
+}
+fn wire_ble_response_parse_u16_impl(
+  port_: MessagePort,
+  data: impl Wire2Api<Vec<u8>> + UnwindSafe,
+  unit_id: impl Wire2Api<u8> + UnwindSafe,
+) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "ble_response_parse_u16",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || {
+      let api_data = data.wire2api();
+      let api_unit_id = unit_id.wire2api();
+      move |task_callback| Ok(ble_response_parse_u16(api_data, api_unit_id))
+    },
+  )
+}
 fn wire_ble_get_ndid_impl(port_: MessagePort) {
   FLUTTER_RUST_BRIDGE_HANDLER.wrap(
     WrapInfo {
@@ -52,6 +83,26 @@ fn wire_ble_at_ndrpt_impl(
       let api_data = data.wire2api();
       let api_retry = retry.wire2api();
       move |task_callback| Ok(ble_at_ndrpt(api_id, api_data, api_retry))
+    },
+  )
+}
+fn wire_ble_at_ndrpt_data_impl(
+  port_: MessagePort,
+  id: impl Wire2Api<String> + UnwindSafe,
+  data: impl Wire2Api<String> + UnwindSafe,
+  retry: impl Wire2Api<u8> + UnwindSafe,
+) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "ble_at_ndrpt_data",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || {
+      let api_id = id.wire2api();
+      let api_data = data.wire2api();
+      let api_retry = retry.wire2api();
+      move |task_callback| Ok(ble_at_ndrpt_data(api_id, api_data, api_retry))
     },
   )
 }
@@ -119,6 +170,72 @@ fn wire_ble_reboot_impl(port_: MessagePort) {
       mode: FfiCallMode::Normal,
     },
     move || move |task_callback| Ok(ble_reboot()),
+  )
+}
+fn wire_hal_generate_get_holdings_impl(
+  port_: MessagePort,
+  unit_id: impl Wire2Api<u8> + UnwindSafe,
+  reg: impl Wire2Api<u16> + UnwindSafe,
+  count: impl Wire2Api<u16> + UnwindSafe,
+) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "hal_generate_get_holdings",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || {
+      let api_unit_id = unit_id.wire2api();
+      let api_reg = reg.wire2api();
+      let api_count = count.wire2api();
+      move |task_callback| Ok(hal_generate_get_holdings(api_unit_id, api_reg, api_count))
+    },
+  )
+}
+fn wire_hal_generate_set_holding_impl(
+  port_: MessagePort,
+  unit_id: impl Wire2Api<u8> + UnwindSafe,
+  reg: impl Wire2Api<u16> + UnwindSafe,
+  value: impl Wire2Api<u16> + UnwindSafe,
+) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "hal_generate_set_holding",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || {
+      let api_unit_id = unit_id.wire2api();
+      let api_reg = reg.wire2api();
+      let api_value = value.wire2api();
+      move |task_callback| Ok(hal_generate_set_holding(api_unit_id, api_reg, api_value))
+    },
+  )
+}
+fn wire_hex_encode_impl(port_: MessagePort, data: impl Wire2Api<Vec<u8>> + UnwindSafe) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "hex_encode",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || {
+      let api_data = data.wire2api();
+      move |task_callback| Ok(hex_encode(api_data))
+    },
+  )
+}
+fn wire_hex_decode_impl(port_: MessagePort, data: impl Wire2Api<String> + UnwindSafe) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "hex_decode",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || {
+      let api_data = data.wire2api();
+      move |task_callback| Ok(hex_decode(api_data))
+    },
   )
 }
 fn wire_hal_new_control_impl(
@@ -199,6 +316,11 @@ where
   }
 }
 
+impl Wire2Api<u16> for u16 {
+  fn wire2api(self) -> u16 {
+    self
+  }
+}
 impl Wire2Api<u32> for u32 {
   fn wire2api(self) -> u32 {
     self

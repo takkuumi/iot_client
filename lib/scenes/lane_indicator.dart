@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -19,19 +20,24 @@ class LaneIndicator extends StatefulWidget {
 
 enum LaneIndicatorState { green, red }
 
-class _LaneIndicatorState extends State<LaneIndicator> {
+class _LaneIndicatorState extends State<LaneIndicator>
+    with AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
   final GlobalKey<ScaffoldMessengerState> key =
       GlobalKey<ScaffoldMessengerState>(debugLabel: 'lane_indicator');
-
+  late TabController tabController;
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
   LaneIndicatorState state1 = LaneIndicatorState.red;
   LaneIndicatorState state2 = LaneIndicatorState.red;
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   void initState() {
     super.initState();
-
+    tabController = TabController(length: 2, vsync: this);
+    tabController.animateTo(0);
     readDevice(
       readAt("0200"),
       initLaneState,
@@ -349,35 +355,65 @@ class _LaneIndicatorState extends State<LaneIndicator> {
     return ScaffoldMessenger(
       key: key,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('车道指示器'),
-        ),
-        body: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(vertical: 50),
-          child: Container(
-            alignment: Alignment.center,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Container(
-                  width: 600,
-                  padding: EdgeInsets.symmetric(horizontal: 30),
-                  child: Wrap(
-                    alignment: WrapAlignment.spaceEvenly,
-                    spacing: 10,
-                    children: [
-                      createLane1(),
-                      createLane2(),
-                      createLane2(),
-                    ],
-                  ),
+          appBar: AppBar(
+            title: const Text('车道指示器'),
+            centerTitle: true,
+            bottom: TabBar(
+              controller: tabController,
+              tabs: [
+                Tab(
+                  text: "控制信息",
+                ),
+                Tab(
+                  text: "服务信息",
                 ),
               ],
             ),
+            actions: [
+              TextButton(
+                onPressed: () => {},
+                child: Text("端口设置"),
+              )
+            ],
           ),
-        ),
-      ),
+          body: TabBarView(
+            controller: tabController,
+            physics: BouncingScrollPhysics(),
+            dragStartBehavior: DragStartBehavior.down,
+            children: [
+              SingleChildScrollView(
+                padding: EdgeInsets.symmetric(vertical: 50),
+                child: Container(
+                  alignment: Alignment.center,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 600,
+                        padding: EdgeInsets.symmetric(horizontal: 30),
+                        child: Wrap(
+                          alignment: WrapAlignment.spaceEvenly,
+                          spacing: 10,
+                          children: [
+                            createLane1(),
+                            createLane2(),
+                            createLane2(),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SingleChildScrollView(
+                padding: EdgeInsets.symmetric(vertical: 50),
+                child: Container(
+                  child: Text("暂无服务信息"),
+                ),
+              )
+            ],
+          )),
     );
   }
 }

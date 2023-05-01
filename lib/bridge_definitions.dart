@@ -9,6 +9,15 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:uuid/uuid.dart';
 
 abstract class Native {
+  Future<bool> bleValidateResponse({required Uint8List data, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kBleValidateResponseConstMeta;
+
+  Future<int?> bleResponseParseU16(
+      {required Uint8List data, required int unitId, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kBleResponseParseU16ConstMeta;
+
   Future<SerialResponse> bleGetNdid({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kBleGetNdidConstMeta;
@@ -20,6 +29,14 @@ abstract class Native {
       dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kBleAtNdrptConstMeta;
+
+  Future<SerialResponse> bleAtNdrptData(
+      {required String id,
+      required String data,
+      required int retry,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kBleAtNdrptDataConstMeta;
 
   Future<SerialResponse> bleAtNdrptTest({dynamic hint});
 
@@ -44,6 +61,30 @@ abstract class Native {
   Future<SerialResponse> bleReboot({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kBleRebootConstMeta;
+
+  Future<String> halGenerateGetHoldings(
+      {required int unitId,
+      required int reg,
+      required int count,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kHalGenerateGetHoldingsConstMeta;
+
+  Future<String> halGenerateSetHolding(
+      {required int unitId,
+      required int reg,
+      required int value,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kHalGenerateSetHoldingConstMeta;
+
+  Future<String> hexEncode({required Uint8List data, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kHexEncodeConstMeta;
+
+  Future<Uint8List> hexDecode({required String data, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kHexDecodeConstMeta;
 
   Future<SerialResponse> halNewControl(
       {required String id,

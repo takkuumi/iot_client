@@ -1,7 +1,7 @@
-use super::{crc_16, send_serialport, SerialResponse};
+use super::{crc16::crc_data, crc_16, send_serialport, SerialResponse};
 
 #[allow(clippy::module_inception)]
-mod at_command {
+mod ble_at {
   pub const AT: &str = "AT"; //串口通讯测试
   pub const AT_VER: &str = "AT+VER"; //读固件版本
   pub const AT_ADDR: &str = "AT+ADDR"; //读MAC地址
@@ -33,7 +33,7 @@ fn try_until(data: &[u8], retry: u8) -> SerialResponse {
     }
     let res = send_serialport(data);
     if res.is_err() {
-      let _ = send_serialport(at_command::AT_REBOOT.as_bytes());
+      let _ = send_serialport(ble_at::AT_REBOOT.as_bytes());
       eprintln!("start reboot...");
       std::thread::sleep(core::time::Duration::from_millis(100));
       eprintln!("rebooted!");
@@ -45,37 +45,37 @@ fn try_until(data: &[u8], retry: u8) -> SerialResponse {
 }
 
 pub fn get_ndid() -> SerialResponse {
-  let data = format!("{}", at_command::AT_NDID);
+  let data = format!("{}", ble_at::AT_NDID);
   send_serialport(data.as_bytes())
 }
 
 pub fn set_ndid(id: &str) -> SerialResponse {
-  let data = format!("{}={}", at_command::AT_NDID, id);
+  let data = format!("{}={}", ble_at::AT_NDID, id);
   send_serialport(data.as_bytes())
 }
 
 pub fn set_baud() -> SerialResponse {
-  let data = format!("{}=115200", at_command::AT_BAUD);
+  let data = format!("{}=115200", ble_at::AT_BAUD);
   send_serialport(data.as_bytes())
 }
 
 pub fn ndreset() -> SerialResponse {
-  let data = format!("{}", at_command::AT_NDRESET);
+  let data = format!("{}", ble_at::AT_NDRESET);
   send_serialport(data.as_bytes())
 }
 
 pub fn restore() -> SerialResponse {
-  let data = format!("{}", at_command::AT_RESTORE);
+  let data = format!("{}", ble_at::AT_RESTORE);
   send_serialport(data.as_bytes())
 }
 
 pub fn set_mode(mode: u8) -> SerialResponse {
-  let data = format!("{}={}", at_command::AT_MODE, mode);
+  let data = format!("{}={}", ble_at::AT_MODE, mode);
   send_serialport(data.as_bytes())
 }
 
 pub fn reboot() -> SerialResponse {
-  let data = format!("{}", at_command::AT_REBOOT);
+  let data = format!("{}", ble_at::AT_REBOOT);
   send_serialport(data.as_bytes())
 }
 
@@ -84,7 +84,7 @@ pub fn at_ndrpt(id: &str, data: &[u8], retry: u8) -> SerialResponse {
 
   let crc_data = crc_16(data);
   let mut bytes = Vec::<u8>::new();
-  bytes.extend_from_slice(at_command::AT_NDRPT.as_bytes());
+  bytes.extend_from_slice(ble_at::AT_NDRPT.as_bytes());
   bytes.push(b'=');
   bytes.extend_from_slice(id.as_bytes());
   bytes.push(b',');
@@ -95,6 +95,24 @@ pub fn at_ndrpt(id: &str, data: &[u8], retry: u8) -> SerialResponse {
   bytes.extend_from_slice(data);
   let r = format!("{crc_data:04X}");
   bytes.extend_from_slice(r.as_bytes());
+
+  try_until(&bytes, retry)
+}
+
+pub fn at_ndrpt_data(id: &str, data: &[u8], retry: u8) -> SerialResponse {
+  let size = data.len() + 1;
+
+  eprintln!("size: {}", size);
+  let mut bytes = Vec::<u8>::new();
+  bytes.extend_from_slice(ble_at::AT_NDRPT.as_bytes());
+  bytes.push(b'=');
+  bytes.extend_from_slice(id.as_bytes());
+  bytes.push(b',');
+  bytes.extend_from_slice(size.to_string().as_bytes());
+  bytes.push(b',');
+  bytes.push(b'\xc8');
+
+  bytes.extend_from_slice(data);
 
   try_until(&bytes, retry)
 }

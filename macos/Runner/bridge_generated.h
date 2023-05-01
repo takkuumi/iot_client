@@ -14,6 +14,10 @@ typedef struct wire_uint_8_list {
   int32_t len;
 } wire_uint_8_list;
 
+typedef struct wire_Com {
+  uint32_t field0;
+} wire_Com;
+
 typedef struct DartCObject *WireSyncReturn;
 
 void store_dart_post_cobject(DartPostCObjectFnType ptr);
@@ -26,24 +30,39 @@ uintptr_t new_dart_opaque(Dart_Handle handle);
 
 intptr_t init_frb_dart_api_dl(void *obj);
 
-void wire_ble__get_ndid(int64_t port_);
+void wire_ble_get_ndid(int64_t port_);
 
-void wire_ble__at_ndrpt(int64_t port_,
-                        struct wire_uint_8_list *id,
-                        struct wire_uint_8_list *data,
-                        uint8_t retry);
+void wire_ble_at_ndrpt(int64_t port_,
+                       struct wire_uint_8_list *id,
+                       struct wire_uint_8_list *data,
+                       uint8_t retry);
 
-void wire_ble__at_ndrpt_test(int64_t port_);
+void wire_ble_at_ndrpt_test(int64_t port_);
 
-void wire_ble__set_ndid(int64_t port_, struct wire_uint_8_list *id);
+void wire_ble_set_ndid(int64_t port_, struct wire_uint_8_list *id);
 
-void wire_ble__set_mode(int64_t port_, uint8_t mode);
+void wire_ble_set_mode(int64_t port_, uint8_t mode);
 
-void wire_ble__ndreset(int64_t port_);
+void wire_ble_ndreset(int64_t port_);
 
-void wire_ble__restore(int64_t port_);
+void wire_ble_restore(int64_t port_);
 
-void wire_ble__reboot(int64_t port_);
+void wire_ble_reboot(int64_t port_);
+
+void wire_hal_new_control(int64_t port_,
+                          struct wire_uint_8_list *id,
+                          uint8_t retry,
+                          uint8_t index,
+                          uint8_t scene,
+                          struct wire_Com *com_in,
+                          struct wire_Com *com_out);
+
+void wire_hal_read_logic_control(int64_t port_,
+                                 struct wire_uint_8_list *id,
+                                 uint8_t retry,
+                                 uint8_t index);
+
+struct wire_Com *new_box_autoadd_com_0(void);
 
 struct wire_uint_8_list *new_uint_8_list_0(int32_t len);
 
@@ -51,14 +70,17 @@ void free_WireSyncReturn(WireSyncReturn ptr);
 
 static int64_t dummy_method_to_enforce_bundling(void) {
     int64_t dummy_var = 0;
-    dummy_var ^= ((int64_t) (void*) wire_ble__get_ndid);
-    dummy_var ^= ((int64_t) (void*) wire_ble__at_ndrpt);
-    dummy_var ^= ((int64_t) (void*) wire_ble__at_ndrpt_test);
-    dummy_var ^= ((int64_t) (void*) wire_ble__set_ndid);
-    dummy_var ^= ((int64_t) (void*) wire_ble__set_mode);
-    dummy_var ^= ((int64_t) (void*) wire_ble__ndreset);
-    dummy_var ^= ((int64_t) (void*) wire_ble__restore);
-    dummy_var ^= ((int64_t) (void*) wire_ble__reboot);
+    dummy_var ^= ((int64_t) (void*) wire_ble_get_ndid);
+    dummy_var ^= ((int64_t) (void*) wire_ble_at_ndrpt);
+    dummy_var ^= ((int64_t) (void*) wire_ble_at_ndrpt_test);
+    dummy_var ^= ((int64_t) (void*) wire_ble_set_ndid);
+    dummy_var ^= ((int64_t) (void*) wire_ble_set_mode);
+    dummy_var ^= ((int64_t) (void*) wire_ble_ndreset);
+    dummy_var ^= ((int64_t) (void*) wire_ble_restore);
+    dummy_var ^= ((int64_t) (void*) wire_ble_reboot);
+    dummy_var ^= ((int64_t) (void*) wire_hal_new_control);
+    dummy_var ^= ((int64_t) (void*) wire_hal_read_logic_control);
+    dummy_var ^= ((int64_t) (void*) new_box_autoadd_com_0);
     dummy_var ^= ((int64_t) (void*) new_uint_8_list_0);
     dummy_var ^= ((int64_t) (void*) free_WireSyncReturn);
     dummy_var ^= ((int64_t) (void*) store_dart_post_cobject);

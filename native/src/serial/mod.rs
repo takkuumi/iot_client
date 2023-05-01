@@ -1,6 +1,6 @@
-use serialport::{ClearBuffer, DataBits, FlowControl, StopBits};
+use std::ops::Deref;
 
-use super::{ResponseState, SerialResponse};
+use serialport::{ClearBuffer, DataBits, FlowControl, StopBits};
 
 // serialport::new("/dev/tty.usbserial-1430", 115200)
 // serialport::new("/dev/tty.usbserial-1410", 115200)
@@ -8,8 +8,101 @@ use super::{ResponseState, SerialResponse};
 
 const BITS_END: &[u8; 2] = b"\r\n";
 
+#[derive(Debug, PartialEq)]
+pub struct BytesParse<'s>(pub &'s [u8]);
+
+impl<'s> Deref for BytesParse<'s> {
+  type Target = [u8];
+
+  fn deref(&self) -> &Self::Target {
+    self.0
+  }
+}
+
+impl<'s> BytesParse<'s> {
+  pub fn new(bytes: &'s [u8]) -> Self {
+    Self(bytes)
+  }
+
+  pub fn validate(&self) -> bool {
+    let bytes = self.deref();
+    if bytes.len() <= 4 {
+      return false;
+    }
+    if bytes.starts_with(BITS_END) && bytes.ends_with(BITS_END) {
+      return false;
+    }
+
+    
+
+    true
+  }
+
+  pub fn get_from(&self) -> Option<String> {
+    None
+  }
+
+  pub fn get_target(&self) -> Option<String> {
+    None
+  }
+
+  pub fn get_value(&self) -> Option<(u8, u8, u16, Vec<u16>, u16)> {
+    None
+  }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum ResponseState {
+  Ok,
+  FailedOpenDevice,
+  Timeout,
+  Unknown,
+  MaxRetry,
+  MaxSendRetry,
+  ReadResponseError,
+}
+
+impl Default for ResponseState {
+  fn default() -> Self {
+    Self::Unknown
+  }
+}
+#[derive(Debug, Default)]
+pub struct SerialResponse {
+  pub state: ResponseState,
+  pub data: Option<Vec<u8>>,
+}
+
+impl SerialResponse {
+  pub fn set_ok(&mut self, buf: &[u8]) {
+    self.state = ResponseState::Ok;
+    self.data = Some(buf.to_vec());
+  }
+
+  #[must_use]
+  pub fn new_err() -> Self {
+    Self {
+      state: ResponseState::MaxRetry,
+      data: None,
+    }
+  }
+
+  #[must_use]
+  pub fn is_ok(&self) -> bool {
+    self.state == ResponseState::Ok
+  }
+
+  #[must_use]
+  pub fn is_err(&self) -> bool {
+    !self.is_ok()
+  }
+}
+
+// tty.usbserial-1410
+// ttySWK0
+
 fn open_tty_swk0(millis: u64) -> Result<Box<dyn serialport::SerialPort>, serialport::Error> {
-  serialport::new("/dev/ttySWK0", 115_200)
+  serialport::new("/dev/tty.usbserial-1410", 115_200)
     .data_bits(DataBits::Eight)
     .stop_bits(StopBits::One)
     .flow_control(FlowControl::None)

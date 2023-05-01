@@ -18,21 +18,24 @@ use std::{ffi::c_void, sync::Arc};
 
 // Section: imports
 
-use crate::ble::{ResponseState, SerialResponse};
+use crate::{
+  hal::{Com, LogicControl},
+  serial::{ResponseState, SerialResponse},
+};
 
 // Section: wire functions
 
-fn wire_ble__get_ndid_impl(port_: MessagePort) {
+fn wire_ble_get_ndid_impl(port_: MessagePort) {
   FLUTTER_RUST_BRIDGE_HANDLER.wrap(
     WrapInfo {
-      debug_name: "ble__get_ndid",
+      debug_name: "ble_get_ndid",
       port: Some(port_),
       mode: FfiCallMode::Normal,
     },
-    move || move |task_callback| Ok(ble__get_ndid()),
+    move || move |task_callback| Ok(ble_get_ndid()),
   )
 }
-fn wire_ble__at_ndrpt_impl(
+fn wire_ble_at_ndrpt_impl(
   port_: MessagePort,
   id: impl Wire2Api<String> + UnwindSafe,
   data: impl Wire2Api<String> + UnwindSafe,
@@ -40,7 +43,7 @@ fn wire_ble__at_ndrpt_impl(
 ) {
   FLUTTER_RUST_BRIDGE_HANDLER.wrap(
     WrapInfo {
-      debug_name: "ble__at_ndrpt",
+      debug_name: "ble_at_ndrpt",
       port: Some(port_),
       mode: FfiCallMode::Normal,
     },
@@ -48,74 +51,129 @@ fn wire_ble__at_ndrpt_impl(
       let api_id = id.wire2api();
       let api_data = data.wire2api();
       let api_retry = retry.wire2api();
-      move |task_callback| Ok(ble__at_ndrpt(api_id, api_data, api_retry))
+      move |task_callback| Ok(ble_at_ndrpt(api_id, api_data, api_retry))
     },
   )
 }
-fn wire_ble__at_ndrpt_test_impl(port_: MessagePort) {
+fn wire_ble_at_ndrpt_test_impl(port_: MessagePort) {
   FLUTTER_RUST_BRIDGE_HANDLER.wrap(
     WrapInfo {
-      debug_name: "ble__at_ndrpt_test",
+      debug_name: "ble_at_ndrpt_test",
       port: Some(port_),
       mode: FfiCallMode::Normal,
     },
-    move || move |task_callback| Ok(ble__at_ndrpt_test()),
+    move || move |task_callback| Ok(ble_at_ndrpt_test()),
   )
 }
-fn wire_ble__set_ndid_impl(port_: MessagePort, id: impl Wire2Api<String> + UnwindSafe) {
+fn wire_ble_set_ndid_impl(port_: MessagePort, id: impl Wire2Api<String> + UnwindSafe) {
   FLUTTER_RUST_BRIDGE_HANDLER.wrap(
     WrapInfo {
-      debug_name: "ble__set_ndid",
+      debug_name: "ble_set_ndid",
       port: Some(port_),
       mode: FfiCallMode::Normal,
     },
     move || {
       let api_id = id.wire2api();
-      move |task_callback| Ok(ble__set_ndid(api_id))
+      move |task_callback| Ok(ble_set_ndid(api_id))
     },
   )
 }
-fn wire_ble__set_mode_impl(port_: MessagePort, mode: impl Wire2Api<u8> + UnwindSafe) {
+fn wire_ble_set_mode_impl(port_: MessagePort, mode: impl Wire2Api<u8> + UnwindSafe) {
   FLUTTER_RUST_BRIDGE_HANDLER.wrap(
     WrapInfo {
-      debug_name: "ble__set_mode",
+      debug_name: "ble_set_mode",
       port: Some(port_),
       mode: FfiCallMode::Normal,
     },
     move || {
       let api_mode = mode.wire2api();
-      move |task_callback| Ok(ble__set_mode(api_mode))
+      move |task_callback| Ok(ble_set_mode(api_mode))
     },
   )
 }
-fn wire_ble__ndreset_impl(port_: MessagePort) {
+fn wire_ble_ndreset_impl(port_: MessagePort) {
   FLUTTER_RUST_BRIDGE_HANDLER.wrap(
     WrapInfo {
-      debug_name: "ble__ndreset",
+      debug_name: "ble_ndreset",
       port: Some(port_),
       mode: FfiCallMode::Normal,
     },
-    move || move |task_callback| Ok(ble__ndreset()),
+    move || move |task_callback| Ok(ble_ndreset()),
   )
 }
-fn wire_ble__restore_impl(port_: MessagePort) {
+fn wire_ble_restore_impl(port_: MessagePort) {
   FLUTTER_RUST_BRIDGE_HANDLER.wrap(
     WrapInfo {
-      debug_name: "ble__restore",
+      debug_name: "ble_restore",
       port: Some(port_),
       mode: FfiCallMode::Normal,
     },
-    move || move |task_callback| Ok(ble__restore()),
+    move || move |task_callback| Ok(ble_restore()),
   )
 }
-fn wire_ble__reboot_impl(port_: MessagePort) {
+fn wire_ble_reboot_impl(port_: MessagePort) {
   FLUTTER_RUST_BRIDGE_HANDLER.wrap(
     WrapInfo {
-      debug_name: "ble__reboot",
+      debug_name: "ble_reboot",
       port: Some(port_),
       mode: FfiCallMode::Normal,
     },
-    move || move |task_callback| Ok(ble__reboot()),
+    move || move |task_callback| Ok(ble_reboot()),
+  )
+}
+fn wire_hal_new_control_impl(
+  port_: MessagePort,
+  id: impl Wire2Api<String> + UnwindSafe,
+  retry: impl Wire2Api<u8> + UnwindSafe,
+  index: impl Wire2Api<u8> + UnwindSafe,
+  scene: impl Wire2Api<u8> + UnwindSafe,
+  com_in: impl Wire2Api<Com> + UnwindSafe,
+  com_out: impl Wire2Api<Com> + UnwindSafe,
+) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "hal_new_control",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || {
+      let api_id = id.wire2api();
+      let api_retry = retry.wire2api();
+      let api_index = index.wire2api();
+      let api_scene = scene.wire2api();
+      let api_com_in = com_in.wire2api();
+      let api_com_out = com_out.wire2api();
+      move |task_callback| {
+        Ok(hal_new_control(
+          api_id,
+          api_retry,
+          api_index,
+          api_scene,
+          api_com_in,
+          api_com_out,
+        ))
+      }
+    },
+  )
+}
+fn wire_hal_read_logic_control_impl(
+  port_: MessagePort,
+  id: impl Wire2Api<String> + UnwindSafe,
+  retry: impl Wire2Api<u8> + UnwindSafe,
+  index: impl Wire2Api<u8> + UnwindSafe,
+) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "hal_read_logic_control",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || {
+      let api_id = id.wire2api();
+      let api_retry = retry.wire2api();
+      let api_index = index.wire2api();
+      move |task_callback| Ok(hal_read_logic_control(api_id, api_retry, api_index))
+    },
   )
 }
 // Section: wrapper structs
@@ -141,6 +199,11 @@ where
   }
 }
 
+impl Wire2Api<u32> for u32 {
+  fn wire2api(self) -> u32 {
+    self
+  }
+}
 impl Wire2Api<u8> for u8 {
   fn wire2api(self) -> u8 {
     self
@@ -148,6 +211,26 @@ impl Wire2Api<u8> for u8 {
 }
 
 // Section: impl IntoDart
+
+impl support::IntoDart for Com {
+  fn into_dart(self) -> support::DartAbi {
+    vec![self.0.into_dart()].into_dart()
+  }
+}
+impl support::IntoDartExceptPrimitive for Com {}
+
+impl support::IntoDart for LogicControl {
+  fn into_dart(self) -> support::DartAbi {
+    vec![
+      self.index.into_dart(),
+      self.scene.into_dart(),
+      self.com_in.into_dart(),
+      self.com_out.into_dart(),
+    ]
+    .into_dart()
+  }
+}
+impl support::IntoDartExceptPrimitive for LogicControl {}
 
 impl support::IntoDart for ResponseState {
   fn into_dart(self) -> support::DartAbi {

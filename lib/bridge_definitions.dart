@@ -44,6 +44,47 @@ abstract class Native {
   Future<SerialResponse> bleReboot({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kBleRebootConstMeta;
+
+  Future<SerialResponse> halNewControl(
+      {required String id,
+      required int retry,
+      required int index,
+      required int scene,
+      required Com comIn,
+      required Com comOut,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kHalNewControlConstMeta;
+
+  Future<LogicControl?> halReadLogicControl(
+      {required String id,
+      required int retry,
+      required int index,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kHalReadLogicControlConstMeta;
+}
+
+class Com {
+  final int field0;
+
+  const Com({
+    required this.field0,
+  });
+}
+
+class LogicControl {
+  final int index;
+  final int scene;
+  final Com comIn;
+  final Com comOut;
+
+  const LogicControl({
+    required this.index,
+    required this.scene,
+    required this.comIn,
+    required this.comOut,
+  });
 }
 
 enum ResponseState {

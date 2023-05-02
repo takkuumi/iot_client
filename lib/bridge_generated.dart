@@ -308,7 +308,7 @@ class NativeImpl implements Native {
         argNames: ["data"],
       );
 
-  Future<SerialResponse> halNewControl(
+  Future<bool> halNewControl(
       {required String id,
       required int retry,
       required int index,
@@ -325,7 +325,7 @@ class NativeImpl implements Native {
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner
           .wire_hal_new_control(port_, arg0, arg1, arg2, arg3, arg4, arg5),
-      parseSuccessData: _wire2api_serial_response,
+      parseSuccessData: _wire2api_bool,
       constMeta: kHalNewControlConstMeta,
       argValues: [id, retry, index, scene, comIn, comOut],
       hint: hint,
@@ -336,6 +336,23 @@ class NativeImpl implements Native {
       const FlutterRustBridgeTaskConstMeta(
         debugName: "hal_new_control",
         argNames: ["id", "retry", "index", "scene", "comIn", "comOut"],
+      );
+
+  Future<Com> halGetComIndexs({required Uint8List indexs, dynamic hint}) {
+    var arg0 = _platform.api2wire_uint_8_list(indexs);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner.wire_hal_get_com_indexs(port_, arg0),
+      parseSuccessData: _wire2api_com,
+      constMeta: kHalGetComIndexsConstMeta,
+      argValues: [indexs],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kHalGetComIndexsConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "hal_get_com_indexs",
+        argNames: ["indexs"],
       );
 
   Future<LogicControl?> halReadLogicControl(
@@ -899,6 +916,23 @@ class NativeWire implements FlutterRustBridgeWireBase {
   late final _wire_hal_new_control = _wire_hal_new_controlPtr.asFunction<
       void Function(int, ffi.Pointer<wire_uint_8_list>, int, int, int,
           ffi.Pointer<wire_Com>, ffi.Pointer<wire_Com>)>();
+
+  void wire_hal_get_com_indexs(
+    int port_,
+    ffi.Pointer<wire_uint_8_list> indexs,
+  ) {
+    return _wire_hal_get_com_indexs(
+      port_,
+      indexs,
+    );
+  }
+
+  late final _wire_hal_get_com_indexsPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Int64,
+              ffi.Pointer<wire_uint_8_list>)>>('wire_hal_get_com_indexs');
+  late final _wire_hal_get_com_indexs = _wire_hal_get_com_indexsPtr
+      .asFunction<void Function(int, ffi.Pointer<wire_uint_8_list>)>();
 
   void wire_hal_read_logic_control(
     int port_,

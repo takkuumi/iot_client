@@ -104,6 +104,11 @@ pub extern "C" fn wire_hal_new_control(
 }
 
 #[no_mangle]
+pub extern "C" fn wire_hal_get_com_indexs(port_: i64, indexs: *mut wire_uint_8_list) {
+  wire_hal_get_com_indexs_impl(port_, indexs)
+}
+
+#[no_mangle]
 pub extern "C" fn wire_hal_read_logic_control(
   port_: i64,
   id: *mut wire_uint_8_list,

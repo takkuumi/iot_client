@@ -86,7 +86,7 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kHexDecodeConstMeta;
 
-  Future<SerialResponse> halNewControl(
+  Future<bool> halNewControl(
       {required String id,
       required int retry,
       required int index,
@@ -96,6 +96,10 @@ abstract class Native {
       dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kHalNewControlConstMeta;
+
+  Future<Com> halGetComIndexs({required Uint8List indexs, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kHalGetComIndexsConstMeta;
 
   Future<LogicControl?> halReadLogicControl(
       {required String id,

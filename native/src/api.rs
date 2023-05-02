@@ -1,4 +1,4 @@
-use crate::hal;
+use crate::hal::{self, Com};
 
 use super::{
   ble::{at_command, BytesParse},
@@ -72,16 +72,33 @@ pub fn hal_new_control(
   scene: u8,
   com_in: hal::Com,
   com_out: hal::Com,
-) -> SerialResponse {
+) -> bool {
   let logic_control = hal::LogicControl {
     index,
     scene,
     com_in,
     com_out,
   };
+  let bytes = logic_control.bytes_u16();
+  let mut start = 2300 + index as u16 * 10;
+  for (index, value) in bytes.into_iter().enumerate() {
+    let reg = start + index as u16;
+    let data = hal::LogicControl::generate_set_holding(1, reg, value);
 
-  let data = logic_control.bytes();
-  at_command::at_ndrpt(&id, &data, retry)
+    if at_command::at_ndrpt_data(&id, &data, retry).is_err() {
+      return false;
+    }
+  }
+
+  true
+}
+
+pub fn hal_get_com_indexs(indexs: Vec<u8>) -> Com {
+  let mut com = Com::default();
+  for index in indexs {
+    com.set_index(index + 1);
+  }
+  com
 }
 
 pub fn hal_read_logic_control(id: String, retry: u8, index: u8) -> Option<hal::LogicControl> {

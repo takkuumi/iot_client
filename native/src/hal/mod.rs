@@ -120,7 +120,6 @@ impl LogicControl {
   pub fn to_modbus(&self) -> Vec<u8> {
     // create request object
     let mut mreq = ModbusRequest::new(1, ModbusProto::Rtu);
-    mreq.tr_id = 2; // just for test, default tr_id is 1
 
     let mut request = Vec::<u8>::new();
     mreq
@@ -168,6 +167,9 @@ mod test {
 
   #[test]
   fn index_works() {
+    let mut com = super::Com::default();
+    com.set_index(1);
+    eprintln!("{:032b}", com.deref());
     let mut com1 = super::Com::default();
     com1.set_index(2);
     let mut com2 = super::Com::default();

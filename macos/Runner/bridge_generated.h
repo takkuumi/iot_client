@@ -74,6 +74,8 @@ void wire_hal_new_control(int64_t port_,
                           struct wire_Com *com_in,
                           struct wire_Com *com_out);
 
+void wire_hal_get_com_indexs(int64_t port_, struct wire_uint_8_list *indexs);
+
 void wire_hal_read_logic_control(int64_t port_,
                                  struct wire_uint_8_list *id,
                                  uint8_t retry,
@@ -103,6 +105,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_hex_encode);
     dummy_var ^= ((int64_t) (void*) wire_hex_decode);
     dummy_var ^= ((int64_t) (void*) wire_hal_new_control);
+    dummy_var ^= ((int64_t) (void*) wire_hal_get_com_indexs);
     dummy_var ^= ((int64_t) (void*) wire_hal_read_logic_control);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_com_0);
     dummy_var ^= ((int64_t) (void*) new_uint_8_list_0);

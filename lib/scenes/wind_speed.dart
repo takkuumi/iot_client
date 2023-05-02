@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:iot_client/ffi.dart';
+import 'package:iot_client/futs/hal.dart';
 import 'package:iot_client/utils/at_parse.dart';
 import 'package:iot_client/views/components/banner.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -22,11 +24,35 @@ class _WindSpeedState extends State<WindSpeed>
   final GlobalKey<ScaffoldMessengerState> key =
       GlobalKey<ScaffoldMessengerState>(debugLabel: 'wind_speed');
 
+  late TabController tabController;
+  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  Future<String?> sn = Future.value(null);
+  Future<String?> ip = Future.value(null);
+  void tabListener() {
+    if (tabController.index == 0) {}
+    if (tabController.index == 1) {
+      _prefs.then((SharedPreferences prefs) {
+        return prefs.getString('mesh');
+      }).then((String? meshId) async {
+        if (meshId != null) {
+          List<int> snData = await getHoldings(meshId, 2196, 9);
+          Uint8List v = Uint16List.fromList(snData).buffer.asUint8List();
+          setState(() {
+            sn = Future.value(String.fromCharCodes(v));
+          });
+
+          List<int> ipData = await getHoldings(meshId, 2247, 4);
+          setState(() {
+            ip = Future.value(ipData.join('.'));
+          });
+        }
+      });
+    }
+  }
+
   late AnimationController animationController;
 
   Timer? timer;
-
-  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
   late String windSpeed1 = '--';
   late String windSpeed2 = '--';

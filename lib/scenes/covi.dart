@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
@@ -20,7 +21,8 @@ class CoVi extends StatefulWidget {
   State<CoVi> createState() => _CoViState();
 }
 
-class _CoViState extends State<CoVi> with SingleTickerProviderStateMixin {
+class _CoViState extends State<CoVi>
+    with AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
   List<Device> devices = [];
 
   final GlobalKey<ScaffoldMessengerState> key =
@@ -32,6 +34,9 @@ class _CoViState extends State<CoVi> with SingleTickerProviderStateMixin {
   late TabController tabController;
   Future<String?> sn = Future.value(null);
   Future<String?> ip = Future.value(null);
+
+  @override
+  bool get wantKeepAlive => true;
   void tabListener() {
     if (tabController.index == 0) {
       startTimer();
@@ -91,6 +96,10 @@ class _CoViState extends State<CoVi> with SingleTickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    tabController = TabController(length: 2, vsync: this);
+    tabController.animateTo(0);
+
+    tabController.addListener(tabListener);
   }
 
   String readAt(String addr) {
@@ -283,33 +292,192 @@ class _CoViState extends State<CoVi> with SingleTickerProviderStateMixin {
             )
           ],
         ),
-        body: SingleChildScrollView(
-          child: Container(
-            alignment: Alignment.center,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Container(
-                  child: CarouselSlider(
-                    options: CarouselOptions(
-                      aspectRatio: 16 / 10,
-                      enlargeCenterPage: true,
-                      scrollDirection: Axis.horizontal,
-                      autoPlay: true,
-                      height: 260,
+        body: TabBarView(
+          controller: tabController,
+          physics: BouncingScrollPhysics(),
+          dragStartBehavior: DragStartBehavior.down,
+          children: [
+            SingleChildScrollView(
+              child: Container(
+                alignment: Alignment.center,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      child: CarouselSlider(
+                        options: CarouselOptions(
+                          aspectRatio: 16 / 10,
+                          enlargeCenterPage: true,
+                          scrollDirection: Axis.horizontal,
+                          autoPlay: true,
+                          height: 260,
+                        ),
+                        items: createImageSliders(),
+                      ),
                     ),
-                    items: createImageSliders(),
-                  ),
+                    Container(
+                      width: 510,
+                      padding: EdgeInsets.symmetric(vertical: 60),
+                      child: createLane1(),
+                    ),
+                  ],
                 ),
-                Container(
-                  width: 510,
-                  padding: EdgeInsets.symmetric(vertical: 60),
-                  child: createLane1(),
-                ),
-              ],
+              ),
             ),
-          ),
+            SingleChildScrollView(
+              padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+              child: Container(
+                child: Column(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.symmetric(vertical: 5),
+                      child: Row(
+                        verticalDirection: VerticalDirection.down,
+                        children: [
+                          Text(
+                            "设备SN编号:",
+                            style: TextStyle(
+                                fontSize: 17, fontWeight: FontWeight.w500),
+                          ),
+                          SizedBox.fromSize(
+                            size: Size(5, 0),
+                          ),
+                          FutureBuilder(
+                            future: sn,
+                            initialData: '',
+                            builder:
+                                (context, AsyncSnapshot<String?> snapshot) {
+                              if (snapshot.hasData &&
+                                  snapshot.connectionState ==
+                                      ConnectionState.done) {
+                                String id = snapshot.data ?? '';
+                                return Text(
+                                  id,
+                                  style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w300),
+                                );
+                              }
+
+                              return Text(
+                                "",
+                                style: TextStyle(
+                                    fontSize: 14, fontWeight: FontWeight.w300),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(vertical: 5),
+                      child: Row(
+                        verticalDirection: VerticalDirection.down,
+                        children: [
+                          Text(
+                            "设备状态:",
+                            style: TextStyle(
+                                fontSize: 17, fontWeight: FontWeight.w500),
+                          ),
+                          SizedBox.fromSize(
+                            size: Size(5, 0),
+                          ),
+                          Text(
+                            "运行中",
+                            style: TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w300),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(vertical: 5),
+                      child: Row(
+                        verticalDirection: VerticalDirection.down,
+                        children: [
+                          Text(
+                            "设备版本:",
+                            style: TextStyle(
+                                fontSize: 17, fontWeight: FontWeight.w500),
+                          ),
+                          SizedBox.fromSize(
+                            size: Size(5, 0),
+                          ),
+                          Text(
+                            "v1.0.0",
+                            style: TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w300),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(vertical: 5),
+                      child: Row(
+                        verticalDirection: VerticalDirection.down,
+                        children: [
+                          Text(
+                            "设备IP:",
+                            style: TextStyle(
+                                fontSize: 17, fontWeight: FontWeight.w500),
+                          ),
+                          SizedBox.fromSize(
+                            size: Size(5, 0),
+                          ),
+                          FutureBuilder(
+                            future: ip,
+                            initialData: '',
+                            builder:
+                                (context, AsyncSnapshot<String?> snapshot) {
+                              if (snapshot.hasData &&
+                                  snapshot.connectionState ==
+                                      ConnectionState.done) {
+                                String id = snapshot.data ?? '';
+                                return Text(
+                                  id,
+                                  style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w300),
+                                );
+                              }
+
+                              return Text(
+                                "",
+                                style: TextStyle(
+                                    fontSize: 14, fontWeight: FontWeight.w300),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(vertical: 5),
+                      child: Row(
+                        verticalDirection: VerticalDirection.down,
+                        children: [
+                          Text(
+                            "设备端口:",
+                            style: TextStyle(
+                                fontSize: 17, fontWeight: FontWeight.w500),
+                          ),
+                          SizedBox.fromSize(
+                            size: Size(5, 0),
+                          ),
+                          Text(
+                            "5002",
+                            style: TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w300),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          ],
         ),
       ),
     );

@@ -29,7 +29,10 @@ class _WindSpeedState extends State<WindSpeed>
   Future<String?> sn = Future.value(null);
   Future<String?> ip = Future.value(null);
   void tabListener() {
-    if (tabController.index == 0) {}
+    if (tabController.index == 0) {
+      startTimer();
+      readDevice(readAt("09CE")).then(respHandler);
+    }
     if (tabController.index == 1) {
       _prefs.then((SharedPreferences prefs) {
         return prefs.getString('mesh');
@@ -95,8 +98,6 @@ class _WindSpeedState extends State<WindSpeed>
     animationController.repeat(min: 0.0, max: 1.0);
 
     super.initState();
-    startTimer();
-    readDevice(readAt("09CE")).then(respHandler);
   }
 
   @override

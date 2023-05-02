@@ -29,7 +29,10 @@ class _LightInsideState extends State<LightInside>
   Future<String?> sn = Future.value(null);
   Future<String?> ip = Future.value(null);
   void tabListener() {
-    if (tabController.index == 0) {}
+    if (tabController.index == 0) {
+      startTimer();
+      readDevice(readAt("09C7")).then(respHandler);
+    }
     if (tabController.index == 1) {
       _prefs.then((SharedPreferences prefs) {
         return prefs.getString('mesh');
@@ -85,8 +88,6 @@ class _LightInsideState extends State<LightInside>
   @override
   void initState() {
     super.initState();
-    startTimer();
-    readDevice(readAt("09C7")).then(respHandler);
   }
 
   @override

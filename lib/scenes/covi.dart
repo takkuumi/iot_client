@@ -33,7 +33,10 @@ class _CoViState extends State<CoVi> with SingleTickerProviderStateMixin {
   Future<String?> sn = Future.value(null);
   Future<String?> ip = Future.value(null);
   void tabListener() {
-    if (tabController.index == 0) {}
+    if (tabController.index == 0) {
+      startTimer();
+      readDevice(readAt("09CA")).then(respHandler);
+    }
     if (tabController.index == 1) {
       _prefs.then((SharedPreferences prefs) {
         return prefs.getString('mesh');
@@ -88,8 +91,6 @@ class _CoViState extends State<CoVi> with SingleTickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    startTimer();
-    readDevice(readAt("09CA")).then(respHandler);
   }
 
   String readAt(String addr) {

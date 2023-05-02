@@ -84,40 +84,43 @@ class _BluetoothState extends State<Bluetooth> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: <Widget>[
-          Expanded(
-            child: devices.isEmpty
-                ? emptyWidget
-                : ListView.builder(
-                    itemCount: devices.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      final Device device = devices[index];
-                      return ListTile(
-                        title: Text(device.name),
-                        subtitle: Text(device.address),
-                        onTap: () async {
-                          final name = device.name;
-                          bool? result = await showSettingDialog();
-                          if (result != null && result) {
-                            if (name.startsWith("Mesh")) {
-                              final prefs = await _prefs;
-                              bool saved = await prefs.setString(
-                                  "mesh", name.substring(5, 9));
-                              if (saved) {
-                                showSnackBar("设置成功");
-                              } else {
-                                showSnackBar("设置失败");
+      body: Container(
+        padding: EdgeInsets.symmetric(vertical: 20, horizontal: 30),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: <Widget>[
+            Expanded(
+              child: devices.isEmpty
+                  ? emptyWidget
+                  : ListView.builder(
+                      itemCount: devices.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        final Device device = devices[index];
+                        return ListTile(
+                          title: Text(device.name),
+                          subtitle: Text(device.address),
+                          onTap: () async {
+                            final name = device.name;
+                            bool? result = await showSettingDialog();
+                            if (result != null && result) {
+                              if (name.startsWith("Mesh")) {
+                                final prefs = await _prefs;
+                                bool saved = await prefs.setString(
+                                    "mesh", name.substring(5, 9));
+                                if (saved) {
+                                  showSnackBar("设置成功");
+                                } else {
+                                  showSnackBar("设置失败");
+                                }
                               }
                             }
-                          }
-                        },
-                      );
-                    },
-                  ),
-          ),
-        ],
+                          },
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.radar),

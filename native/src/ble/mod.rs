@@ -28,7 +28,7 @@ impl<'s> BytesParse<'s> {
   pub fn validate(&self) -> bool {
     let bytes = self.deref();
     let len = bytes.len();
-    if len <= 4 {
+    if len <= 30 {
       return false;
     }
     if !bytes.starts_with(BITS_END) && !bytes.ends_with(BITS_END) {
@@ -166,6 +166,10 @@ impl<'s> BytesParse<'s> {
 
     let text = String::from_utf8_lossy(sub);
     let buf = hex::decode(text.as_ref()).unwrap();
+
+    if buf.len() < 5 {
+      return None;
+    }
 
     let value = u16::from_be_bytes([buf[3], buf[4]]);
 

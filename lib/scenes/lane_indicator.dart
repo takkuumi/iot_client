@@ -1,15 +1,19 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:iot_client/ffi.dart';
+import 'package:iot_client/scenes/lane_indicator_port.dart';
 import 'package:iot_client/scenes/widgets/lane_indicator_components.dart';
 import 'package:iot_client/utils/at_parse.dart';
+import 'package:iot_client/utils/navigation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
+import '../futs/hal.dart';
 
 class LaneIndicator extends StatefulWidget {
   const LaneIndicator({Key? key}) : super(key: key);
@@ -30,21 +34,49 @@ class _LaneIndicatorState extends State<LaneIndicator>
   LaneIndicatorState state1 = LaneIndicatorState.red;
   LaneIndicatorState state2 = LaneIndicatorState.red;
 
+  Future<String?> sn = Future.value(null);
+  Future<String?> ip = Future.value(null);
+
   @override
   bool get wantKeepAlive => true;
+
+  void tabListener() {
+    if (tabController.index == 0) {
+      readDevice(
+        readAt("0200"),
+        initLaneState,
+        () {
+          debugPrint("error");
+        },
+      );
+    }
+    if (tabController.index == 1) {
+      _prefs.then((SharedPreferences prefs) {
+        return prefs.getString('mesh');
+      }).then((String? meshId) async {
+        if (meshId != null) {
+          List<int> snData = await getHoldings(meshId, 2196, 9);
+          Uint8List v = Uint16List.fromList(snData).buffer.asUint8List();
+          setState(() {
+            sn = Future.value(String.fromCharCodes(v));
+          });
+
+          List<int> ipData = await getHoldings(meshId, 2247, 4);
+          setState(() {
+            ip = Future.value(ipData.join('.'));
+          });
+        }
+      });
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     tabController = TabController(length: 2, vsync: this);
     tabController.animateTo(0);
-    readDevice(
-      readAt("0200"),
-      initLaneState,
-      () {
-        debugPrint("error");
-      },
-    );
+
+    tabController.addListener(tabListener);
   }
 
   void initLaneState(int? state) {
@@ -93,6 +125,7 @@ class _LaneIndicatorState extends State<LaneIndicator>
 
   @override
   void dispose() {
+    tabController.removeListener(tabListener);
     super.dispose();
   }
 
@@ -371,8 +404,13 @@ class _LaneIndicatorState extends State<LaneIndicator>
             ),
             actions: [
               TextButton(
-                onPressed: () => {},
-                child: Text("端口设置"),
+                onPressed: () => {
+                  Navigation.navigateTo(
+                    context: context,
+                    screen: LaneIndicatorPort(),
+                  )
+                },
+                child: Text("逻辑控制"),
               )
             ],
           ),
@@ -407,9 +445,157 @@ class _LaneIndicatorState extends State<LaneIndicator>
                 ),
               ),
               SingleChildScrollView(
-                padding: EdgeInsets.symmetric(vertical: 50),
+                padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
                 child: Container(
-                  child: Text("暂无服务信息"),
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.symmetric(vertical: 5),
+                        child: Row(
+                          verticalDirection: VerticalDirection.down,
+                          children: [
+                            Text(
+                              "设备SN编号:",
+                              style: TextStyle(
+                                  fontSize: 17, fontWeight: FontWeight.w500),
+                            ),
+                            SizedBox.fromSize(
+                              size: Size(5, 0),
+                            ),
+                            FutureBuilder(
+                              future: sn,
+                              initialData: '',
+                              builder:
+                                  (context, AsyncSnapshot<String?> snapshot) {
+                                if (snapshot.hasData &&
+                                    snapshot.connectionState ==
+                                        ConnectionState.done) {
+                                  String id = snapshot.data ?? '';
+                                  return Text(
+                                    id,
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w300),
+                                  );
+                                }
+
+                                return Text(
+                                  "",
+                                  style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w300),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: EdgeInsets.symmetric(vertical: 5),
+                        child: Row(
+                          verticalDirection: VerticalDirection.down,
+                          children: [
+                            Text(
+                              "设备状态:",
+                              style: TextStyle(
+                                  fontSize: 17, fontWeight: FontWeight.w500),
+                            ),
+                            SizedBox.fromSize(
+                              size: Size(5, 0),
+                            ),
+                            Text(
+                              "运行中",
+                              style: TextStyle(
+                                  fontSize: 14, fontWeight: FontWeight.w300),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: EdgeInsets.symmetric(vertical: 5),
+                        child: Row(
+                          verticalDirection: VerticalDirection.down,
+                          children: [
+                            Text(
+                              "设备版本:",
+                              style: TextStyle(
+                                  fontSize: 17, fontWeight: FontWeight.w500),
+                            ),
+                            SizedBox.fromSize(
+                              size: Size(5, 0),
+                            ),
+                            Text(
+                              "v1.0.0",
+                              style: TextStyle(
+                                  fontSize: 14, fontWeight: FontWeight.w300),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: EdgeInsets.symmetric(vertical: 5),
+                        child: Row(
+                          verticalDirection: VerticalDirection.down,
+                          children: [
+                            Text(
+                              "设备IP:",
+                              style: TextStyle(
+                                  fontSize: 17, fontWeight: FontWeight.w500),
+                            ),
+                            SizedBox.fromSize(
+                              size: Size(5, 0),
+                            ),
+                            FutureBuilder(
+                              future: ip,
+                              initialData: '',
+                              builder:
+                                  (context, AsyncSnapshot<String?> snapshot) {
+                                if (snapshot.hasData &&
+                                    snapshot.connectionState ==
+                                        ConnectionState.done) {
+                                  String id = snapshot.data ?? '';
+                                  return Text(
+                                    id,
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w300),
+                                  );
+                                }
+
+                                return Text(
+                                  "",
+                                  style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w300),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: EdgeInsets.symmetric(vertical: 5),
+                        child: Row(
+                          verticalDirection: VerticalDirection.down,
+                          children: [
+                            Text(
+                              "设备端口:",
+                              style: TextStyle(
+                                  fontSize: 17, fontWeight: FontWeight.w500),
+                            ),
+                            SizedBox.fromSize(
+                              size: Size(5, 0),
+                            ),
+                            Text(
+                              "5002",
+                              style: TextStyle(
+                                  fontSize: 14, fontWeight: FontWeight.w300),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               )
             ],

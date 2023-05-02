@@ -132,6 +132,24 @@ class _CrossHoleState extends State<CrossHole>
       child: Scaffold(
         appBar: AppBar(
           title: const Text('横洞指示'),
+          centerTitle: true,
+          bottom: TabBar(
+            controller: tabController,
+            tabs: [
+              Tab(
+                text: "控制信息",
+              ),
+              Tab(
+                text: "服务信息",
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => {},
+              child: Text("逻辑控制"),
+            )
+          ],
         ),
         body: SingleChildScrollView(
           child: Container(

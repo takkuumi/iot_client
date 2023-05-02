@@ -135,6 +135,24 @@ class _WaterPumpState extends State<WaterPump>
       child: Scaffold(
         appBar: AppBar(
           title: const Text('水泵液压'),
+          centerTitle: true,
+          bottom: TabBar(
+            controller: tabController,
+            tabs: [
+              Tab(
+                text: "控制信息",
+              ),
+              Tab(
+                text: "服务信息",
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => {},
+              child: Text("逻辑控制"),
+            )
+          ],
         ),
         body: SingleChildScrollView(
           child: Container(

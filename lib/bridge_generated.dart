@@ -338,6 +338,23 @@ class NativeImpl implements Native {
         argNames: ["id", "retry", "index", "scene", "comIn", "comOut"],
       );
 
+  Future<Com> halNewCom({required int value, dynamic hint}) {
+    var arg0 = api2wire_u32(value);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner.wire_hal_new_com(port_, arg0),
+      parseSuccessData: _wire2api_com,
+      constMeta: kHalNewComConstMeta,
+      argValues: [value],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kHalNewComConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "hal_new_com",
+        argNames: ["value"],
+      );
+
   Future<Com> halGetComIndexs({required Uint8List indexs, dynamic hint}) {
     var arg0 = _platform.api2wire_uint_8_list(indexs);
     return _platform.executeNormal(FlutterRustBridgeTask(
@@ -916,6 +933,22 @@ class NativeWire implements FlutterRustBridgeWireBase {
   late final _wire_hal_new_control = _wire_hal_new_controlPtr.asFunction<
       void Function(int, ffi.Pointer<wire_uint_8_list>, int, int, int,
           ffi.Pointer<wire_Com>, ffi.Pointer<wire_Com>)>();
+
+  void wire_hal_new_com(
+    int port_,
+    int value,
+  ) {
+    return _wire_hal_new_com(
+      port_,
+      value,
+    );
+  }
+
+  late final _wire_hal_new_comPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Uint32)>>(
+          'wire_hal_new_com');
+  late final _wire_hal_new_com =
+      _wire_hal_new_comPtr.asFunction<void Function(int, int)>();
 
   void wire_hal_get_com_indexs(
     int port_,

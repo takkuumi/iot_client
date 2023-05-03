@@ -199,17 +199,6 @@ mod test {
 
   #[test]
   pub fn at_ndrpt_test2() {
-    // 0101002190
-
-    let mut i = 0;
-    loop {
-      if i > 100 {
-        break;
-      }
-      let res = super::set_baud();
-      println!("res: {}", String::from_utf8_lossy(&res.data.unwrap()));
-      i += 1;
-    }
 
     // super::reboot().unwrap();
 

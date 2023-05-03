@@ -52,13 +52,6 @@ impl SerialResponse {
   #[must_use]
   pub fn is_err(&self) -> bool {
     !self.is_ok()
-      || self.data.is_none()
-      || self
-        .data
-        .as_ref()
-        .unwrap_or(&Vec::<u8>::with_capacity(0))
-        .len()
-        < 30
   }
 }
 

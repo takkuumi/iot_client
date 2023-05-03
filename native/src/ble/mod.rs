@@ -28,7 +28,7 @@ impl<'s> BytesParse<'s> {
   pub fn validate(&self) -> bool {
     let bytes = self.deref();
     let len = bytes.len();
-    if len <= 30 {
+    if len <= 4 {
       return false;
     }
     if !bytes.starts_with(BITS_END) && !bytes.ends_with(BITS_END) {

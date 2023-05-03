@@ -6,7 +6,6 @@ import 'package:iot_client/ffi.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
-import '../futs/hal.dart';
 
 class LaneIndicatorPort extends StatefulWidget {
   const LaneIndicatorPort({Key? key}) : super(key: key);

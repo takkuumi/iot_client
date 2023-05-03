@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:iot_client/ffi.dart';
 import 'package:flutter/material.dart';
 import 'package:iot_client/futs/hal.dart';
+import 'package:iot_client/utils/navigation.dart';
+import 'package:iot_client/views/logic_control_setting.dart';
 import 'package:settings_ui/settings_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -39,7 +41,7 @@ class _SettingAppState extends State<SettingApp> {
 
   final TextEditingController _textEditingController = TextEditingController();
 
-  Future<String?> ndid = Future.value(null);
+  late Future<String?> ndid = Future.value(null);
   Future<String?> mac = Future.value(null);
   Future<String?> ip = Future.value(null);
   Future<String?> subnetMask = Future.value(null);
@@ -88,6 +90,11 @@ class _SettingAppState extends State<SettingApp> {
         });
       }
     });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   void closeAppUsingSystemPop() {
@@ -162,7 +169,7 @@ class _SettingAppState extends State<SettingApp> {
                         showSnackBar(String.fromCharCodes(data3));
                       }
 
-                      closeAppUsingSystemPop();
+                      // closeAppUsingSystemPop();
                     }
                   },
                   child: Text('修改'),
@@ -234,6 +241,19 @@ class _SettingAppState extends State<SettingApp> {
           SettingsSection(
             title: Text('基本'),
             tiles: <SettingsTile>[
+              SettingsTile.navigation(
+                leading: Icon(Icons.restore),
+                title: Text('重启本机蓝牙'),
+                onPressed: (context) async {
+                  SerialResponse r2 = await api.bleNdreset();
+                  Uint8List? data2 = r2.data;
+                  if (data2 != null) {
+                    showSnackBar(String.fromCharCodes(data2));
+                    return;
+                  }
+                  showSnackBar("重启失败");
+                },
+              ),
               SettingsTile.navigation(
                 leading: Icon(Icons.bluetooth_connected),
                 title: Text('本机蓝牙地址'),
@@ -346,6 +366,21 @@ class _SettingAppState extends State<SettingApp> {
               SettingsTile.navigation(
                 title: Text('Modbus地址'),
                 value: Text('1'),
+              ),
+            ],
+          ),
+          SettingsSection(
+            title: Text('配置'),
+            tiles: <SettingsTile>[
+              SettingsTile.navigation(
+                leading: Icon(Icons.bluetooth_connected),
+                title: Text('逻辑配置服务'),
+                onPressed: (context) {
+                  Navigation.navigateTo(
+                    context: context,
+                    screen: LogicControlSetting(),
+                  );
+                },
               ),
             ],
           ),

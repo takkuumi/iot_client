@@ -72,6 +72,10 @@ impl Com {
     self.0 & (1 << (32 - index)) != 0
   }
 
+  pub fn set_value(&mut self, value: u32) {
+    self.0 = value;
+  }
+
   pub fn to_index(&self) -> Vec<Index> {
     let mut result = Vec::with_capacity(32);
     for i in 1..33 {

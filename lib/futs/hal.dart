@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:iot_client/ffi.dart';
 
@@ -11,7 +10,7 @@ Future<int?> getHolding(String meshId, int reg) async {
   Uint8List? rdata = sr.data;
   if (rdata != null) {
     String text = String.fromCharCodes(rdata);
-    debugPrint('$text');
+    debugPrint(text);
     bool state = await api.bleValidateResponse(data: rdata);
     if (state) {
       return await api.bleResponseParseU16(data: rdata, unitId: 1);
@@ -21,6 +20,7 @@ Future<int?> getHolding(String meshId, int reg) async {
 }
 
 Future<List<int>> getHoldings(String meshId, int reg, int count) async {
+  debugPrint(meshId);
   List<int> res = List<int>.empty(growable: true);
   for (int i = reg; i < reg + count; i++) {
     int? value = await getHolding(meshId, i);

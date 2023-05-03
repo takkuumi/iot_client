@@ -97,6 +97,10 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kHalNewControlConstMeta;
 
+  Future<Com> halNewCom({required int value, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kHalNewComConstMeta;
+
   Future<Com> halGetComIndexs({required Uint8List indexs, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kHalGetComIndexsConstMeta;

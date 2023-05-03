@@ -93,6 +93,12 @@ pub fn hal_new_control(
   true
 }
 
+pub fn hal_new_com(value: u32) -> Com {
+  let mut com = Com::default();
+  com.set_value(value);
+  com
+}
+
 pub fn hal_get_com_indexs(indexs: Vec<u8>) -> Com {
   let mut com = Com::default();
   for index in indexs {

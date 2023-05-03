@@ -273,6 +273,19 @@ fn wire_hal_new_control_impl(
     },
   )
 }
+fn wire_hal_new_com_impl(port_: MessagePort, value: impl Wire2Api<u32> + UnwindSafe) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "hal_new_com",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || {
+      let api_value = value.wire2api();
+      move |task_callback| Ok(hal_new_com(api_value))
+    },
+  )
+}
 fn wire_hal_get_com_indexs_impl(port_: MessagePort, indexs: impl Wire2Api<Vec<u8>> + UnwindSafe) {
   FLUTTER_RUST_BRIDGE_HANDLER.wrap(
     WrapInfo {

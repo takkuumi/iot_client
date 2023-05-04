@@ -1,4 +1,4 @@
-use super::{crc16::crc_data, crc_16, send_serialport, SerialResponse};
+use super::{crc_16, send_serialport, SerialResponse};
 
 #[allow(clippy::module_inception)]
 mod ble_at {

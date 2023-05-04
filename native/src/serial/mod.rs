@@ -1,5 +1,3 @@
-use std::ops::Deref;
-
 use serialport::{ClearBuffer, DataBits, FlowControl, StopBits};
 
 // serialport::new("/dev/tty.usbserial-1430", 115200)
@@ -59,7 +57,7 @@ impl SerialResponse {
 // ttySWK0
 
 fn open_tty_swk0(millis: u64) -> Result<Box<dyn serialport::SerialPort>, serialport::Error> {
-  serialport::new("/dev/ttySWK0", 115_200)
+  serialport::new("/dev/tty.usbserial-1430", 115_200)
     .data_bits(DataBits::Eight)
     .stop_bits(StopBits::One)
     .flow_control(FlowControl::None)
@@ -80,7 +78,7 @@ fn read_serialport(port: &mut Box<dyn serialport::SerialPort>) -> SerialResponse
     let mut resp_buf = [0_u8; 6];
     let res = port.read(&mut resp_buf);
     match res {
-      Err(ref e) => {
+      Err(ref _e) => {
         if retry > 5 {
           response.state = ResponseState::ReadResponseError;
           break;

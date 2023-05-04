@@ -4,7 +4,7 @@ mod crc16;
 use super::serial::{send_serialport, SerialResponse};
 use crc16::crc_16;
 use regex::Regex;
-use rmodbus::{client::ModbusRequest, server::ModbusFrame, ModbusProto};
+use rmodbus::{client::ModbusRequest, ModbusProto};
 use std::ops::Deref;
 
 const BITS_END: &[u8; 2] = b"\r\n";
@@ -237,7 +237,7 @@ mod test {
       .unwrap();
 
     // write request to stream
-    stream.write(&request).unwrap();
+    stream.write_all(&request).unwrap();
 
     // read first 6 bytes of response frame
     let mut buf = [0u8; 6];
@@ -256,7 +256,7 @@ mod test {
 
     // get coil values back
     mreq.generate_get_coils(0, 2, &mut request).unwrap();
-    stream.write(&request).unwrap();
+    stream.write_all(&request).unwrap();
     let mut buf = [0u8; 6];
     stream.read_exact(&mut buf).unwrap();
     let mut response = Vec::new();

@@ -201,7 +201,10 @@ class _BluetoothState extends State<Bluetooth> {
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.radar),
         tooltip: "扫描",
-        onPressed: isScaning ? null : scanBleDevice,
+        onPressed: () {
+          timer?.cancel();
+          setTimer();
+        },
       ),
     );
   }

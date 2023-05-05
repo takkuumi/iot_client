@@ -51,7 +51,7 @@ class _SettingAppState extends State<SettingApp> {
 
   void mountedState(void Function() fn) {
     if (mounted) {
-      mountedState(fn);
+      setState(fn);
     }
   }
 

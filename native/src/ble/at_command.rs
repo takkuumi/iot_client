@@ -1,4 +1,4 @@
-use crate::serial::send_scan_serialport;
+use crate::serial::{send_scan_serialport, send_utilok_serialport};
 
 use super::{crc_16, send_serialport, SerialResponse};
 
@@ -30,6 +30,8 @@ mod ble_at {
 
   pub const AT_CHINFO: &str = "AT+CHINFO"; // 读取连接对端信息
   pub const AT_LECCONN: &str = "AT+LECCONN"; // 向指定地址发起连接
+
+  pub const AT_LEDISC: &str = "AT+LEDISC"; // 断开指定连接
 }
 
 fn try_until(data: &[u8], retry: u8) -> SerialResponse {
@@ -67,7 +69,12 @@ pub fn lecconn2(addr: &str, add_type: u8) -> SerialResponse {
 }
 
 pub fn lecconn_addr(addr: &str) -> SerialResponse {
-  let data = format!("{}={},FFF0,FFF2,FFF1", ble_at::AT_LECCONN, addr);
+  let data = format!("{}={}", ble_at::AT_LECCONN, addr);
+  send_serialport(data.as_bytes())
+}
+
+pub fn ledisc(index: u8) -> SerialResponse {
+  let data = format!("{}={}", ble_at::AT_LEDISC, index);
   send_serialport(data.as_bytes())
 }
 

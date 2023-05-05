@@ -55,35 +55,36 @@ class _SettingAppState extends State<SettingApp> {
     }
   }
 
+  Future<void> readHoldings1() async {
+    List<int> data1 = await getHoldings(2196, 40);
+    List<int> data2 = await getHoldings(2236, 40);
+
+    List<int> data = data1 + data2;
+
+    if (data.length < 80) {
+      return;
+    }
+
+    String hexmac =
+        List.of([data[67], data[68], data[69], data[70], data[71], data[72]])
+            .map((e) => e.toRadixString(16).toUpperCase().padLeft(2, '0'))
+            .join('-');
+
+    String ipstr = List.of([data[51], data[52], data[53], data[54]]).join('.');
+    String subnetstr =
+        List.of([data[55], data[56], data[57], data[58]]).join('.');
+    String gatawaystr =
+        List.of([data[59], data[60], data[61], data[62]]).join('.');
+    mac = Future.value(hexmac);
+    ip = Future.value(ipstr);
+    subnetMask = Future.value(subnetstr);
+    gateway = Future.value(gatawaystr);
+    mountedState(() {});
+  }
+
   @override
   void initState() {
     super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      List<int> data = await getHoldings(2263, 5);
-      String hexmac = data
-          .map((e) => e.toRadixString(16).toUpperCase().padLeft(2, '0'))
-          .join('-');
-      mountedState(() {
-        mac = Future.value(hexmac);
-      });
-
-      List<int> ipData = await getHoldings(2247, 4);
-      String hexIp = ipData.join('.');
-      mountedState(() {
-        ip = Future.value(hexIp);
-      });
-
-      List<int> subnetMaskData = await getHoldings(2251, 4);
-      mountedState(() {
-        subnetMask = Future.value(subnetMaskData.join('.'));
-      });
-
-      List<int> gatewayData = await getHoldings(2255, 4);
-      mountedState(() {
-        gateway = Future.value(gatewayData.join('.'));
-      });
-    });
   }
 
   @override
@@ -229,6 +230,16 @@ class _SettingAppState extends State<SettingApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('逻辑控制配置'),
+        centerTitle: true,
+        actions: [
+          TextButton(
+            onPressed: readHoldings1,
+            child: Text("读取"),
+          )
+        ],
+      ),
       body: SettingsList(
         platform: selectedPlatform,
         sections: [
@@ -383,7 +394,9 @@ class PlatformPickerScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Platforms')),
+      appBar: AppBar(
+        title: Text('Platforms'),
+      ),
       body: SettingsList(
         platform: platform,
         sections: [

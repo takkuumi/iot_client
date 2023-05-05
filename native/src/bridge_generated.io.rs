@@ -91,6 +91,11 @@ pub extern "C" fn wire_ble_lecconn_addr(port_: i64, addr: *mut wire_uint_8_list)
 }
 
 #[no_mangle]
+pub extern "C" fn wire_ble_ledisc(port_: i64, index: u8) {
+  wire_ble_ledisc_impl(port_, index)
+}
+
+#[no_mangle]
 pub extern "C" fn wire_ble_lesend(port_: i64, index: u8, data: *mut wire_uint_8_list) {
   wire_ble_lesend_impl(port_, index, data)
 }

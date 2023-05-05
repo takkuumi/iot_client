@@ -235,6 +235,19 @@ fn wire_ble_lecconn_addr_impl(port_: MessagePort, addr: impl Wire2Api<String> + 
     },
   )
 }
+fn wire_ble_ledisc_impl(port_: MessagePort, index: impl Wire2Api<u8> + UnwindSafe) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "ble_ledisc",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || {
+      let api_index = index.wire2api();
+      move |task_callback| Ok(ble_ledisc(api_index))
+    },
+  )
+}
 fn wire_ble_lesend_impl(
   port_: MessagePort,
   index: impl Wire2Api<u8> + UnwindSafe,

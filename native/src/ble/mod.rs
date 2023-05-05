@@ -45,15 +45,19 @@ impl<'s> BytesParse<'s> {
       return false;
     }
 
-    let id_reg = Regex::new(r"^\d{4}$").unwrap();
+    // +DATA=0,014,0103020000B844
+
+    let id_reg = Regex::new(r"^\d$").unwrap();
 
     let rang_s = rang_e;
-    let rang_e = rang_s + 4;
+    let rang_e = rang_s + 1;
     let sub = &bytes[rang_s..rang_e];
     eprintln!("sub: {:?}", String::from_utf8_lossy(sub));
     if !id_reg.is_match(&String::from_utf8_lossy(sub)) {
       return false;
     }
+
+    // +DATA=0,014,0103020000B844
 
     let rang_s = rang_e;
     let rang_e = rang_s + 1;
@@ -63,19 +67,31 @@ impl<'s> BytesParse<'s> {
       return false;
     }
 
+    let count_reg = Regex::new(r"^\d{3}$").unwrap();
+
     let rang_s = rang_e;
-    let rang_e = rang_s + 4;
-    let sub = &bytes[rang_s..rang_e];
-    eprintln!("sub: {:?}", String::from_utf8_lossy(sub));
-    if !id_reg.is_match(&String::from_utf8_lossy(sub)) {
+    let rang_e = rang_s + 3;
+    let sub_count = &bytes[rang_s..rang_e];
+    eprintln!("count: {:?}", String::from_utf8_lossy(sub));
+    if !count_reg.is_match(&String::from_utf8_lossy(sub_count)) {
       return false;
     }
+    let Ok(count) = String::from_utf8_lossy(sub_count).parse::<usize>()  else {
+        return false;
+    };
+    eprintln!("count: {:?}", count);
 
     let rang_s = rang_e;
     let rang_e = rang_s + 1;
     let sub = &bytes[rang_s..rang_e];
     eprintln!("sub: {:?}", String::from_utf8_lossy(sub));
     if !sub.eq(b",") {
+      return false;
+    }
+
+    // +DATA=0,014,0103020000B844
+
+    if count < 10 {
       return false;
     }
 
@@ -83,45 +99,13 @@ impl<'s> BytesParse<'s> {
       return false;
     };
 
-    if index < rang_e {
+    let data_seq = &bytes[index + 1..];
+
+    eprintln!("-----> {}", data_seq.len());
+    eprintln!("-----> {}", count);
+    if (data_seq.len() - 2) != count {
       return false;
     }
-
-    let count_reg = Regex::new(r"^\d+$").unwrap();
-
-    let rang_s = rang_e;
-    let rang_e = index;
-    let sub = &bytes[rang_s..rang_e];
-    let text = String::from_utf8_lossy(sub);
-    eprintln!("sub: {:?}", text);
-    if !count_reg.is_match(&text) {
-      return false;
-    }
-
-    eprintln!("captures: {:?}", count_reg.captures(&text));
-    let Some(count) =  count_reg.captures(&text) else {
-      return false;
-    };
-    let Some(count) = count
-      .get(0)
-      .and_then(|v| {
-        eprintln!("match: {:?}", v.as_str());
-        v.as_str().parse::<usize>().ok()
-      }) else {
-        return false;
-      };
-
-    eprintln!("count: {:?}", count);
-
-    if count < 10 {
-      return false;
-    }
-
-    // let rang_s = rang_e + 2;
-    // let rang_e = rang_s + count - 1;
-    // let sub = &bytes[rang_s..rang_e];
-    // let text = String::from_utf8_lossy(sub);
-    // eprintln!("sub: {:?}", text);
 
     true
   }
@@ -154,26 +138,29 @@ impl<'s> BytesParse<'s> {
     Some(result)
   }
 
-  pub fn parse_u16(&self, unit_id: u8) -> Option<u16> {
+  pub fn parse_u16(&self, unit_id: u8) -> Option<Vec<u16>> {
     if !self.validate() {
       return None;
     }
 
-    let index = self.get_index().unwrap();
-    let rang_s = index + 2;
-    let rang_e = self.deref().len() - 2;
-    let sub = &self.deref()[rang_s..rang_e];
+    // +DATA=0,014,0103020000B844
+    let rang_e = self.deref().len() - 6;
+    let data = &self.deref()[20..rang_e];
 
-    let text = String::from_utf8_lossy(sub);
-    let buf = hex::decode(text.as_ref()).unwrap();
+    let text = String::from_utf8_lossy(data);
+    let res = hex::decode(text.as_ref()).unwrap();
 
-    if buf.len() < 5 {
-      return None;
+    let chunks = res.chunks(2);
+
+    let mut result = Vec::new();
+    for chunk in chunks {
+      let mut buf = [0u8; 2];
+      buf.copy_from_slice(chunk);
+      let val = u16::from_be_bytes(buf);
+      result.push(val);
     }
 
-    let value = u16::from_be_bytes([buf[3], buf[4]]);
-
-    Some(value)
+    Some(result)
   }
 
   pub fn get_from(&self) -> Option<String> {
@@ -202,15 +189,12 @@ mod test {
 
   #[test]
   fn parse_works() {
-    let bytes = [
-      13, 10, 43, 68, 65, 84, 65, 61, 48, 48, 48, 49, 44, 48, 48, 48, 51, 44, 49, 57, 44, 200, 48,
-      49, 48, 51, 48, 52, 48, 48, 48, 49, 48, 48, 48, 48, 65, 66, 70, 51, 13, 10,
-    ];
+    let bytes = "\r\n+DATA=0,014,0103020000B844\r\n".as_bytes();
 
     eprintln!("{}", String::from_utf8_lossy(&bytes));
-    let pa = BytesParse::new(&bytes);
+    let pa = BytesParse::new(bytes);
     let res = pa.validate();
-    eprintln!("{:?}", res);
+    eprintln!("= {}", res);
     if res {
       let res = pa.parse_u16(1);
       eprintln!("{:?}", res);

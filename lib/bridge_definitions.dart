@@ -13,7 +13,7 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kBleValidateResponseConstMeta;
 
-  Future<int?> bleResponseParseU16(
+  Future<Uint16List?> bleResponseParseU16(
       {required Uint8List data, required int unitId, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kBleResponseParseU16ConstMeta;
@@ -79,6 +79,10 @@ abstract class Native {
   Future<SerialResponse> bleLecconnAddr({required String addr, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kBleLecconnAddrConstMeta;
+
+  Future<SerialResponse> bleLedisc({required int index, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kBleLediscConstMeta;
 
   Future<SerialResponse> bleLesend(
       {required int index, required String data, dynamic hint});

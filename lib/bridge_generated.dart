@@ -44,14 +44,14 @@ class NativeImpl implements Native {
         argNames: ["data"],
       );
 
-  Future<int?> bleResponseParseU16(
+  Future<Uint16List?> bleResponseParseU16(
       {required Uint8List data, required int unitId, dynamic hint}) {
     var arg0 = _platform.api2wire_uint_8_list(data);
     var arg1 = api2wire_u8(unitId);
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) =>
           _platform.inner.wire_ble_response_parse_u16(port_, arg0, arg1),
-      parseSuccessData: _wire2api_opt_box_autoadd_u16,
+      parseSuccessData: _wire2api_opt_uint_16_list,
       constMeta: kBleResponseParseU16ConstMeta,
       argValues: [data, unitId],
       hint: hint,
@@ -298,6 +298,23 @@ class NativeImpl implements Native {
         argNames: ["addr"],
       );
 
+  Future<SerialResponse> bleLedisc({required int index, dynamic hint}) {
+    var arg0 = api2wire_u8(index);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner.wire_ble_ledisc(port_, arg0),
+      parseSuccessData: _wire2api_serial_response,
+      constMeta: kBleLediscConstMeta,
+      argValues: [index],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kBleLediscConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "ble_ledisc",
+        argNames: ["index"],
+      );
+
   Future<SerialResponse> bleLesend(
       {required int index, required String data, dynamic hint}) {
     var arg0 = api2wire_u8(index);
@@ -520,10 +537,6 @@ class NativeImpl implements Native {
     return _wire2api_logic_control(raw);
   }
 
-  int _wire2api_box_autoadd_u16(dynamic raw) {
-    return raw as int;
-  }
-
   Com _wire2api_com(dynamic raw) {
     final arr = raw as List<dynamic>;
     if (arr.length != 1)
@@ -553,8 +566,8 @@ class NativeImpl implements Native {
     return raw == null ? null : _wire2api_box_autoadd_logic_control(raw);
   }
 
-  int? _wire2api_opt_box_autoadd_u16(dynamic raw) {
-    return raw == null ? null : _wire2api_box_autoadd_u16(raw);
+  Uint16List? _wire2api_opt_uint_16_list(dynamic raw) {
+    return raw == null ? null : _wire2api_uint_16_list(raw);
   }
 
   Uint8List? _wire2api_opt_uint_8_list(dynamic raw) {
@@ -585,6 +598,10 @@ class NativeImpl implements Native {
 
   int _wire2api_u8(dynamic raw) {
     return raw as int;
+  }
+
+  Uint16List _wire2api_uint_16_list(dynamic raw) {
+    return raw as Uint16List;
   }
 
   Uint8List _wire2api_uint_8_list(dynamic raw) {
@@ -1000,6 +1017,22 @@ class NativeWire implements FlutterRustBridgeWireBase {
               ffi.Pointer<wire_uint_8_list>)>>('wire_ble_lecconn_addr');
   late final _wire_ble_lecconn_addr = _wire_ble_lecconn_addrPtr
       .asFunction<void Function(int, ffi.Pointer<wire_uint_8_list>)>();
+
+  void wire_ble_ledisc(
+    int port_,
+    int index,
+  ) {
+    return _wire_ble_ledisc(
+      port_,
+      index,
+    );
+  }
+
+  late final _wire_ble_lediscPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Uint8)>>(
+          'wire_ble_ledisc');
+  late final _wire_ble_ledisc =
+      _wire_ble_lediscPtr.asFunction<void Function(int, int)>();
 
   void wire_ble_lesend(
     int port_,

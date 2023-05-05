@@ -221,3 +221,47 @@ pub fn send_scan_serialport(data: &[u8]) -> SerialResponse {
 
   read_scan_serialport(&mut port)
 }
+
+fn read_utilok_serialport(port: &mut Box<dyn serialport::SerialPort>) -> SerialResponse {
+  let mut response = SerialResponse::default();
+  let mut buffer = Vec::<u8>::with_capacity(80);
+  loop {
+    if (buffer.len() > 2) && String::from_utf8_lossy(&buffer).contains("OK") {
+      break;
+    }
+    let mut resp_buf = [0_u8; 6];
+    let res = port.read(&mut resp_buf);
+    match res {
+      Err(_) => {
+        continue;
+      }
+      Ok(size) => {
+        if size == 0 {
+          continue;
+        }
+        eprintln!("{}", String::from_utf8_lossy(&resp_buf));
+        buffer.extend_from_slice(&resp_buf[..size]);
+      }
+    }
+  }
+  response.set_ok(&buffer);
+  response
+}
+
+#[must_use]
+pub fn send_utilok_serialport(data: &[u8]) -> SerialResponse {
+  let mut response = SerialResponse::default();
+
+  let tty_device = open_tty_swk0(500);
+  if tty_device.is_err() {
+    response.state = ResponseState::FailedOpenDevice;
+    return response;
+  }
+  let mut port = tty_device.unwrap();
+  let _ = port.clear(ClearBuffer::Input);
+
+  let _ = port.write(data);
+  let _ = port.flush();
+
+  read_utilok_serialport(&mut port)
+}

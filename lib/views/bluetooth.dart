@@ -50,6 +50,7 @@ class _BluetoothState extends State<Bluetooth> {
 
       if (scanRes.data != null) {
         responseText += String.fromCharCodes(scanRes.data!);
+        debugPrint(responseText);
       } else {
         mountedState(() {
           stateMsg = '扫描失败，等待下一次重试！';
@@ -60,6 +61,7 @@ class _BluetoothState extends State<Bluetooth> {
 
       if (chinfoRes.data != null) {
         responseText += String.fromCharCodes(chinfoRes.data!);
+        debugPrint(responseText);
       } else {
         mountedState(() {
           stateMsg = '查询设备信息失败，请手动点击扫描按扭重试！';
@@ -68,9 +70,9 @@ class _BluetoothState extends State<Bluetooth> {
 
       List<Device> items = parseDevices(responseText);
       for (Device element in items) {
-        if (!devices.any((e) => e.hashCode == element.hashCode)) {
-          devices.add(element);
-        }
+        devices.removeWhere((e) => e.mac == element.mac);
+
+        devices.add(element);
       }
     } catch (_) {
       mountedState(() {
@@ -85,6 +87,7 @@ class _BluetoothState extends State<Bluetooth> {
   }
 
   Future<bool> connect(String addr) async {
+    debugPrint("connect: $addr");
     SerialResponse res = await api.bleLecconnAddr(addr: addr);
     if (res.data == null) {
       return false;
@@ -104,6 +107,35 @@ class _BluetoothState extends State<Bluetooth> {
     timer = Timer.periodic(timerDuration, (timer) async {
       scanBleDevice();
     });
+  }
+
+  Future<void> connectDevice(Device device) async {
+    debugPrint("connectDevice ${device.toString()}");
+    bool? result = await showSettingDialog();
+    if (result != null && result) {
+      final connAddr = '${device.mac}${device.addressType}';
+      timer?.cancel();
+      final conn = await connect(connAddr);
+      setTimer();
+      debugPrint('connection: $conn');
+      final prefs = await _prefs;
+
+      // 查找已存在的地址断开连接
+      final int? index = prefs.getInt("index");
+      if (index != null) {
+        await api.bleLedisc(index: index);
+      }
+
+      //设置新连接
+      bool saved = await prefs.setString("mesh", connAddr);
+      await prefs.setInt("index", device.no);
+
+      if (saved) {
+        showSnackBar("设置成功");
+      } else {
+        showSnackBar("设置失败");
+      }
+    }
   }
 
   @override
@@ -169,26 +201,7 @@ class _BluetoothState extends State<Bluetooth> {
                           title: Text('名 称: ${device.name}'),
                           subtitle: Text('MAC地址: ${device.mac}'),
                           onTap: () async {
-                            final name = device.name;
-                            bool? result = await showSettingDialog();
-                            if (result != null && result) {
-                              final connAddr =
-                                  '${device.mac}${device.addressType}';
-                              timer?.cancel();
-                              final conn = await connect(connAddr);
-                              setTimer();
-                              debugPrint('connection: $conn');
-                              final prefs = await _prefs;
-                              bool saved =
-                                  await prefs.setString("mesh", connAddr);
-                              await prefs.setInt("index", device.no);
-
-                              if (saved) {
-                                showSnackBar("设置成功");
-                              } else {
-                                showSnackBar("设置失败");
-                              }
-                            }
+                            await connectDevice(device);
                           },
                         );
                       },

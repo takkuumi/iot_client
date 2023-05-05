@@ -10,7 +10,7 @@ pub fn ble_validate_response(data: Vec<u8>) -> bool {
   BytesParse::new(&data).validate()
 }
 
-pub fn ble_response_parse_u16(data: Vec<u8>, unit_id: u8) -> Option<u16> {
+pub fn ble_response_parse_u16(data: Vec<u8>, unit_id: u8) -> Option<Vec<u16>> {
   BytesParse::new(&data).parse_u16(unit_id)
 }
 
@@ -64,6 +64,10 @@ pub fn ble_lecconn2(addr: String, add_type: u8) -> SerialResponse {
 
 pub fn ble_lecconn_addr(addr: String) -> SerialResponse {
   at_command::lecconn_addr(addr.as_str())
+}
+
+pub fn ble_ledisc(index: u8) -> SerialResponse {
+  at_command::ledisc(index)
 }
 
 pub fn ble_lesend(index: u8, data: String) -> SerialResponse {

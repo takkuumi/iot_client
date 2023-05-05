@@ -60,7 +60,7 @@ fn open_tty_swk0(millis: u64) -> Result<Box<dyn serialport::SerialPort>, serialp
   serialport::new("/dev/ttySWK0", 115_200)
     .data_bits(DataBits::Eight)
     .stop_bits(StopBits::One)
-    .flow_control(FlowControl::None)
+    .flow_control(FlowControl::Software)
     .timeout(core::time::Duration::from_millis(millis))
     .open()
 }
@@ -182,15 +182,18 @@ fn read_scan_serialport(port: &mut Box<dyn serialport::SerialPort>) -> SerialRes
   let mut response = SerialResponse::default();
   let mut buffer = Vec::<u8>::with_capacity(80);
   loop {
+    if (buffer.len() > 2) && buffer.ends_with(b"}\r\n") {
+      break;
+    }
     let mut resp_buf = [0_u8; 6];
     let res = port.read(&mut resp_buf);
     match res {
       Err(_) => {
-        break;
+        continue;
       }
       Ok(size) => {
         if size == 0 {
-          break;
+          continue;
         }
         eprintln!("{}", String::from_utf8_lossy(&resp_buf));
         buffer.extend_from_slice(&resp_buf[..size]);

@@ -14,14 +14,15 @@
 use crate::api::*;
 use core::panic::UnwindSafe;
 use flutter_rust_bridge::*;
-use std::{ffi::c_void, sync::Arc};
+use std::ffi::c_void;
+use std::sync::Arc;
 
 // Section: imports
 
-use crate::{
-  hal::{Com, LogicControl},
-  serial::{ResponseState, SerialResponse},
-};
+use crate::hal::Com;
+use crate::hal::LogicControl;
+use crate::serial::ResponseState;
+use crate::serial::SerialResponse;
 
 // Section: wire functions
 
@@ -170,6 +171,83 @@ fn wire_ble_reboot_impl(port_: MessagePort) {
       mode: FfiCallMode::Normal,
     },
     move || move |task_callback| Ok(ble_reboot()),
+  )
+}
+fn wire_ble_scan_impl(port_: MessagePort, typee: impl Wire2Api<u8> + UnwindSafe) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "ble_scan",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || {
+      let api_typee = typee.wire2api();
+      move |task_callback| Ok(ble_scan(api_typee))
+    },
+  )
+}
+fn wire_ble_lecconn_impl(
+  port_: MessagePort,
+  addr: impl Wire2Api<String> + UnwindSafe,
+  add_type: impl Wire2Api<u8> + UnwindSafe,
+) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "ble_lecconn",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || {
+      let api_addr = addr.wire2api();
+      let api_add_type = add_type.wire2api();
+      move |task_callback| Ok(ble_lecconn(api_addr, api_add_type))
+    },
+  )
+}
+fn wire_ble_lecconn2_impl(
+  port_: MessagePort,
+  addr: impl Wire2Api<String> + UnwindSafe,
+  add_type: impl Wire2Api<u8> + UnwindSafe,
+) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "ble_lecconn2",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || {
+      let api_addr = addr.wire2api();
+      let api_add_type = add_type.wire2api();
+      move |task_callback| Ok(ble_lecconn2(api_addr, api_add_type))
+    },
+  )
+}
+fn wire_ble_lesend_impl(
+  port_: MessagePort,
+  index: impl Wire2Api<u8> + UnwindSafe,
+  data: impl Wire2Api<String> + UnwindSafe,
+) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "ble_lesend",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || {
+      let api_index = index.wire2api();
+      let api_data = data.wire2api();
+      move |task_callback| Ok(ble_lesend(api_index, api_data))
+    },
+  )
+}
+fn wire_ble_chinfo_impl(port_: MessagePort) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "ble_chinfo",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || move |task_callback| Ok(ble_chinfo()),
   )
 }
 fn wire_hal_generate_get_holdings_impl(

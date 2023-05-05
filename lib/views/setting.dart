@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:iot_client/futs/hal.dart';
 import 'package:iot_client/utils/navigation.dart';
 import 'package:iot_client/views/logic_control_setting.dart';
+import 'package:iot_client/views/rs485_setting.dart';
 import 'package:settings_ui/settings_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -379,6 +380,16 @@ class _SettingAppState extends State<SettingApp> {
                   Navigation.navigateTo(
                     context: context,
                     screen: LogicControlSetting(),
+                  );
+                },
+              ),
+              SettingsTile.navigation(
+                leading: Icon(Icons.bluetooth_connected),
+                title: Text('RS485配置'),
+                onPressed: (context) {
+                  Navigation.navigateTo(
+                    context: context,
+                    screen: RS485Setting(),
                   );
                 },
               ),

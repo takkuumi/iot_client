@@ -62,6 +62,29 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kBleRebootConstMeta;
 
+  Future<SerialResponse> bleScan({required int typee, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kBleScanConstMeta;
+
+  Future<SerialResponse> bleLecconn(
+      {required String addr, required int addType, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kBleLecconnConstMeta;
+
+  Future<SerialResponse> bleLecconn2(
+      {required String addr, required int addType, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kBleLecconn2ConstMeta;
+
+  Future<SerialResponse> bleLesend(
+      {required int index, required String data, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kBleLesendConstMeta;
+
+  Future<SerialResponse> bleChinfo({dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kBleChinfoConstMeta;
+
   Future<String> halGenerateGetHoldings(
       {required int unitId,
       required int reg,

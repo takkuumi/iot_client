@@ -71,46 +71,74 @@ Map<int, String> _comin = Map.from({
   15: "I16(15)",
 });
 
+Map<int, String> _kPortOptions = Map.from({
+  0x01: "RS1",
+  0x02: "RS2",
+  0x03: "RS3",
+});
+
+Map<int, String> _kFunctionCodeOptions = Map.from({
+  0x01: "读取线圈",
+  0x02: "读取离散输入",
+  0x03: "读取保持寄存器",
+  0x04: "读取输入寄存器",
+  0x05: "写单线圈",
+  0x06: "写入单个寄存器",
+  0x0F: "写入多个线圈",
+  0x10: "写入多个寄存器",
+});
+
 List<DropdownMenuItem<int>> _ruleItems = _rules.keys
     .map((e) => DropdownMenuItem<int>(
+          enabled: e <= 10,
           value: e,
           child: Text(_rules[e]!, style: TextStyle(fontSize: 14)),
         ))
     .toList();
 
-List<DropdownMenuItem<int>> genCominItems() {
-  return _comin.keys
+List<DropdownMenuItem<int>> genDropdownItems(Map<int, String> options) {
+  return options.keys
       .map((e) => DropdownMenuItem<int>(
             alignment: Alignment.center,
             value: e,
-            child: Text(_comin[e]!, style: TextStyle(fontSize: 10)),
-          ))
-      .toList();
-}
-
-List<DropdownMenuItem<int>> genComoutItems() {
-  return _comout.keys
-      .map((e) => DropdownMenuItem<int>(
-            alignment: Alignment.center,
-            value: e,
-            child: Text(_comout[e]!, style: TextStyle(fontSize: 10)),
+            child: Text(options[e]!, style: TextStyle(fontSize: 10)),
           ))
       .toList();
 }
 
 List<List<int>> _com = List.filled(3, List.filled(16, -1));
 
+class Directive {
+  int port;
+  int functionCode;
+  int slaveId;
+  int slaveAddress;
+  int count;
+  int masterAddress;
+
+  Directive({
+    required this.port,
+    required this.functionCode,
+    required this.slaveId,
+    required this.slaveAddress,
+    required this.count,
+    required this.masterAddress,
+  });
+}
+
 class LogicRule {
   int index;
   int rule;
   List<List<int>> comIn;
   List<List<int>> comOut;
+  List<Directive> directives;
 
   LogicRule({
     required this.index,
     required this.comIn,
     required this.comOut,
     this.rule = 0,
+    this.directives = const [],
   }) {
     comIn.forEach((element) {
       debugPrint("=>${element.toString()}");
@@ -129,6 +157,10 @@ class LogicRuleItem extends StatefulWidget {
 }
 
 class _LogicRuleItemState extends State<LogicRuleItem> {
+  int getWidgetIndex() {
+    return widget.logicRule.index;
+  }
+
   void submitRule(int? value) {
     if (value != null) {
       widget.logicRule.rule = value;
@@ -163,7 +195,15 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
     return widget.logicRule.comOut[rowIndex][index];
   }
 
-  
+  Widget buildSizedLine(double space) {
+    return Column(
+      children: [
+        SizedBox(height: space),
+        Divider(height: 1),
+        SizedBox(height: space),
+      ],
+    );
+  }
 
   Widget buildCominItem(int rowIndex, String label, int index) {
     return Container(
@@ -181,7 +221,7 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
           DropdownButton<int>(
             alignment: Alignment.center,
             value: getComout(rowIndex, index),
-            items: genComoutItems(),
+            items: genDropdownItems(_comout),
             onChanged: (value) {
               submitComout(rowIndex, index, value);
             },
@@ -189,7 +229,7 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
           DropdownButton<int>(
             alignment: Alignment.center,
             value: getComin(rowIndex, index),
-            items: genCominItems(),
+            items: genDropdownItems(_comin),
             onChanged: (value) {
               submitComin(rowIndex, index, value);
             },
@@ -205,36 +245,24 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
       return Container(
         child: Column(
           children: [
-            Container(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  buildCominItem(0, "正面绿箭", 0),
-                  buildCominItem(0, "正面红叉", 1),
-                  buildCominItem(0, "背面绿箭", 2),
-                  buildCominItem(0, "背面红叉", 3),
-                ],
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                buildCominItem(0, "正面绿箭", 0),
+                buildCominItem(0, "正面红叉", 1),
+                buildCominItem(0, "背面绿箭", 2),
+                buildCominItem(0, "背面红叉", 3),
+              ],
             ),
-            SizedBox(
-              height: 15,
-            ),
-            Divider(
-              height: 1,
-            ),
-            SizedBox(
-              height: 15,
-            ),
-            Container(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  buildCominItem(1, "正面绿箭", 0),
-                  buildCominItem(1, "正面红叉", 1),
-                  buildCominItem(1, "背面绿箭", 2),
-                  buildCominItem(1, "背面红叉", 3),
-                ],
-              ),
+            buildSizedLine(15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                buildCominItem(1, "正面绿箭", 0),
+                buildCominItem(1, "正面红叉", 1),
+                buildCominItem(1, "背面绿箭", 2),
+                buildCominItem(1, "背面红叉", 3),
+              ],
             ),
           ],
         ),
@@ -243,56 +271,34 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
       return Container(
         child: Column(
           children: [
-            Container(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  buildCominItem(0, "正面绿箭", 0),
-                  buildCominItem(0, "正面红叉", 1),
-                  buildCominItem(0, "背面绿箭", 2),
-                  buildCominItem(0, "背面红叉", 3),
-                ],
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                buildCominItem(0, "正面绿箭", 0),
+                buildCominItem(0, "正面红叉", 1),
+                buildCominItem(0, "背面绿箭", 2),
+                buildCominItem(0, "背面红叉", 3),
+              ],
             ),
-            SizedBox(
-              height: 15,
+            buildSizedLine(15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                buildCominItem(1, "正面绿箭", 0),
+                buildCominItem(1, "正面红叉", 1),
+                buildCominItem(1, "背面绿箭", 2),
+                buildCominItem(1, "背面红叉", 3),
+              ],
             ),
-            Divider(
-              height: 1,
-            ),
-            SizedBox(
-              height: 15,
-            ),
-            Container(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  buildCominItem(1, "正面绿箭", 0),
-                  buildCominItem(1, "正面红叉", 1),
-                  buildCominItem(1, "背面绿箭", 2),
-                  buildCominItem(1, "背面红叉", 3),
-                ],
-              ),
-            ),
-            SizedBox(
-              height: 15,
-            ),
-            Divider(
-              height: 1,
-            ),
-            SizedBox(
-              height: 15,
-            ),
-            Container(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  buildCominItem(2, "正面绿箭", 0),
-                  buildCominItem(2, "正面红叉", 1),
-                  buildCominItem(2, "背面绿箭", 2),
-                  buildCominItem(2, "背面红叉", 3),
-                ],
-              ),
+            buildSizedLine(15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                buildCominItem(2, "正面绿箭", 0),
+                buildCominItem(2, "正面红叉", 1),
+                buildCominItem(2, "背面绿箭", 2),
+                buildCominItem(2, "背面红叉", 3),
+              ],
             ),
           ],
         ),
@@ -324,7 +330,7 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
               Positioned(
                 right: 0,
                 child: IconButton(
-                  icon: Icon(Icons.remove, color: Colors.white),
+                  icon: Icon(Icons.close, color: Colors.white),
                   onPressed: widget.onRemoved,
                 ),
               )
@@ -366,7 +372,8 @@ class _LogicControlSettingState extends State<LogicControlSetting> {
 
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
-  List<LogicRule> rules = List.empty(growable: true);
+  List<LogicRule> rules = [];
+  List<GlobalKey<_LogicRuleItemState>> keys = [];
 
   final List<int> cominit = [
     -1,
@@ -425,11 +432,14 @@ class _LogicControlSettingState extends State<LogicControlSetting> {
           title: const Text('逻辑控制配置'),
           centerTitle: true,
           actions: [
-            IconButton(
+            TextButton(
               onPressed: () => {
                 // 保存逻辑配置
+                keys.forEach((element) {
+                  debugPrint("KEY ${element.currentState?.getWidgetIndex()}");
+                })
               },
-              icon: Icon(Icons.save),
+              child: Text("保存"),
             )
           ],
         ),
@@ -437,7 +447,12 @@ class _LogicControlSettingState extends State<LogicControlSetting> {
           shrinkWrap: true,
           itemCount: rules.length,
           itemBuilder: (ctxt, index) {
+            final key = GlobalKey<_LogicRuleItemState>(
+                debugLabel: "logic_rule_item$index");
+            keys.add(key);
+
             return LogicRuleItem(
+              key: key,
               logicRule: rules[index],
               onRemoved: () => removeRule(index),
             );

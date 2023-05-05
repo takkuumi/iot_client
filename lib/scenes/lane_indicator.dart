@@ -402,17 +402,6 @@ class _LaneIndicatorState extends State<LaneIndicator>
                 ),
               ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () => {
-                  Navigation.navigateTo(
-                    context: context,
-                    screen: LaneIndicatorPort(),
-                  )
-                },
-                child: Text("逻辑控制"),
-              )
-            ],
           ),
           body: TabBarView(
             controller: tabController,

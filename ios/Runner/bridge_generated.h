@@ -58,6 +58,16 @@ void wire_ble_restore(int64_t port_);
 
 void wire_ble_reboot(int64_t port_);
 
+void wire_ble_scan(int64_t port_, uint8_t typee);
+
+void wire_ble_lecconn(int64_t port_, struct wire_uint_8_list *addr, uint8_t add_type);
+
+void wire_ble_lecconn2(int64_t port_, struct wire_uint_8_list *addr, uint8_t add_type);
+
+void wire_ble_lesend(int64_t port_, uint8_t index, struct wire_uint_8_list *data);
+
+void wire_ble_chinfo(int64_t port_);
+
 void wire_hal_generate_get_holdings(int64_t port_, uint8_t unit_id, uint16_t reg, uint16_t count);
 
 void wire_hal_generate_set_holding(int64_t port_, uint8_t unit_id, uint16_t reg, uint16_t value);
@@ -102,6 +112,11 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_ble_ndreset);
     dummy_var ^= ((int64_t) (void*) wire_ble_restore);
     dummy_var ^= ((int64_t) (void*) wire_ble_reboot);
+    dummy_var ^= ((int64_t) (void*) wire_ble_scan);
+    dummy_var ^= ((int64_t) (void*) wire_ble_lecconn);
+    dummy_var ^= ((int64_t) (void*) wire_ble_lecconn2);
+    dummy_var ^= ((int64_t) (void*) wire_ble_lesend);
+    dummy_var ^= ((int64_t) (void*) wire_ble_chinfo);
     dummy_var ^= ((int64_t) (void*) wire_hal_generate_get_holdings);
     dummy_var ^= ((int64_t) (void*) wire_hal_generate_set_holding);
     dummy_var ^= ((int64_t) (void*) wire_hex_encode);

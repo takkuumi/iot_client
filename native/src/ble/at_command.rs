@@ -1,3 +1,5 @@
+use crate::serial::send_scan_serialport;
+
 use super::{crc_16, send_serialport, SerialResponse};
 
 #[allow(clippy::module_inception)]
@@ -23,6 +25,11 @@ mod ble_at {
   pub const AT_NDDEVKEY: &str = "AT+NDDEVKEY"; //读/写Mesh网络的设备密钥
   pub const AT_NDADV: &str = "AT+NDADV"; //始能未组网的广播
   pub const AT_LESEND: &str = "AT+LESEND"; //发送数据给GATT直连设备
+
+  pub const AT_SCAN: &str = "AT+SCAN"; // 搜索附近的设备
+
+  pub const AT_CHINFO: &str = "AT+CHINFO"; // 读取连接对端信息
+  pub const AT_LECCONN: &str = "AT+LECCONN"; // 向指定地址发起连接
 }
 
 fn try_until(data: &[u8], retry: u8) -> SerialResponse {
@@ -44,9 +51,32 @@ fn try_until(data: &[u8], retry: u8) -> SerialResponse {
   }
 }
 
-pub fn get_ndid() -> SerialResponse {
-  let data = format!("{}", ble_at::AT_NDID);
+pub fn scan(typee: u8) -> SerialResponse {
+  let data = format!("{}={}", ble_at::AT_SCAN, typee);
+  send_scan_serialport(data.as_bytes())
+}
+
+pub fn lecconn(addr: &str, add_type: u8) -> SerialResponse {
+  let data = format!("{}={}{}", ble_at::AT_LECCONN, addr, add_type);
   send_serialport(data.as_bytes())
+}
+
+pub fn lecconn2(addr: &str, add_type: u8) -> SerialResponse {
+  let data = format!("{}={}{},FFF0,FFF2,FFF1", ble_at::AT_LECCONN, addr, add_type);
+  send_serialport(data.as_bytes())
+}
+
+pub fn lesend(index: u8, data: &str) -> SerialResponse {
+  let data = format!("{}={},{},{}", ble_at::AT_LESEND, index, data.len(), data);
+  send_serialport(data.as_bytes())
+}
+
+pub fn chinfo() -> SerialResponse {
+  send_serialport(ble_at::AT_CHINFO.as_bytes())
+}
+
+pub fn get_ndid() -> SerialResponse {
+  send_serialport(ble_at::AT_NDID.as_bytes())
 }
 
 pub fn set_ndid(id: &str) -> SerialResponse {
@@ -54,19 +84,17 @@ pub fn set_ndid(id: &str) -> SerialResponse {
   send_serialport(data.as_bytes())
 }
 
-pub fn set_baud() -> SerialResponse {
-  let data = format!("{}=115200", ble_at::AT_BAUD);
+pub fn set_baud(baud: u32) -> SerialResponse {
+  let data = format!("{}={}", ble_at::AT_BAUD, baud);
   send_serialport(data.as_bytes())
 }
 
 pub fn ndreset() -> SerialResponse {
-  let data = format!("{}", ble_at::AT_NDRESET);
-  send_serialport(data.as_bytes())
+  send_serialport(ble_at::AT_NDRESET.as_bytes())
 }
 
 pub fn restore() -> SerialResponse {
-  let data = format!("{}", ble_at::AT_RESTORE);
-  send_serialport(data.as_bytes())
+  send_serialport(ble_at::AT_RESTORE.as_bytes())
 }
 
 pub fn set_mode(mode: u8) -> SerialResponse {
@@ -75,8 +103,7 @@ pub fn set_mode(mode: u8) -> SerialResponse {
 }
 
 pub fn reboot() -> SerialResponse {
-  let data = format!("{}", ble_at::AT_REBOOT);
-  send_serialport(data.as_bytes())
+  send_serialport(ble_at::AT_REBOOT.as_bytes())
 }
 
 pub fn at_ndrpt(id: &str, data: &[u8], retry: u8) -> SerialResponse {
@@ -127,6 +154,25 @@ mod test {
   #[test]
   pub fn at_works() {
     let res = super::get_ndid();
+    assert!(res.is_ok());
+  }
+
+  #[test]
+  pub fn at_set_works() {
+    let res = super::restore();
+    assert!(res.is_ok());
+    eprintln!("{}", String::from_utf8_lossy(&res.data.unwrap()));
+    let res = super::get_ndid();
+    assert!(res.is_ok());
+    eprintln!("get_ndid {}", String::from_utf8_lossy(&res.data.unwrap()));
+    let res = super::reboot();
+    assert!(res.is_ok());
+    eprintln!("{}", String::from_utf8_lossy(&res.data.unwrap()));
+    let res = super::set_ndid("1000");
+    assert!(res.is_ok());
+    let res = super::set_mode(2);
+    assert!(res.is_ok());
+    let res = super::reboot();
     assert!(res.is_ok());
   }
 

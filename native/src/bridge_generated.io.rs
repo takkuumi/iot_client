@@ -71,6 +71,31 @@ pub extern "C" fn wire_ble_reboot(port_: i64) {
 }
 
 #[no_mangle]
+pub extern "C" fn wire_ble_scan(port_: i64, typee: u8) {
+  wire_ble_scan_impl(port_, typee)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_ble_lecconn(port_: i64, addr: *mut wire_uint_8_list, add_type: u8) {
+  wire_ble_lecconn_impl(port_, addr, add_type)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_ble_lecconn2(port_: i64, addr: *mut wire_uint_8_list, add_type: u8) {
+  wire_ble_lecconn2_impl(port_, addr, add_type)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_ble_lesend(port_: i64, index: u8, data: *mut wire_uint_8_list) {
+  wire_ble_lesend_impl(port_, index, data)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_ble_chinfo(port_: i64) {
+  wire_ble_chinfo_impl(port_)
+}
+
+#[no_mangle]
 pub extern "C" fn wire_hal_generate_get_holdings(port_: i64, unit_id: u8, reg: u16, count: u16) {
   wire_hal_generate_get_holdings_impl(port_, unit_id, reg, count)
 }

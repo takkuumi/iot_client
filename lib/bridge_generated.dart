@@ -226,6 +226,96 @@ class NativeImpl implements Native {
         argNames: [],
       );
 
+  Future<SerialResponse> bleScan({required int typee, dynamic hint}) {
+    var arg0 = api2wire_u8(typee);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner.wire_ble_scan(port_, arg0),
+      parseSuccessData: _wire2api_serial_response,
+      constMeta: kBleScanConstMeta,
+      argValues: [typee],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kBleScanConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "ble_scan",
+        argNames: ["typee"],
+      );
+
+  Future<SerialResponse> bleLecconn(
+      {required String addr, required int addType, dynamic hint}) {
+    var arg0 = _platform.api2wire_String(addr);
+    var arg1 = api2wire_u8(addType);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner.wire_ble_lecconn(port_, arg0, arg1),
+      parseSuccessData: _wire2api_serial_response,
+      constMeta: kBleLecconnConstMeta,
+      argValues: [addr, addType],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kBleLecconnConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "ble_lecconn",
+        argNames: ["addr", "addType"],
+      );
+
+  Future<SerialResponse> bleLecconn2(
+      {required String addr, required int addType, dynamic hint}) {
+    var arg0 = _platform.api2wire_String(addr);
+    var arg1 = api2wire_u8(addType);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner.wire_ble_lecconn2(port_, arg0, arg1),
+      parseSuccessData: _wire2api_serial_response,
+      constMeta: kBleLecconn2ConstMeta,
+      argValues: [addr, addType],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kBleLecconn2ConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "ble_lecconn2",
+        argNames: ["addr", "addType"],
+      );
+
+  Future<SerialResponse> bleLesend(
+      {required int index, required String data, dynamic hint}) {
+    var arg0 = api2wire_u8(index);
+    var arg1 = _platform.api2wire_String(data);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner.wire_ble_lesend(port_, arg0, arg1),
+      parseSuccessData: _wire2api_serial_response,
+      constMeta: kBleLesendConstMeta,
+      argValues: [index, data],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kBleLesendConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "ble_lesend",
+        argNames: ["index", "data"],
+      );
+
+  Future<SerialResponse> bleChinfo({dynamic hint}) {
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner.wire_ble_chinfo(port_),
+      parseSuccessData: _wire2api_serial_response,
+      constMeta: kBleChinfoConstMeta,
+      argValues: [],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kBleChinfoConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "ble_chinfo",
+        argNames: [],
+      );
+
   Future<String> halGenerateGetHoldings(
       {required int unitId,
       required int reg,
@@ -822,6 +912,93 @@ class NativeWire implements FlutterRustBridgeWireBase {
           'wire_ble_reboot');
   late final _wire_ble_reboot =
       _wire_ble_rebootPtr.asFunction<void Function(int)>();
+
+  void wire_ble_scan(
+    int port_,
+    int typee,
+  ) {
+    return _wire_ble_scan(
+      port_,
+      typee,
+    );
+  }
+
+  late final _wire_ble_scanPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Uint8)>>(
+          'wire_ble_scan');
+  late final _wire_ble_scan =
+      _wire_ble_scanPtr.asFunction<void Function(int, int)>();
+
+  void wire_ble_lecconn(
+    int port_,
+    ffi.Pointer<wire_uint_8_list> addr,
+    int add_type,
+  ) {
+    return _wire_ble_lecconn(
+      port_,
+      addr,
+      add_type,
+    );
+  }
+
+  late final _wire_ble_lecconnPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Int64, ffi.Pointer<wire_uint_8_list>,
+              ffi.Uint8)>>('wire_ble_lecconn');
+  late final _wire_ble_lecconn = _wire_ble_lecconnPtr
+      .asFunction<void Function(int, ffi.Pointer<wire_uint_8_list>, int)>();
+
+  void wire_ble_lecconn2(
+    int port_,
+    ffi.Pointer<wire_uint_8_list> addr,
+    int add_type,
+  ) {
+    return _wire_ble_lecconn2(
+      port_,
+      addr,
+      add_type,
+    );
+  }
+
+  late final _wire_ble_lecconn2Ptr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Int64, ffi.Pointer<wire_uint_8_list>,
+              ffi.Uint8)>>('wire_ble_lecconn2');
+  late final _wire_ble_lecconn2 = _wire_ble_lecconn2Ptr
+      .asFunction<void Function(int, ffi.Pointer<wire_uint_8_list>, int)>();
+
+  void wire_ble_lesend(
+    int port_,
+    int index,
+    ffi.Pointer<wire_uint_8_list> data,
+  ) {
+    return _wire_ble_lesend(
+      port_,
+      index,
+      data,
+    );
+  }
+
+  late final _wire_ble_lesendPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Int64, ffi.Uint8,
+              ffi.Pointer<wire_uint_8_list>)>>('wire_ble_lesend');
+  late final _wire_ble_lesend = _wire_ble_lesendPtr
+      .asFunction<void Function(int, int, ffi.Pointer<wire_uint_8_list>)>();
+
+  void wire_ble_chinfo(
+    int port_,
+  ) {
+    return _wire_ble_chinfo(
+      port_,
+    );
+  }
+
+  late final _wire_ble_chinfoPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>(
+          'wire_ble_chinfo');
+  late final _wire_ble_chinfo =
+      _wire_ble_chinfoPtr.asFunction<void Function(int)>();
 
   void wire_hal_generate_get_holdings(
     int port_,

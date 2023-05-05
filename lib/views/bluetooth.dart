@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'package:iot_client/ffi.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_scan_bluetooth/flutter_scan_bluetooth.dart';
@@ -24,32 +24,68 @@ class _BluetoothState extends State<Bluetooth> {
 
   @override
   void initState() {
-    bluetooth.requestPermissions();
+    super.initState();
+    // bluetooth.requestPermissions();
 
-    bluetooth.startScan(pairedDevices: false);
+    // bluetooth.startScan(pairedDevices: false);
 
-    bluetooth.devices.listen((device) async {
-      String name = device.name;
-      String address = device.address;
+    // bluetooth.devices.listen((device) async {
+    //   String name = device.name;
+    //   String address = device.address;
 
-      Device item = Device(name, address, false);
-      if (name.startsWith('Mesh') && !devices.contains(item)) {
-        String meshId = name.substring(5, 9);
-        List<int> ipData = await getHoldings(meshId, 2247, 4);
-        String hexIp = ipData.join('.');
-        item.address += '\r\nIP地址:$hexIp';
-        setState(() {
-          devices.add(item);
-        });
+    //   Device item = Device(name, address, false);
+    //   if (name.startsWith('Mesh') && !devices.contains(item)) {
+    //     String meshId = name.substring(5, 9);
+    //     List<int> ipData = await getHoldings(meshId, 2247, 4);
+    //     String hexIp = ipData.join('.');
+    //     item.address += '\r\nIP地址:$hexIp';
+    //     setState(() {
+    //       devices.add(item);
+    //     });
+    //   }
+    // });
+
+    api.bleScan(typee: 1).then((value) {
+      Uint8List? data = value.data;
+      if (data != null) {
+        debugPrint(String.fromCharCodes(data));
+      }
+      return api.bleChinfo();
+    }).then((value) {
+      Uint8List? data = value.data;
+      if (data != null) {
+        debugPrint(String.fromCharCodes(data));
+      }
+      return api.bleLecconn2(addr: "DC0D30000FC2", addType: 0);
+    }).then((value) {
+      Uint8List? data = value.data;
+      if (data != null) {
+        debugPrint(String.fromCharCodes(data));
+      }
+      return api.bleLesend(
+          index: 0, data: '''// bluetooth.devices.listen((device) async {
+    //   String name = device.name;
+    //   String address = device.address;
+    // });''');
+    }).then((value) {
+      Uint8List? data = value.data;
+      if (data != null) {
+        debugPrint(String.fromCharCodes(data));
+      }
+      return api.bleLesend(
+          index: 0, data: '''// bluetooth.devices.listen((device) async {
+    //   String name = device.name;
+    // });''');
+    }).then((value) {
+      Uint8List? data = value.data;
+      if (data != null) {
+        debugPrint(String.fromCharCodes(data));
       }
     });
-    super.initState();
   }
 
   @override
   void dispose() {
-    bluetooth.stopScan();
-
     super.dispose();
   }
 

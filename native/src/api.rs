@@ -49,6 +49,27 @@ pub fn ble_reboot() -> SerialResponse {
   at_command::reboot()
 }
 
+// 搜索附近的设备
+pub fn ble_scan(typee: u8) -> SerialResponse {
+  at_command::scan(1)
+}
+
+pub fn ble_lecconn(addr: String, add_type: u8) -> SerialResponse {
+  at_command::lecconn(addr.as_str(), add_type)
+}
+
+pub fn ble_lecconn2(addr: String, add_type: u8) -> SerialResponse {
+  at_command::lecconn2(addr.as_str(), add_type)
+}
+
+pub fn ble_lesend(index: u8, data: String) -> SerialResponse {
+  at_command::lesend(index, data.as_str())
+}
+
+pub fn ble_chinfo() -> SerialResponse {
+  at_command::chinfo()
+}
+
 pub fn hal_generate_get_holdings(unit_id: u8, reg: u16, count: u16) -> String {
   hex::encode_upper(LogicControl::generate_get_holdings(unit_id, reg, count))
 }

@@ -24,6 +24,12 @@ class _FanState extends State<Fan>
   Future<String?> sn = Future.value(null);
   Future<String?> ip = Future.value(null);
 
+  void mountedState(void Function() fn) {
+    if (mounted) {
+      setState(fn);
+    }
+  }
+
   @override
   bool get wantKeepAlive => true;
   void tabListener() {
@@ -31,17 +37,19 @@ class _FanState extends State<Fan>
     if (tabController.index == 1) {
       _prefs.then((SharedPreferences prefs) {
         return prefs.getString('mesh');
-      }).then((String? meshId) async {
-        if (meshId != null) {
-          List<int> snData = await getHoldings(meshId, 2196, 9);
-          Uint8List v = Uint16List.fromList(snData).buffer.asUint8List();
-          setState(() {
-            sn = Future.value(String.fromCharCodes(v));
+      }).then((String? addr) async {
+        if (addr != null) {
+          getHoldings(2196, 9).then((value) {
+            Uint8List v = Uint16List.fromList(value).buffer.asUint8List();
+            mountedState(() {
+              sn = Future.value(String.fromCharCodes(v));
+            });
           });
 
-          List<int> ipData = await getHoldings(meshId, 2247, 4);
-          setState(() {
-            ip = Future.value(ipData.join('.'));
+          getHoldings(2247, 4).then((value) {
+            mountedState(() {
+              ip = Future.value(value.join('.'));
+            });
           });
         }
       });
@@ -162,12 +170,6 @@ class _FanState extends State<Fan>
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => {},
-              child: Text("逻辑控制"),
-            )
-          ],
         ),
         body: TabBarView(
           controller: tabController,

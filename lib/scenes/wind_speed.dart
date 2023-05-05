@@ -30,6 +30,12 @@ class _WindSpeedState extends State<WindSpeed>
   Future<String?> sn = Future.value(null);
   Future<String?> ip = Future.value(null);
 
+  void mountedState(void Function() fn) {
+    if (mounted) {
+      setState(fn);
+    }
+  }
+
   @override
   bool get wantKeepAlive => true;
   void tabListener() {
@@ -40,17 +46,19 @@ class _WindSpeedState extends State<WindSpeed>
     if (tabController.index == 1) {
       _prefs.then((SharedPreferences prefs) {
         return prefs.getString('mesh');
-      }).then((String? meshId) async {
-        if (meshId != null) {
-          List<int> snData = await getHoldings(meshId, 2196, 9);
-          Uint8List v = Uint16List.fromList(snData).buffer.asUint8List();
-          setState(() {
-            sn = Future.value(String.fromCharCodes(v));
+      }).then((String? addr) async {
+        if (addr != null) {
+          getHoldings(2196, 9).then((value) {
+            Uint8List v = Uint16List.fromList(value).buffer.asUint8List();
+            mountedState(() {
+              sn = Future.value(String.fromCharCodes(v));
+            });
           });
 
-          List<int> ipData = await getHoldings(meshId, 2247, 4);
-          setState(() {
-            ip = Future.value(ipData.join('.'));
+          getHoldings(2247, 4).then((value) {
+            mountedState(() {
+              ip = Future.value(value.join('.'));
+            });
           });
         }
       });
@@ -77,7 +85,7 @@ class _WindSpeedState extends State<WindSpeed>
       }
     }
 
-    setState(() {
+    mountedState(() {
       windSpeed1 = "${recoder[0] / 10} m/s";
       windSpeed2 = "${recoder[1]}";
       windSpeed3 = "${recoder[2] / 10} m/s";
@@ -121,23 +129,22 @@ class _WindSpeedState extends State<WindSpeed>
     return "0103${addr}0004";
   }
 
-  Future<String?> getLink() async {
+  Future<int?> getLink() async {
     final SharedPreferences prefs = await _prefs;
-    return prefs.getString('mesh');
+    return prefs.getInt('index');
   }
 
   Future<String?> readDevice(
     String sdata,
   ) async {
-    String? meshId = await getLink();
+    int? index = await getLink();
 
-    if (meshId == null || meshId.isEmpty) {
+    if (index == null) {
       return null;
     }
 
     try {
-      SerialResponse response =
-          await api.bleAtNdrpt(id: meshId, data: sdata, retry: 5);
+      SerialResponse response = await api.bleLesend(index: index, data: sdata);
       Uint8List? data = response.data;
       if (data != null) {
         return String.fromCharCodes(data);
@@ -301,12 +308,6 @@ class _WindSpeedState extends State<WindSpeed>
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => {},
-              child: Text("逻辑控制"),
-            )
-          ],
         ),
         body: TabBarView(
           controller: tabController,

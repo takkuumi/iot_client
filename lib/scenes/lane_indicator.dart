@@ -37,6 +37,12 @@ class _LaneIndicatorState extends State<LaneIndicator>
   Future<String?> sn = Future.value(null);
   Future<String?> ip = Future.value(null);
 
+  void mountedState(void Function() fn) {
+    if (mounted) {
+      setState(fn);
+    }
+  }
+
   @override
   bool get wantKeepAlive => true;
 
@@ -53,17 +59,19 @@ class _LaneIndicatorState extends State<LaneIndicator>
     if (tabController.index == 1) {
       _prefs.then((SharedPreferences prefs) {
         return prefs.getString('mesh');
-      }).then((String? meshId) async {
-        if (meshId != null) {
-          List<int> snData = await getHoldings(meshId, 2196, 9);
-          Uint8List v = Uint16List.fromList(snData).buffer.asUint8List();
-          setState(() {
-            sn = Future.value(String.fromCharCodes(v));
+      }).then((String? addr) async {
+        if (addr != null) {
+          getHoldings(2196, 9).then((value) {
+            Uint8List v = Uint16List.fromList(value).buffer.asUint8List();
+            mountedState(() {
+              sn = Future.value(String.fromCharCodes(v));
+            });
           });
 
-          List<int> ipData = await getHoldings(meshId, 2247, 4);
-          setState(() {
-            ip = Future.value(ipData.join('.'));
+          getHoldings(2247, 4).then((value) {
+            mountedState(() {
+              ip = Future.value(value.join('.'));
+            });
           });
         }
       });
@@ -83,7 +91,7 @@ class _LaneIndicatorState extends State<LaneIndicator>
     debugPrint("----------------------->$state");
     // 0 1 1 0 06
     if (state == 6) {
-      setState(() {
+      mountedState(() {
         state1 = LaneIndicatorState.red;
         state2 = LaneIndicatorState.green;
       });
@@ -92,7 +100,7 @@ class _LaneIndicatorState extends State<LaneIndicator>
 
     // 1 0 0 1 09
     if (state == 9) {
-      setState(() {
+      mountedState(() {
         state1 = LaneIndicatorState.green;
         state2 = LaneIndicatorState.red;
       });
@@ -101,7 +109,7 @@ class _LaneIndicatorState extends State<LaneIndicator>
 
     // 0 1 0 1  OA
     if (state == 10) {
-      setState(() {
+      mountedState(() {
         state1 = LaneIndicatorState.red;
         state2 = LaneIndicatorState.red;
       });
@@ -110,14 +118,14 @@ class _LaneIndicatorState extends State<LaneIndicator>
 
     // 1 0 1 0
     if (state == 5) {
-      setState(() {
+      mountedState(() {
         state1 = LaneIndicatorState.green;
         state2 = LaneIndicatorState.green;
       });
       return;
     }
 
-    setState(() {
+    mountedState(() {
       state1 = LaneIndicatorState.red;
       state2 = LaneIndicatorState.red;
     });

@@ -25,15 +25,23 @@ class _BluetoothState extends State<Bluetooth> {
 
   String stateMsg = '';
 
+  void mountedState(void Function() fn) {
+    if (mounted) {
+      setState(fn);
+    }
+  }
+
   Future<void> scanBleDevice() async {
     if (isScaning) {
       return;
     }
 
-    setState(() {
-      isScaning = true;
-      stateMsg = '正在扫描';
-    });
+    if (mounted) {
+      mountedState(() {
+        isScaning = true;
+        stateMsg = '正在扫描';
+      });
+    }
 
     try {
       String responseText = '';
@@ -43,7 +51,7 @@ class _BluetoothState extends State<Bluetooth> {
       if (scanRes.data != null) {
         responseText += String.fromCharCodes(scanRes.data!);
       } else {
-        setState(() {
+        mountedState(() {
           stateMsg = '扫描失败，等待下一次重试！';
         });
       }
@@ -53,7 +61,7 @@ class _BluetoothState extends State<Bluetooth> {
       if (chinfoRes.data != null) {
         responseText += String.fromCharCodes(chinfoRes.data!);
       } else {
-        setState(() {
+        mountedState(() {
           stateMsg = '查询设备信息失败，请手动点击扫描按扭重试！';
         });
       }
@@ -65,11 +73,11 @@ class _BluetoothState extends State<Bluetooth> {
         }
       }
     } catch (_) {
-      setState(() {
+      mountedState(() {
         stateMsg = '扫描失败，请手动点击扫描按扭重试！';
       });
     } finally {
-      setState(() {
+      mountedState(() {
         isScaning = false;
         stateMsg = '';
       });
@@ -173,6 +181,8 @@ class _BluetoothState extends State<Bluetooth> {
                               final prefs = await _prefs;
                               bool saved =
                                   await prefs.setString("mesh", connAddr);
+                              await prefs.setInt("index", device.no);
+
                               if (saved) {
                                 showSnackBar("设置成功");
                               } else {

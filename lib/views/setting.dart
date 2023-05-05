@@ -49,55 +49,40 @@ class _SettingAppState extends State<SettingApp> {
   Future<String?> subnetMask = Future.value(null);
   Future<String?> gateway = Future.value(null);
 
-  // FutureOr<String>
+  void mountedState(void Function() fn) {
+    if (mounted) {
+      mountedState(fn);
+    }
+  }
 
   @override
   void initState() {
     super.initState();
 
-    // WidgetsBinding.instance.addPostFrameCallback((_) async {
-    //   await scanBleDevice();
-    // });
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      List<int> data = await getHoldings(2263, 5);
+      String hexmac = data
+          .map((e) => e.toRadixString(16).toUpperCase().padLeft(2, '0'))
+          .join('-');
+      mountedState(() {
+        mac = Future.value(hexmac);
+      });
 
-    api.bleGetNdid().then((value) {
-      Uint8List? data = value.data;
-      if (data != null) {
-        String id = String.fromCharCodes(data);
-        id = id.replaceAll(RegExp(r'[^\d]'), '');
-        setState(() {
-          ndid = Future.value(id);
-        });
-      }
-    }).then((meshId) async {});
+      List<int> ipData = await getHoldings(2247, 4);
+      String hexIp = ipData.join('.');
+      mountedState(() {
+        ip = Future.value(hexIp);
+      });
 
-    _prefs.then((SharedPreferences prefs) {
-      return prefs.getString('mesh');
-    }).then((String? meshId) async {
-      if (meshId != null) {
-        List<int> data = await getHoldings(meshId, 2263, 5);
-        String hexmac = data
-            .map((e) => e.toRadixString(16).toUpperCase().padLeft(2, '0'))
-            .join('-');
-        setState(() {
-          mac = Future.value(hexmac);
-        });
+      List<int> subnetMaskData = await getHoldings(2251, 4);
+      mountedState(() {
+        subnetMask = Future.value(subnetMaskData.join('.'));
+      });
 
-        List<int> ipData = await getHoldings(meshId, 2247, 4);
-        String hexIp = ipData.join('.');
-        setState(() {
-          ip = Future.value(hexIp);
-        });
-
-        List<int> subnetMaskData = await getHoldings(meshId, 2251, 4);
-        setState(() {
-          subnetMask = Future.value(subnetMaskData.join('.'));
-        });
-
-        List<int> gatewayData = await getHoldings(meshId, 2255, 4);
-        setState(() {
-          gateway = Future.value(gatewayData.join('.'));
-        });
-      }
+      List<int> gatewayData = await getHoldings(2255, 4);
+      mountedState(() {
+        gateway = Future.value(gatewayData.join('.'));
+      });
     });
   }
 
@@ -120,7 +105,7 @@ class _SettingAppState extends State<SettingApp> {
         context: context,
         builder: (context) {
           bool isChecked = false;
-          return StatefulBuilder(builder: (context, setState) {
+          return StatefulBuilder(builder: (context, mountedState) {
             return AlertDialog(
               content: Form(
                   key: _formKey,
@@ -195,7 +180,7 @@ class _SettingAppState extends State<SettingApp> {
         context: context,
         builder: (context) {
           bool isChecked = false;
-          return StatefulBuilder(builder: (context, setState) {
+          return StatefulBuilder(builder: (context, mountedState) {
             return AlertDialog(
               content: Form(
                   key: _formKey,

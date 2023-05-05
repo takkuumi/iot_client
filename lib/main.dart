@@ -15,10 +15,10 @@ void main() async {
     statusBarColor: Colors.transparent,
   ));
   // 强制竖屏
-  SystemChrome.setEnabledSystemUIMode(
-    SystemUiMode.manual,
-    overlays: <SystemUiOverlay>[SystemUiOverlay.top],
-  );
+  // SystemChrome.setEnabledSystemUIMode(
+  //   SystemUiMode.manual,
+  //   overlays: <SystemUiOverlay>[SystemUiOverlay.top],
+  // );
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,

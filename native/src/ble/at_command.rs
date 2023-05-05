@@ -52,7 +52,7 @@ fn try_until(data: &[u8], retry: u8) -> SerialResponse {
 }
 
 pub fn scan(typee: u8) -> SerialResponse {
-  let data = format!("{}={}", ble_at::AT_SCAN, typee);
+  let data = format!("{}={}\r\n", ble_at::AT_SCAN, typee);
   send_scan_serialport(data.as_bytes())
 }
 
@@ -63,6 +63,11 @@ pub fn lecconn(addr: &str, add_type: u8) -> SerialResponse {
 
 pub fn lecconn2(addr: &str, add_type: u8) -> SerialResponse {
   let data = format!("{}={}{},FFF0,FFF2,FFF1", ble_at::AT_LECCONN, addr, add_type);
+  send_serialport(data.as_bytes())
+}
+
+pub fn lecconn_addr(addr: &str) -> SerialResponse {
+  let data = format!("{}={},FFF0,FFF2,FFF1", ble_at::AT_LECCONN, addr);
   send_serialport(data.as_bytes())
 }
 

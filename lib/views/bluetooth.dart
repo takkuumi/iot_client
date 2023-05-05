@@ -1,13 +1,12 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:iot_client/ffi.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_scan_bluetooth/flutter_scan_bluetooth.dart';
 import 'package:iot_client/device.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
-import '../futs/hal.dart';
 
 class Bluetooth extends StatefulWidget {
   const Bluetooth({Key? key}) : super(key: key);
@@ -22,70 +21,96 @@ class _BluetoothState extends State<Bluetooth> {
 
   List<Device> devices = [];
 
+  bool isScaning = false;
+
+  String stateMsg = '';
+
+  Future<void> scanBleDevice() async {
+    if (isScaning) {
+      return;
+    }
+
+    setState(() {
+      isScaning = true;
+      stateMsg = '正在扫描';
+    });
+
+    try {
+      String responseText = '';
+
+      SerialResponse scanRes = await api.bleScan(typee: 1);
+
+      if (scanRes.data != null) {
+        responseText += String.fromCharCodes(scanRes.data!);
+      } else {
+        setState(() {
+          stateMsg = '扫描失败，等待下一次重试！';
+        });
+      }
+
+      SerialResponse chinfoRes = await api.bleChinfo();
+
+      if (chinfoRes.data != null) {
+        responseText += String.fromCharCodes(chinfoRes.data!);
+      } else {
+        setState(() {
+          stateMsg = '查询设备信息失败，请手动点击扫描按扭重试！';
+        });
+      }
+
+      List<Device> items = parseDevices(responseText);
+      for (Device element in items) {
+        if (!devices.any((e) => e.hashCode == element.hashCode)) {
+          devices.add(element);
+        }
+      }
+    } catch (_) {
+      setState(() {
+        stateMsg = '扫描失败，请手动点击扫描按扭重试！';
+      });
+    } finally {
+      setState(() {
+        isScaning = false;
+        stateMsg = '';
+      });
+    }
+  }
+
+  Future<bool> connect(String addr) async {
+    SerialResponse res = await api.bleLecconnAddr(addr: addr);
+    if (res.data == null) {
+      return false;
+    }
+
+    SerialResponse res2 = await api.bleChinfo();
+    if (res2.data == null) {
+      return false;
+    }
+    debugPrint(String.fromCharCodes(res2.data!));
+    return true;
+  }
+
+  Timer? timer;
+
+  void setTimer() {
+    timer = Timer.periodic(timerDuration, (timer) async {
+      scanBleDevice();
+    });
+  }
+
   @override
   void initState() {
     super.initState();
-    // bluetooth.requestPermissions();
 
-    // bluetooth.startScan(pairedDevices: false);
-
-    // bluetooth.devices.listen((device) async {
-    //   String name = device.name;
-    //   String address = device.address;
-
-    //   Device item = Device(name, address, false);
-    //   if (name.startsWith('Mesh') && !devices.contains(item)) {
-    //     String meshId = name.substring(5, 9);
-    //     List<int> ipData = await getHoldings(meshId, 2247, 4);
-    //     String hexIp = ipData.join('.');
-    //     item.address += '\r\nIP地址:$hexIp';
-    //     setState(() {
-    //       devices.add(item);
-    //     });
-    //   }
-    // });
-
-    api.bleScan(typee: 1).then((value) {
-      Uint8List? data = value.data;
-      if (data != null) {
-        debugPrint(String.fromCharCodes(data));
-      }
-      return api.bleChinfo();
-    }).then((value) {
-      Uint8List? data = value.data;
-      if (data != null) {
-        debugPrint(String.fromCharCodes(data));
-      }
-      return api.bleLecconn2(addr: "DC0D30000FC2", addType: 0);
-    }).then((value) {
-      Uint8List? data = value.data;
-      if (data != null) {
-        debugPrint(String.fromCharCodes(data));
-      }
-      return api.bleLesend(
-          index: 0, data: '''// bluetooth.devices.listen((device) async {
-    //   String name = device.name;
-    //   String address = device.address;
-    // });''');
-    }).then((value) {
-      Uint8List? data = value.data;
-      if (data != null) {
-        debugPrint(String.fromCharCodes(data));
-      }
-      return api.bleLesend(
-          index: 0, data: '''// bluetooth.devices.listen((device) async {
-    //   String name = device.name;
-    // });''');
-    }).then((value) {
-      Uint8List? data = value.data;
-      if (data != null) {
-        debugPrint(String.fromCharCodes(data));
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      scanBleDevice();
+      setTimer();
     });
   }
 
   @override
   void dispose() {
+    timer?.cancel();
     super.dispose();
   }
 
@@ -95,14 +120,14 @@ class _BluetoothState extends State<Bluetooth> {
       builder: (context) {
         return AlertDialog(
           title: Text("提示"),
-          content: Text("设置此蓝牙为默认直连吗？"),
+          content: Text("确认连接？"),
           actions: <Widget>[
             TextButton(
               child: Text("取消"),
               onPressed: () => Navigator.of(context).pop(false),
             ),
             TextButton(
-              child: Text("确定"),
+              child: Text("连接"),
               onPressed: () {
                 Navigator.of(context).pop(true);
               },
@@ -120,12 +145,12 @@ class _BluetoothState extends State<Bluetooth> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        padding: EdgeInsets.symmetric(vertical: 20, horizontal: 30),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[
-            Expanded(
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: <Widget>[
+          Expanded(
+            child: Container(
+              padding: EdgeInsets.symmetric(vertical: 20, horizontal: 30),
               child: devices.isEmpty
                   ? emptyWidget
                   : ListView.builder(
@@ -133,21 +158,25 @@ class _BluetoothState extends State<Bluetooth> {
                       itemBuilder: (BuildContext context, int index) {
                         final Device device = devices[index];
                         return ListTile(
-                          title: Text(device.name),
-                          subtitle: Text(device.address),
+                          title: Text('名 称: ${device.name}'),
+                          subtitle: Text('MAC地址: ${device.mac}'),
                           onTap: () async {
                             final name = device.name;
                             bool? result = await showSettingDialog();
                             if (result != null && result) {
-                              if (name.startsWith("Mesh")) {
-                                final prefs = await _prefs;
-                                bool saved = await prefs.setString(
-                                    "mesh", name.substring(5, 9));
-                                if (saved) {
-                                  showSnackBar("设置成功");
-                                } else {
-                                  showSnackBar("设置失败");
-                                }
+                              final connAddr =
+                                  '${device.mac}${device.addressType}';
+                              timer?.cancel();
+                              final conn = await connect(connAddr);
+                              setTimer();
+                              debugPrint('connection: $conn');
+                              final prefs = await _prefs;
+                              bool saved =
+                                  await prefs.setString("mesh", connAddr);
+                              if (saved) {
+                                showSnackBar("设置成功");
+                              } else {
+                                showSnackBar("设置失败");
                               }
                             }
                           },
@@ -155,26 +184,24 @@ class _BluetoothState extends State<Bluetooth> {
                       },
                     ),
             ),
-          ],
-        ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.black12,
+            ),
+            height: 40,
+            padding: EdgeInsets.symmetric(horizontal: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [Text('状态信息:'), Text(stateMsg)],
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.radar),
         tooltip: "扫描",
-        onPressed: () async {
-          await checkAndAskPermissions();
-          try {
-            setState(() {
-              devices = [];
-            });
-            await bluetooth.stopScan();
-
-            await bluetooth.startScan(pairedDevices: false);
-            showSnackBar("开始扫描");
-          } on PlatformException catch (e) {
-            debugPrint(e.toString());
-          }
-        },
+        onPressed: isScaning ? null : scanBleDevice,
       ),
     );
   }

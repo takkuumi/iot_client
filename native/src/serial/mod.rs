@@ -70,7 +70,7 @@ fn read_serialport(port: &mut Box<dyn serialport::SerialPort>) -> SerialResponse
   let mut retry: u8 = 0;
   let mut buffer = Vec::<u8>::with_capacity(80);
   loop {
-    if buffer.len() > 2 && buffer.ends_with(BITS_END) {
+    if (buffer.len() > 2) && buffer.ends_with(BITS_END) {
       response.set_ok(&buffer);
       break;
     }
@@ -85,7 +85,6 @@ fn read_serialport(port: &mut Box<dyn serialport::SerialPort>) -> SerialResponse
           break;
         }
         retry += 1;
-        let _ = port.clear(ClearBuffer::Output);
         std::thread::sleep(core::time::Duration::from_millis(u64::from(retry) * 30));
         continue;
       }
@@ -181,34 +180,24 @@ pub fn send_serialport(data: &[u8]) -> SerialResponse {
 
 fn read_scan_serialport(port: &mut Box<dyn serialport::SerialPort>) -> SerialResponse {
   let mut response = SerialResponse::default();
-
-  let mut buffer = Vec::<u8>::with_capacity(100);
+  let mut buffer = Vec::<u8>::with_capacity(80);
   loop {
-    if buffer.len() > 1 && buffer.ends_with(b"}") {
-      let _ = port.clear(ClearBuffer::Output);
-      response.set_ok(&buffer);
-      break;
-    }
-
-    let mut resp_buf = [0_u8; 10];
+    let mut resp_buf = [0_u8; 6];
     let res = port.read(&mut resp_buf);
     match res {
-      Err(ref e) => {
-        std::thread::sleep(core::time::Duration::from_millis(15));
-        continue;
+      Err(_) => {
+        break;
       }
       Ok(size) => {
         if size == 0 {
-          continue;
+          break;
         }
-
         eprintln!("{}", String::from_utf8_lossy(&resp_buf));
-
         buffer.extend_from_slice(&resp_buf[..size]);
       }
     }
   }
-
+  response.set_ok(&buffer);
   response
 }
 
@@ -223,64 +212,9 @@ pub fn send_scan_serialport(data: &[u8]) -> SerialResponse {
   }
   let mut port = tty_device.unwrap();
   let _ = port.clear(ClearBuffer::Input);
-  let _ = port.clear_break();
-  let mut retry: u8 = 0;
-  'outer: loop {
-    if retry > 3 {
-      response.state = ResponseState::MaxSendRetry;
-      return response;
-    }
 
-    if retry != 0 {
-      eprintln!("retry:{retry}");
-      let _ = port.clear(ClearBuffer::Input);
-      std::thread::sleep(core::time::Duration::from_millis(u64::from(retry) * 100));
-    }
-
-    let chunks = data.chunks_exact(10);
-    let rem = chunks.remainder();
-    for chunk in chunks {
-      let w_res = port.write(chunk);
-      // let _ = port.flush();
-      if w_res.is_err() {
-        retry += 1;
-        continue 'outer;
-      }
-    }
-
-    let mut end: Vec<u8> = Vec::new();
-    if !rem.is_empty() {
-      end.extend_from_slice(rem);
-    }
-    end.extend_from_slice(BITS_END);
-
-    eprintln!("remainder:{:?}", &end);
-    eprintln!("remainder data {}", String::from_utf8_lossy(&end));
-
-    let w_res = port.write(&end);
-    let _ = port.flush();
-
-    if w_res.is_err() {
-      retry += 1;
-      continue 'outer;
-    }
-
-    let mut buf = [0_u8; 15];
-    let bt_res = port.read(&mut buf);
-
-    if bt_res.is_err() {
-      retry += 1;
-      continue 'outer;
-    }
-    if !buf.starts_with(b"\r\nE") {
-      retry += 1;
-      let err_msg = String::from_utf8_lossy(&buf);
-      eprintln!("蓝牙发送失败({retry}),错误码:{err_msg}");
-      continue 'outer;
-    }
-    // buffer.extend_from_slice(&buf[..size]);
-    break 'outer;
-  }
+  let _ = port.write(data);
+  let _ = port.flush();
 
   read_scan_serialport(&mut port)
 }

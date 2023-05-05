@@ -281,6 +281,23 @@ class NativeImpl implements Native {
         argNames: ["addr", "addType"],
       );
 
+  Future<SerialResponse> bleLecconnAddr({required String addr, dynamic hint}) {
+    var arg0 = _platform.api2wire_String(addr);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner.wire_ble_lecconn_addr(port_, arg0),
+      parseSuccessData: _wire2api_serial_response,
+      constMeta: kBleLecconnAddrConstMeta,
+      argValues: [addr],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kBleLecconnAddrConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "ble_lecconn_addr",
+        argNames: ["addr"],
+      );
+
   Future<SerialResponse> bleLesend(
       {required int index, required String data, dynamic hint}) {
     var arg0 = api2wire_u8(index);
@@ -966,6 +983,23 @@ class NativeWire implements FlutterRustBridgeWireBase {
               ffi.Uint8)>>('wire_ble_lecconn2');
   late final _wire_ble_lecconn2 = _wire_ble_lecconn2Ptr
       .asFunction<void Function(int, ffi.Pointer<wire_uint_8_list>, int)>();
+
+  void wire_ble_lecconn_addr(
+    int port_,
+    ffi.Pointer<wire_uint_8_list> addr,
+  ) {
+    return _wire_ble_lecconn_addr(
+      port_,
+      addr,
+    );
+  }
+
+  late final _wire_ble_lecconn_addrPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Int64,
+              ffi.Pointer<wire_uint_8_list>)>>('wire_ble_lecconn_addr');
+  late final _wire_ble_lecconn_addr = _wire_ble_lecconn_addrPtr
+      .asFunction<void Function(int, ffi.Pointer<wire_uint_8_list>)>();
 
   void wire_ble_lesend(
     int port_,

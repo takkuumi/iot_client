@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:iot_client/views/bluetooth.dart';
-import 'package:iot_client/views/in_app_browser.dart';
 import 'package:iot_client/views/setting.dart';
 
 import 'constants.dart';
@@ -9,8 +8,7 @@ import 'views/home.dart';
 
 const int homeTab = 0;
 const int bluetoothTab = 1;
-const int controlTab = 2;
-const int settingTab = 3;
+const int settingTab = 2;
 
 class MyApp extends StatefulWidget {
   final ThemeData theme;
@@ -32,8 +30,6 @@ class _MyAppState extends State<MyApp> {
       body = const Home();
     } else if (_bottomNavigationBarIndex == bluetoothTab) {
       body = const Bluetooth();
-    } else if (_bottomNavigationBarIndex == controlTab) {
-      body = const InAppView();
     } else if (_bottomNavigationBarIndex == settingTab) {
       body = const SettingApp();
     }
@@ -65,10 +61,6 @@ class _MyAppState extends State<MyApp> {
               BottomNavigationBarItem(
                 icon: Icon(Icons.bluetooth_searching),
                 label: '蓝牙',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.vpn_lock),
-                label: '监控',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.settings),

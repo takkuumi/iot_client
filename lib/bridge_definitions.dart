@@ -76,6 +76,10 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kBleLecconn2ConstMeta;
 
+  Future<SerialResponse> bleLecconnAddr({required String addr, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kBleLecconnAddrConstMeta;
+
   Future<SerialResponse> bleLesend(
       {required int index, required String data, dynamic hint});
 

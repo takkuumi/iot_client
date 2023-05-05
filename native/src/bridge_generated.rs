@@ -222,6 +222,19 @@ fn wire_ble_lecconn2_impl(
     },
   )
 }
+fn wire_ble_lecconn_addr_impl(port_: MessagePort, addr: impl Wire2Api<String> + UnwindSafe) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "ble_lecconn_addr",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || {
+      let api_addr = addr.wire2api();
+      move |task_callback| Ok(ble_lecconn_addr(api_addr))
+    },
+  )
+}
 fn wire_ble_lesend_impl(
   port_: MessagePort,
   index: impl Wire2Api<u8> + UnwindSafe,

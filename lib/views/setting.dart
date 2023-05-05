@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
@@ -34,7 +35,7 @@ class _SettingAppState extends State<SettingApp> {
     DevicePlatform.macOS: 'MacOS',
     DevicePlatform.windows: 'Windows',
   };
-  DevicePlatform selectedPlatform = DevicePlatform.web;
+  DevicePlatform selectedPlatform = DevicePlatform.fuchsia;
 
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
@@ -48,9 +49,16 @@ class _SettingAppState extends State<SettingApp> {
   Future<String?> subnetMask = Future.value(null);
   Future<String?> gateway = Future.value(null);
 
+  // FutureOr<String>
+
   @override
   void initState() {
     super.initState();
+
+    // WidgetsBinding.instance.addPostFrameCallback((_) async {
+    //   await scanBleDevice();
+    // });
+
     api.bleGetNdid().then((value) {
       Uint8List? data = value.data;
       if (data != null) {
@@ -240,45 +248,11 @@ class _SettingAppState extends State<SettingApp> {
         platform: selectedPlatform,
         sections: [
           SettingsSection(
-            title: Text('基本'),
+            title: Text('连接信息'),
             tiles: <SettingsTile>[
               SettingsTile.navigation(
-                leading: Icon(Icons.restore),
-                title: Text('重启本机蓝牙'),
-                onPressed: (context) async {
-                  SerialResponse r2 = await api.bleNdreset();
-                  Uint8List? data2 = r2.data;
-                  if (data2 != null) {
-                    showSnackBar(String.fromCharCodes(data2));
-                    return;
-                  }
-                  showSnackBar("重启失败");
-                },
-              ),
-              SettingsTile.navigation(
-                leading: Icon(Icons.bluetooth_connected),
-                title: Text('本机蓝牙地址'),
-                value: FutureBuilder(
-                  future: ndid,
-                  initialData: 'NDID=',
-                  builder: (context, AsyncSnapshot<String?> snapshot) {
-                    if (snapshot.hasData &&
-                        snapshot.connectionState == ConnectionState.done) {
-                      String id = snapshot.data ?? '';
-
-                      return Text(id);
-                    }
-
-                    return Text('NDID=');
-                  },
-                ),
-                onPressed: (context) {
-                  showInformationDialog(context);
-                },
-              ),
-              SettingsTile.navigation(
                 leading: Icon(Icons.network_cell),
-                title: Text('直连地址'),
+                title: Text('当前连接地址'),
                 value: FutureBuilder(
                   future: _prefs.then((SharedPreferences prefs) {
                     return prefs.getString('mesh');
@@ -391,33 +365,6 @@ class _SettingAppState extends State<SettingApp> {
                     context: context,
                     screen: RS485Setting(),
                   );
-                },
-              ),
-            ],
-          ),
-          SettingsSection(
-            title: Text('服务'),
-            tiles: <SettingsTile>[
-              SettingsTile.navigation(
-                leading: Icon(Icons.bluetooth_connected),
-                title: Text('服务地址'),
-                value: FutureBuilder(
-                  future: _prefs.then((SharedPreferences prefs) {
-                    return prefs.getString('network_url');
-                  }),
-                  initialData: '',
-                  builder: (context, AsyncSnapshot<String?> snapshot) {
-                    if (snapshot.hasData &&
-                        snapshot.connectionState == ConnectionState.done) {
-                      String url = snapshot.data ?? '';
-                      return Text(url);
-                    }
-
-                    return Text('');
-                  },
-                ),
-                onPressed: (context) {
-                  settingNetworkUrlDialog(context);
                 },
               ),
             ],

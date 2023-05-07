@@ -43,6 +43,8 @@ class _SettingAppState extends State<SettingApp> {
 
   final TextEditingController _textEditingController = TextEditingController();
 
+  final TextEditingController _ipEditingController = TextEditingController();
+
   late Future<String?> ndid = Future.value(null);
   Future<String?> mac = Future.value(null);
   Future<String?> ip = Future.value(null);
@@ -85,6 +87,9 @@ class _SettingAppState extends State<SettingApp> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await readHoldings1();
+    });
   }
 
   @override
@@ -227,6 +232,63 @@ class _SettingAppState extends State<SettingApp> {
         });
   }
 
+  Future<void> settingIplDialog(BuildContext context) async {
+    BuildContext _c = context;
+    return await showDialog(
+        context: context,
+        builder: (context) {
+          bool isChecked = false;
+          return StatefulBuilder(builder: (context, mountedState) {
+            return AlertDialog(
+              content: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextFormField(
+                        keyboardType: TextInputType.url,
+                        maxLength: 100,
+                        maxLines: 5,
+                        controller: _ipEditingController,
+                        validator: (value) {
+                          return value!.isNotEmpty ? null : "请输入IP地址";
+                        },
+                        decoration: InputDecoration(hintText: ""),
+                      ),
+                    ],
+                  )),
+              title: Text('修改IP地址'),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('取消'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    if (_formKey.currentState?.validate() ?? false) {
+                      String url = _textEditingController.text;
+                      List<String> ips = url.trim().split(".");
+                      String req = await api.halGenerateSetHolding(
+                          unitId: 1, reg: 2247, value: int.parse(ips[0]));
+                      bool res = await setHoldings(req);
+
+                      if (res) {
+                        showSnackBar("修改成功");
+                      }
+
+                      Navigator.canPop(_c);
+                    }
+                  },
+                  child: Text('修改'),
+                )
+              ],
+            );
+          });
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -288,6 +350,9 @@ class _SettingAppState extends State<SettingApp> {
               ),
               SettingsTile.navigation(
                 title: Text('IP地址'),
+                onPressed: (c) {
+                  settingIplDialog(c);
+                },
                 value: FutureBuilder(
                   future: ip,
                   initialData: '',
@@ -368,6 +433,10 @@ class _SettingAppState extends State<SettingApp> {
           SettingsSection(
             title: Text('帐户'),
             tiles: <SettingsTile>[
+              SettingsTile.navigation(
+                leading: Icon(Icons.logout),
+                title: Text('关于我们'),
+              ),
               SettingsTile.navigation(
                 leading: Icon(Icons.logout),
                 title: Text('退出应用'),

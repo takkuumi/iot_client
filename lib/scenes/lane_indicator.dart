@@ -6,10 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:iot_client/ffi.dart';
-import 'package:iot_client/scenes/lane_indicator_port.dart';
 import 'package:iot_client/scenes/widgets/lane_indicator_components.dart';
 import 'package:iot_client/utils/at_parse.dart';
-import 'package:iot_client/utils/navigation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
@@ -25,7 +23,7 @@ class LaneIndicator extends StatefulWidget {
 enum LaneIndicatorState { green, red }
 
 class _LaneIndicatorState extends State<LaneIndicator>
-    with AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
+    with TickerProviderStateMixin {
   final GlobalKey<ScaffoldMessengerState> key =
       GlobalKey<ScaffoldMessengerState>(debugLabel: 'lane_indicator');
   late TabController tabController;
@@ -43,32 +41,113 @@ class _LaneIndicatorState extends State<LaneIndicator>
     }
   }
 
+  int? rule;
+
+  // 车一
+  int? in1_1;
+  int? in1_2;
+  int? in1_3;
+  int? in1_4;
+  int? ot1_1;
+  int? ot1_2;
+  int? ot1_3;
+  int? ot1_4;
+
+  // 车二
+  int? in2_1;
+  int? in2_2;
+  int? in2_3;
+  int? in2_4;
+  int? ot2_1;
+  int? ot2_2;
+  int? ot2_3;
+  int? ot2_4;
+
+  // 车三
+  int? in3_1;
+  int? in3_2;
+  int? in3_3;
+  int? in3_4;
+  int? ot3_1;
+  int? ot3_2;
+  int? ot3_3;
+  int? ot3_4;
+
   @override
-  bool get wantKeepAlive => true;
+  bool get wantKeepAlive => false;
 
   void tabListener() {
     if (tabController.index == 0) {
-      readDevice(
-        readAt("0200"),
-        initLaneState,
-        () {
-          debugPrint("error");
-        },
-      );
+      _prefs.then((SharedPreferences prefs) {
+        return prefs.getString('mesh');
+      }).then((String? addr) async {
+        timer?.cancel();
+        timer = null;
+        await getHoldings(2300, 28).then((value) {
+          debugPrint(value.join(','));
+
+          rule = value[1];
+
+          in1_1 = value[2];
+
+          in1_2 = value[3];
+          in1_3 = value[4];
+          in1_4 = value[5];
+
+          ot1_1 = value[14];
+          ot1_2 = value[15];
+          ot1_3 = value[16];
+          ot1_4 = value[17];
+
+          in2_1 = value[6];
+          in2_2 = value[7];
+          in2_3 = value[8];
+          in2_4 = value[9];
+
+          ot2_1 = value[18];
+          ot2_2 = value[19];
+          ot2_3 = value[20];
+          ot2_4 = value[21];
+
+          in3_1 = value[10];
+          in3_2 = value[11];
+          in3_3 = value[12];
+          in3_4 = value[13];
+
+          ot3_1 = value[22];
+          ot3_2 = value[23];
+          ot3_3 = value[24];
+          ot3_4 = value[25];
+        });
+
+        await initLaneState();
+
+        setTimer();
+      });
+
+      // readDevice(
+      //   readAt("0200"),
+      //   initLaneState,
+      //   () {
+      //     debugPrint("error");
+      //   },
+      // );
     }
     if (tabController.index == 1) {
       _prefs.then((SharedPreferences prefs) {
         return prefs.getString('mesh');
       }).then((String? addr) async {
+        timer?.cancel();
+        timer = null;
         if (addr != null) {
-          getHoldings(2196, 9).then((value) {
+          await getHoldings(2196, 9).then((value) {
             Uint8List v = Uint16List.fromList(value).buffer.asUint8List();
             mountedState(() {
               sn = Future.value(String.fromCharCodes(v));
             });
           });
 
-          getHoldings(2247, 4).then((value) {
+          await getHoldings(2247, 4).then((value) {
             mountedState(() {
               ip = Future.value(value.join('.'));
             });
@@ -77,6 +156,8 @@ class _LaneIndicatorState extends State<LaneIndicator>
       });
     }
   }
+
+  Timer? timer;
 
   @override
   void initState() {
@@ -87,135 +168,49 @@ class _LaneIndicatorState extends State<LaneIndicator>
     tabController.addListener(tabListener);
   }
 
-  void initLaneState(int? state) {
-    debugPrint("----------------------->$state");
-    // 0 1 1 0 06
-    if (state == 6) {
-      mountedState(() {
-        state1 = LaneIndicatorState.red;
-        state2 = LaneIndicatorState.green;
-      });
-      return;
+  void setTimer() {
+    if (timer != null) {
+      timer!.cancel();
+      timer = null;
     }
-
-    // 1 0 0 1 09
-    if (state == 9) {
-      mountedState(() {
-        state1 = LaneIndicatorState.green;
-        state2 = LaneIndicatorState.red;
-      });
-      return;
-    }
-
-    // 0 1 0 1  OA
-    if (state == 10) {
-      mountedState(() {
-        state1 = LaneIndicatorState.red;
-        state2 = LaneIndicatorState.red;
-      });
-      return;
-    }
-
-    // 1 0 1 0
-    if (state == 5) {
-      mountedState(() {
-        state1 = LaneIndicatorState.green;
-        state2 = LaneIndicatorState.green;
-      });
-      return;
-    }
-
-    mountedState(() {
-      state1 = LaneIndicatorState.red;
-      state2 = LaneIndicatorState.red;
+    timer = Timer.periodic(timerDuration, (timer) async {
+      await initLaneState();
     });
+  }
+
+  Future<void> initLaneState() async {
+    bool? a = await getCoil(in1_1!);
+    if (a != null && a) {
+      mountedState(() {
+        state1 = LaneIndicatorState.green;
+      });
+    }
+    bool? b = await getCoil(in1_2!);
+    if (b != null && b) {
+      mountedState(() {
+        state1 = LaneIndicatorState.red;
+      });
+    }
+
+    bool? c = await getCoil(in1_3!);
+    if (c != null && c) {
+      mountedState(() {
+        state2 = LaneIndicatorState.green;
+      });
+    }
+    bool? d = await getCoil(in1_4!);
+    if (d != null && d) {
+      mountedState(() {
+        state2 = LaneIndicatorState.red;
+      });
+    }
   }
 
   @override
   void dispose() {
     tabController.removeListener(tabListener);
+    timer?.cancel();
     super.dispose();
-  }
-
-  Future<String?> getLink() async {
-    final SharedPreferences prefs = await _prefs;
-    return prefs.getString('mesh');
-  }
-
-  String readAt(String addr) {
-    // 010F020000030105
-    return "0101${addr}0004";
-  }
-
-  String sendAt(String addr, LaneIndicatorState state) {
-    // 04 0100
-    //    0001
-    String data = state == LaneIndicatorState.green ? '01' : '02';
-    // 010F020000030105
-    return "010F${addr}000201$data";
-  }
-
-  Future<void> readDevice(
-    String sdata,
-    void Function(int) onReadResponse,
-    void Function() onError,
-  ) async {
-    String? meshId = await getLink();
-
-    if (meshId == null || meshId.isEmpty) {
-      return;
-    }
-
-    SerialResponse response =
-        await api.bleAtNdrpt(id: meshId, data: sdata, retry: 5);
-    Uint8List? data = response.data;
-    if (data == null) {
-      onError();
-      return;
-    }
-
-    String resp = String.fromCharCodes(data);
-
-    int? res = getAtReadResult(resp);
-    if (res != null) {
-      onReadResponse(res);
-    } else {
-      onError();
-    }
-  }
-
-  void syncState() {
-    readDevice(
-      readAt("0200"),
-      initLaneState,
-      () => showSnackBar("操作失败,未收到响应", key),
-    );
-  }
-
-  Future<void> writeDevice(
-    String x0200,
-    void Function() onError,
-  ) async {
-    String? meshId = await getLink();
-
-    if (meshId == null || meshId.isEmpty) {
-      showSnackBar("未设置连接设备", key);
-      return;
-    }
-
-    SerialResponse response =
-        await api.bleAtNdrpt(id: meshId, data: x0200, retry: 5);
-    Uint8List? x0200Data = response.data;
-    if (x0200Data == null) {
-      onError();
-      return;
-    }
-    String resp = String.fromCharCodes(x0200Data);
-    debugPrint(resp);
-    bool isOk = getAtOk(resp);
-    if (!isOk) {
-      onError();
-    }
   }
 
   final BoxShadow boxShadow = BoxShadow(
@@ -233,25 +228,23 @@ class _LaneIndicatorState extends State<LaneIndicator>
         verticalLineOnly,
         GestureDetector(
           onTap: () async {
-            await EasyLoading.show(
-              status: '正在下发操作...',
-              maskType: EasyLoadingMaskType.black,
-            );
             LaneIndicatorState nextState = state1 == LaneIndicatorState.green
                 ? LaneIndicatorState.red
                 : LaneIndicatorState.green;
 
-            String data = sendAt("0200", nextState);
-            debugPrint(data);
-            await writeDevice(data, () => showSnackBar("操作失败,未收到响应", key));
-            await readDevice(
-              readAt("0200"),
-              initLaneState,
-              () {
-                showSnackBar("操作失败,未收到响应", key);
-              },
-            );
-            await EasyLoading.dismiss();
+            if (nextState == LaneIndicatorState.green) {
+              await setCoils(ot1_1! + 512, [true, false]);
+              // if ([4, 5, 8, 9].contains(rule!)) {
+              await setCoils(ot1_3! + 512, [false, true]);
+              // }
+            } else {
+              await setCoils(ot1_1! + 512, [false, true]);
+              // if ([4, 5, 8, 9].contains(rule!)) {
+              await setCoils(ot1_3! + 512, [true, false]);
+              // }
+            }
+
+            await initLaneState();
           },
           child: Container(
             width: 100,
@@ -267,27 +260,23 @@ class _LaneIndicatorState extends State<LaneIndicator>
         verticalLine,
         GestureDetector(
           onTap: () async {
-            await EasyLoading.show(
-              status: '正在下发操作...',
-              maskType: EasyLoadingMaskType.black,
-            );
             LaneIndicatorState nextState = state2 == LaneIndicatorState.green
                 ? LaneIndicatorState.red
                 : LaneIndicatorState.green;
 
-            String data = sendAt("0202", nextState);
+            if (nextState == LaneIndicatorState.green) {
+              await setCoils(ot1_3! + 512, [true, false]);
+              // if ([4, 5, 8, 9].contains(rule!)) {
+              await setCoils(ot1_1! + 512, [false, true]);
+              // }
+            } else {
+              await setCoils(ot1_3! + 512, [false, true]);
+              // if ([4, 5, 8, 9].contains(rule!)) {
+              await setCoils(ot1_1! + 512, [true, false]);
+              //}
+            }
 
-            await writeDevice(data, () => {showSnackBar("操作失败,未收到响应", key)});
-
-            await readDevice(
-              readAt("0200"),
-              initLaneState,
-              () {
-                showSnackBar("操作失败,未收到响应", key);
-              },
-            );
-
-            await EasyLoading.dismiss();
+            await initLaneState();
           },
           child: Container(
             width: 100,

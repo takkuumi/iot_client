@@ -39,11 +39,7 @@ fn wire_ble_validate_response_impl(port_: MessagePort, data: impl Wire2Api<Vec<u
     },
   )
 }
-fn wire_ble_response_parse_u16_impl(
-  port_: MessagePort,
-  data: impl Wire2Api<Vec<u8>> + UnwindSafe,
-  unit_id: impl Wire2Api<u8> + UnwindSafe,
-) {
+fn wire_ble_response_parse_u16_impl(port_: MessagePort, data: impl Wire2Api<Vec<u8>> + UnwindSafe) {
   FLUTTER_RUST_BRIDGE_HANDLER.wrap(
     WrapInfo {
       debug_name: "ble_response_parse_u16",
@@ -52,8 +48,23 @@ fn wire_ble_response_parse_u16_impl(
     },
     move || {
       let api_data = data.wire2api();
-      let api_unit_id = unit_id.wire2api();
-      move |task_callback| Ok(ble_response_parse_u16(api_data, api_unit_id))
+      move |task_callback| Ok(ble_response_parse_u16(api_data))
+    },
+  )
+}
+fn wire_ble_response_parse_bool_impl(
+  port_: MessagePort,
+  data: impl Wire2Api<Vec<u8>> + UnwindSafe,
+) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "ble_response_parse_bool",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || {
+      let api_data = data.wire2api();
+      move |task_callback| Ok(ble_response_parse_bool(api_data))
     },
   )
 }
@@ -296,6 +307,46 @@ fn wire_hal_generate_get_holdings_impl(
     },
   )
 }
+fn wire_hal_generate_get_coils_impl(
+  port_: MessagePort,
+  unit_id: impl Wire2Api<u8> + UnwindSafe,
+  reg: impl Wire2Api<u16> + UnwindSafe,
+  count: impl Wire2Api<u16> + UnwindSafe,
+) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "hal_generate_get_coils",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || {
+      let api_unit_id = unit_id.wire2api();
+      let api_reg = reg.wire2api();
+      let api_count = count.wire2api();
+      move |task_callback| Ok(hal_generate_get_coils(api_unit_id, api_reg, api_count))
+    },
+  )
+}
+fn wire_hal_generate_set_coils_impl(
+  port_: MessagePort,
+  unit_id: impl Wire2Api<u8> + UnwindSafe,
+  reg: impl Wire2Api<u16> + UnwindSafe,
+  values: impl Wire2Api<Vec<u8>> + UnwindSafe,
+) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "hal_generate_set_coils",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || {
+      let api_unit_id = unit_id.wire2api();
+      let api_reg = reg.wire2api();
+      let api_values = values.wire2api();
+      move |task_callback| Ok(hal_generate_set_coils(api_unit_id, api_reg, api_values))
+    },
+  )
+}
 fn wire_hal_generate_set_holding_impl(
   port_: MessagePort,
   unit_id: impl Wire2Api<u8> + UnwindSafe,
@@ -344,8 +395,6 @@ fn wire_hex_decode_impl(port_: MessagePort, data: impl Wire2Api<String> + Unwind
 }
 fn wire_hal_new_control_impl(
   port_: MessagePort,
-  id: impl Wire2Api<String> + UnwindSafe,
-  retry: impl Wire2Api<u8> + UnwindSafe,
   index: impl Wire2Api<u8> + UnwindSafe,
   scene: impl Wire2Api<u8> + UnwindSafe,
   com_in: impl Wire2Api<Com> + UnwindSafe,
@@ -358,22 +407,75 @@ fn wire_hal_new_control_impl(
       mode: FfiCallMode::Normal,
     },
     move || {
-      let api_id = id.wire2api();
-      let api_retry = retry.wire2api();
       let api_index = index.wire2api();
       let api_scene = scene.wire2api();
       let api_com_in = com_in.wire2api();
       let api_com_out = com_out.wire2api();
       move |task_callback| {
         Ok(hal_new_control(
-          api_id,
-          api_retry,
           api_index,
           api_scene,
           api_com_in,
           api_com_out,
         ))
       }
+    },
+  )
+}
+fn wire_hal_control_impl(
+  port_: MessagePort,
+  unit_id: impl Wire2Api<u8> + UnwindSafe,
+  index: impl Wire2Api<u8> + UnwindSafe,
+  scene: impl Wire2Api<u8> + UnwindSafe,
+  v1: impl Wire2Api<Vec<u8>> + UnwindSafe,
+  v2: impl Wire2Api<Vec<u8>> + UnwindSafe,
+  v3: impl Wire2Api<Vec<u8>> + UnwindSafe,
+  v4: impl Wire2Api<Vec<u8>> + UnwindSafe,
+  v5: impl Wire2Api<Vec<u8>> + UnwindSafe,
+  v6: impl Wire2Api<Vec<u8>> + UnwindSafe,
+) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "hal_control",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || {
+      let api_unit_id = unit_id.wire2api();
+      let api_index = index.wire2api();
+      let api_scene = scene.wire2api();
+      let api_v1 = v1.wire2api();
+      let api_v2 = v2.wire2api();
+      let api_v3 = v3.wire2api();
+      let api_v4 = v4.wire2api();
+      let api_v5 = v5.wire2api();
+      let api_v6 = v6.wire2api();
+      move |task_callback| {
+        Ok(hal_control(
+          api_unit_id,
+          api_index,
+          api_scene,
+          api_v1,
+          api_v2,
+          api_v3,
+          api_v4,
+          api_v5,
+          api_v6,
+        ))
+      }
+    },
+  )
+}
+fn wire_hal_display_com_impl(port_: MessagePort, com: impl Wire2Api<Com> + UnwindSafe) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "hal_display_com",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || {
+      let api_com = com.wire2api();
+      move |task_callback| Ok(hal_display_com(api_com))
     },
   )
 }

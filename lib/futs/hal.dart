@@ -46,10 +46,126 @@ Future<List<int>> getHoldings(int reg, int count) async {
   String text = String.fromCharCodes(rdata);
   debugPrint(text);
 
-  Uint16List? v = await api.bleResponseParseU16(data: rdata, unitId: 1);
+  Uint16List? v = await api.bleResponseParseU16(data: rdata);
   if (v == null) {
     return res;
   }
 
   return v.toList();
+}
+
+Future<int?> getCoils(int reg, int count) async {
+  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  final SharedPreferences prefs = await _prefs;
+  String? addr = prefs.getString("mesh");
+
+  if (addr != null) {
+    await api.bleLecconnAddr(addr: addr);
+  }
+  int? index = prefs.getInt("index");
+  if (index == null) {
+    return null;
+  }
+
+  String data =
+      await api.halGenerateGetCoils(unitId: 1, reg: reg, count: count);
+  debugPrint('getHolding: $data');
+  SerialResponse sr = await api.bleLesend(index: index, data: data);
+  Uint8List? rdata = sr.data;
+  if (rdata == null) {
+    return null;
+  }
+  String text = String.fromCharCodes(rdata);
+  debugPrint("getCoils $text");
+
+  Uint16List? v = await api.bleResponseParseU16(data: rdata);
+  if (v == null) {
+    return null;
+  }
+
+  return v.toList().first;
+}
+
+Future<bool?> getCoil(int reg) async {
+  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  final SharedPreferences prefs = await _prefs;
+  String? addr = prefs.getString("mesh");
+
+  if (addr != null) {
+    await api.bleLecconnAddr(addr: addr);
+  }
+  int? index = prefs.getInt("index");
+  if (index == null) {
+    return null;
+  }
+
+  String data = await api.halGenerateGetCoils(unitId: 1, reg: reg, count: 1);
+  debugPrint('getHolding: $data');
+  SerialResponse sr = await api.bleLesend(index: index, data: data);
+  Uint8List? rdata = sr.data;
+  if (rdata == null) {
+    return null;
+  }
+  String text = String.fromCharCodes(rdata);
+  debugPrint(text);
+
+  Uint8List? v = await api.bleResponseParseBool(data: rdata);
+  if (v == null) {
+    return null;
+  }
+
+  return v.toList().map((e) => e == 1).first;
+}
+
+Future<bool> setCoils(int reg, List<bool> values) async {
+  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  final SharedPreferences prefs = await _prefs;
+  String? addr = prefs.getString("mesh");
+
+  if (addr != null) {
+    await api.bleLecconnAddr(addr: addr);
+  }
+  int? index = prefs.getInt("index");
+  if (index == null) {
+    return false;
+  }
+
+  String data = await api.halGenerateSetCoils(
+      unitId: 1,
+      reg: reg,
+      values: Uint8List.fromList(values.map((e) => e ? 1 : 0).toList()));
+
+  SerialResponse sr = await api.bleLesend(index: index, data: data);
+  Uint8List? rdata = sr.data;
+  if (rdata == null) {
+    return false;
+  }
+  String text = String.fromCharCodes(rdata);
+  debugPrint(text);
+
+  return text.contains("011008");
+}
+
+Future<bool> setHoldings(String data) async {
+  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  final SharedPreferences prefs = await _prefs;
+  String? addr = prefs.getString("mesh");
+
+  if (addr != null) {
+    await api.bleLecconnAddr(addr: addr);
+  }
+  int? index = prefs.getInt("index");
+  if (index == null) {
+    return false;
+  }
+
+  SerialResponse sr = await api.bleLesend(index: index, data: data);
+  Uint8List? rdata = sr.data;
+  if (rdata == null) {
+    return false;
+  }
+  String text = String.fromCharCodes(rdata);
+  debugPrint(text);
+
+  return text.contains("011008");
 }

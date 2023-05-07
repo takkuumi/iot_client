@@ -14,9 +14,14 @@ abstract class Native {
   FlutterRustBridgeTaskConstMeta get kBleValidateResponseConstMeta;
 
   Future<Uint16List?> bleResponseParseU16(
-      {required Uint8List data, required int unitId, dynamic hint});
+      {required Uint8List data, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kBleResponseParseU16ConstMeta;
+
+  Future<Uint8List?> bleResponseParseBool(
+      {required Uint8List data, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kBleResponseParseBoolConstMeta;
 
   Future<SerialResponse> bleGetNdid({dynamic hint});
 
@@ -101,6 +106,22 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kHalGenerateGetHoldingsConstMeta;
 
+  Future<String> halGenerateGetCoils(
+      {required int unitId,
+      required int reg,
+      required int count,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kHalGenerateGetCoilsConstMeta;
+
+  Future<String> halGenerateSetCoils(
+      {required int unitId,
+      required int reg,
+      required Uint8List values,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kHalGenerateSetCoilsConstMeta;
+
   Future<String> halGenerateSetHolding(
       {required int unitId,
       required int reg,
@@ -117,16 +138,32 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kHexDecodeConstMeta;
 
-  Future<bool> halNewControl(
-      {required String id,
-      required int retry,
-      required int index,
+  Future<Uint8List> halNewControl(
+      {required int index,
       required int scene,
       required Com comIn,
       required Com comOut,
       dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kHalNewControlConstMeta;
+
+  Future<String> halControl(
+      {required int unitId,
+      required int index,
+      required int scene,
+      required Uint8List v1,
+      required Uint8List v2,
+      required Uint8List v3,
+      required Uint8List v4,
+      required Uint8List v5,
+      required Uint8List v6,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kHalControlConstMeta;
+
+  Future<String> halDisplayCom({required Com com, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kHalDisplayComConstMeta;
 
   Future<Com> halNewCom({required int value, dynamic hint});
 

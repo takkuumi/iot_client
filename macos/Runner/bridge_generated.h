@@ -32,7 +32,9 @@ intptr_t init_frb_dart_api_dl(void *obj);
 
 void wire_ble_validate_response(int64_t port_, struct wire_uint_8_list *data);
 
-void wire_ble_response_parse_u16(int64_t port_, struct wire_uint_8_list *data, uint8_t unit_id);
+void wire_ble_response_parse_u16(int64_t port_, struct wire_uint_8_list *data);
+
+void wire_ble_response_parse_bool(int64_t port_, struct wire_uint_8_list *data);
 
 void wire_ble_get_ndid(int64_t port_);
 
@@ -74,6 +76,13 @@ void wire_ble_chinfo(int64_t port_);
 
 void wire_hal_generate_get_holdings(int64_t port_, uint8_t unit_id, uint16_t reg, uint16_t count);
 
+void wire_hal_generate_get_coils(int64_t port_, uint8_t unit_id, uint16_t reg, uint16_t count);
+
+void wire_hal_generate_set_coils(int64_t port_,
+                                 uint8_t unit_id,
+                                 uint16_t reg,
+                                 struct wire_uint_8_list *values);
+
 void wire_hal_generate_set_holding(int64_t port_, uint8_t unit_id, uint16_t reg, uint16_t value);
 
 void wire_hex_encode(int64_t port_, struct wire_uint_8_list *data);
@@ -81,12 +90,23 @@ void wire_hex_encode(int64_t port_, struct wire_uint_8_list *data);
 void wire_hex_decode(int64_t port_, struct wire_uint_8_list *data);
 
 void wire_hal_new_control(int64_t port_,
-                          struct wire_uint_8_list *id,
-                          uint8_t retry,
                           uint8_t index,
                           uint8_t scene,
                           struct wire_Com *com_in,
                           struct wire_Com *com_out);
+
+void wire_hal_control(int64_t port_,
+                      uint8_t unit_id,
+                      uint8_t index,
+                      uint8_t scene,
+                      struct wire_uint_8_list *v1,
+                      struct wire_uint_8_list *v2,
+                      struct wire_uint_8_list *v3,
+                      struct wire_uint_8_list *v4,
+                      struct wire_uint_8_list *v5,
+                      struct wire_uint_8_list *v6);
+
+void wire_hal_display_com(int64_t port_, struct wire_Com *com);
 
 void wire_hal_new_com(int64_t port_, uint32_t value);
 
@@ -107,6 +127,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     int64_t dummy_var = 0;
     dummy_var ^= ((int64_t) (void*) wire_ble_validate_response);
     dummy_var ^= ((int64_t) (void*) wire_ble_response_parse_u16);
+    dummy_var ^= ((int64_t) (void*) wire_ble_response_parse_bool);
     dummy_var ^= ((int64_t) (void*) wire_ble_get_ndid);
     dummy_var ^= ((int64_t) (void*) wire_ble_at_ndrpt);
     dummy_var ^= ((int64_t) (void*) wire_ble_at_ndrpt_data);
@@ -124,10 +145,14 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_ble_lesend);
     dummy_var ^= ((int64_t) (void*) wire_ble_chinfo);
     dummy_var ^= ((int64_t) (void*) wire_hal_generate_get_holdings);
+    dummy_var ^= ((int64_t) (void*) wire_hal_generate_get_coils);
+    dummy_var ^= ((int64_t) (void*) wire_hal_generate_set_coils);
     dummy_var ^= ((int64_t) (void*) wire_hal_generate_set_holding);
     dummy_var ^= ((int64_t) (void*) wire_hex_encode);
     dummy_var ^= ((int64_t) (void*) wire_hex_decode);
     dummy_var ^= ((int64_t) (void*) wire_hal_new_control);
+    dummy_var ^= ((int64_t) (void*) wire_hal_control);
+    dummy_var ^= ((int64_t) (void*) wire_hal_display_com);
     dummy_var ^= ((int64_t) (void*) wire_hal_new_com);
     dummy_var ^= ((int64_t) (void*) wire_hal_get_com_indexs);
     dummy_var ^= ((int64_t) (void*) wire_hal_read_logic_control);

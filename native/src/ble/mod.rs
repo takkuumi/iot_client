@@ -138,7 +138,7 @@ impl<'s> BytesParse<'s> {
     Some(result)
   }
 
-  pub fn parse_u16(&self, unit_id: u8) -> Option<Vec<u16>> {
+  pub fn parse_u16(&self) -> Option<Vec<u16>> {
     if !self.validate() {
       return None;
     }
@@ -157,6 +157,32 @@ impl<'s> BytesParse<'s> {
       let mut buf = [0u8; 2];
       buf.copy_from_slice(chunk);
       let val = u16::from_be_bytes(buf);
+      result.push(val);
+    }
+
+    Some(result)
+  }
+
+  pub fn parse_bool(&self) -> Option<Vec<u8>> {
+    if !self.validate() {
+      return None;
+    }
+
+    // +DATA=0,014,0103020000B844
+    let rang_e = self.deref().len() - 6;
+    let data = &self.deref()[20..rang_e];
+
+    let text = String::from_utf8_lossy(data);
+    let res = hex::decode(text.as_ref()).unwrap();
+
+    let chunks = res.chunks(2);
+
+    let mut result = Vec::new();
+    for chunk in chunks {
+      let mut buf = [0u8; 1];
+      buf.copy_from_slice(chunk);
+
+      let val = u8::from_be_bytes(buf);
       result.push(val);
     }
 
@@ -196,7 +222,7 @@ mod test {
     let res = pa.validate();
     eprintln!("= {}", res);
     if res {
-      let res = pa.parse_u16(1);
+      let res = pa.parse_u16();
       eprintln!("{:?}", res);
     }
   }

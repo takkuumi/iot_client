@@ -133,6 +133,56 @@ impl LogicControl {
     request
   }
 
+  pub fn generate_set_holdings(
+    unit_id: u8,
+    index: u8,
+    scene: u8,
+    v1: Vec<u8>,
+    v2: Vec<u8>,
+    v3: Vec<u8>,
+    v4: Vec<u8>,
+    v5: Vec<u8>,
+    v6: Vec<u8>,
+  ) -> Vec<u8> {
+    // create request object
+    let mut mreq = ModbusRequest::new(unit_id, ModbusProto::Rtu);
+
+    let mut values = Vec::<u16>::with_capacity(5);
+
+    values.push(u16::from_be_bytes([0, index]));
+    values.push(u16::from_be_bytes([0, scene]));
+
+    for ele in v1 {
+      values.push(u16::from_be_bytes([0, ele]));
+    }
+
+    for ele in v2 {
+      values.push(u16::from_be_bytes([0, ele]));
+    }
+
+    for ele in v3 {
+      values.push(u16::from_be_bytes([0, ele]));
+    }
+
+    for ele in v4 {
+      values.push(u16::from_be_bytes([0, ele]));
+    }
+
+    for ele in v5 {
+      values.push(u16::from_be_bytes([0, ele]));
+    }
+
+    for ele in v6 {
+      values.push(u16::from_be_bytes([0, ele]));
+    }
+
+    let mut request = Vec::<u8>::new();
+    mreq
+      .generate_set_holdings_bulk(2300, &values, &mut request)
+      .unwrap();
+    request
+  }
+
   pub fn generate_set_holding(unit_id: u8, reg: u16, value: u16) -> Vec<u8> {
     // create request object
     let mut mreq = ModbusRequest::new(unit_id, ModbusProto::Rtu);
@@ -152,6 +202,26 @@ impl LogicControl {
       .unwrap();
     request
   }
+
+  pub fn generate_get_coils(unit_id: u8, reg: u16, count: u16) -> Vec<u8> {
+    // create request object
+    let mut mreq = ModbusRequest::new(unit_id, ModbusProto::Rtu);
+
+    let mut request = Vec::<u8>::new();
+    mreq.generate_get_coils(reg, count, &mut request).unwrap();
+    request
+  }
+
+  pub fn generate_set_coils(unit_id: u8, reg: u16, values: &[bool]) -> Vec<u8> {
+    // create request object
+    let mut mreq = ModbusRequest::new(unit_id, ModbusProto::Rtu);
+
+    let mut request = Vec::<u8>::new();
+    mreq
+      .generate_set_coils_bulk(reg, values, &mut request)
+      .unwrap();
+    request
+  }
 }
 
 #[cfg(test)]
@@ -167,28 +237,6 @@ mod test {
     for i in 0..17 {
       eprintln!("    const {} = 0b{:08b};", (65 + i as u8) as char, i)
     }
-  }
-
-  #[test]
-  fn index_works() {
-    let mut com = super::Com::default();
-    com.set_index(1);
-    eprintln!("{:032b}", com.deref());
-    let mut com1 = super::Com::default();
-    com1.set_index(2);
-    let mut com2 = super::Com::default();
-    com2.set_index(3);
-
-    let mut a = com1.bitor(com2);
-
-    eprintln!("{:032b}", a.deref());
-
-    a.clear_index(3);
-
-    eprintln!("{:032b}", a.deref());
-
-    let vec_a = a.to_index();
-    eprintln!("{:?}", vec_a);
   }
 
   #[test]

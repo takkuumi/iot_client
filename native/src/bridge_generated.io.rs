@@ -7,12 +7,13 @@ pub extern "C" fn wire_ble_validate_response(port_: i64, data: *mut wire_uint_8_
 }
 
 #[no_mangle]
-pub extern "C" fn wire_ble_response_parse_u16(
-  port_: i64,
-  data: *mut wire_uint_8_list,
-  unit_id: u8,
-) {
-  wire_ble_response_parse_u16_impl(port_, data, unit_id)
+pub extern "C" fn wire_ble_response_parse_u16(port_: i64, data: *mut wire_uint_8_list) {
+  wire_ble_response_parse_u16_impl(port_, data)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_ble_response_parse_bool(port_: i64, data: *mut wire_uint_8_list) {
+  wire_ble_response_parse_bool_impl(port_, data)
 }
 
 #[no_mangle]
@@ -111,6 +112,21 @@ pub extern "C" fn wire_hal_generate_get_holdings(port_: i64, unit_id: u8, reg: u
 }
 
 #[no_mangle]
+pub extern "C" fn wire_hal_generate_get_coils(port_: i64, unit_id: u8, reg: u16, count: u16) {
+  wire_hal_generate_get_coils_impl(port_, unit_id, reg, count)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_hal_generate_set_coils(
+  port_: i64,
+  unit_id: u8,
+  reg: u16,
+  values: *mut wire_uint_8_list,
+) {
+  wire_hal_generate_set_coils_impl(port_, unit_id, reg, values)
+}
+
+#[no_mangle]
 pub extern "C" fn wire_hal_generate_set_holding(port_: i64, unit_id: u8, reg: u16, value: u16) {
   wire_hal_generate_set_holding_impl(port_, unit_id, reg, value)
 }
@@ -128,14 +144,33 @@ pub extern "C" fn wire_hex_decode(port_: i64, data: *mut wire_uint_8_list) {
 #[no_mangle]
 pub extern "C" fn wire_hal_new_control(
   port_: i64,
-  id: *mut wire_uint_8_list,
-  retry: u8,
   index: u8,
   scene: u8,
   com_in: *mut wire_Com,
   com_out: *mut wire_Com,
 ) {
-  wire_hal_new_control_impl(port_, id, retry, index, scene, com_in, com_out)
+  wire_hal_new_control_impl(port_, index, scene, com_in, com_out)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_hal_control(
+  port_: i64,
+  unit_id: u8,
+  index: u8,
+  scene: u8,
+  v1: *mut wire_uint_8_list,
+  v2: *mut wire_uint_8_list,
+  v3: *mut wire_uint_8_list,
+  v4: *mut wire_uint_8_list,
+  v5: *mut wire_uint_8_list,
+  v6: *mut wire_uint_8_list,
+) {
+  wire_hal_control_impl(port_, unit_id, index, scene, v1, v2, v3, v4, v5, v6)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_hal_display_com(port_: i64, com: *mut wire_Com) {
+  wire_hal_display_com_impl(port_, com)
 }
 
 #[no_mangle]

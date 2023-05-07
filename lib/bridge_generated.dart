@@ -45,15 +45,14 @@ class NativeImpl implements Native {
       );
 
   Future<Uint16List?> bleResponseParseU16(
-      {required Uint8List data, required int unitId, dynamic hint}) {
+      {required Uint8List data, dynamic hint}) {
     var arg0 = _platform.api2wire_uint_8_list(data);
-    var arg1 = api2wire_u8(unitId);
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) =>
-          _platform.inner.wire_ble_response_parse_u16(port_, arg0, arg1),
+          _platform.inner.wire_ble_response_parse_u16(port_, arg0),
       parseSuccessData: _wire2api_opt_uint_16_list,
       constMeta: kBleResponseParseU16ConstMeta,
-      argValues: [data, unitId],
+      argValues: [data],
       hint: hint,
     ));
   }
@@ -61,7 +60,26 @@ class NativeImpl implements Native {
   FlutterRustBridgeTaskConstMeta get kBleResponseParseU16ConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
         debugName: "ble_response_parse_u16",
-        argNames: ["data", "unitId"],
+        argNames: ["data"],
+      );
+
+  Future<Uint8List?> bleResponseParseBool(
+      {required Uint8List data, dynamic hint}) {
+    var arg0 = _platform.api2wire_uint_8_list(data);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) =>
+          _platform.inner.wire_ble_response_parse_bool(port_, arg0),
+      parseSuccessData: _wire2api_opt_uint_8_list,
+      constMeta: kBleResponseParseBoolConstMeta,
+      argValues: [data],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kBleResponseParseBoolConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "ble_response_parse_bool",
+        argNames: ["data"],
       );
 
   Future<SerialResponse> bleGetNdid({dynamic hint}) {
@@ -374,6 +392,54 @@ class NativeImpl implements Native {
         argNames: ["unitId", "reg", "count"],
       );
 
+  Future<String> halGenerateGetCoils(
+      {required int unitId,
+      required int reg,
+      required int count,
+      dynamic hint}) {
+    var arg0 = api2wire_u8(unitId);
+    var arg1 = api2wire_u16(reg);
+    var arg2 = api2wire_u16(count);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) =>
+          _platform.inner.wire_hal_generate_get_coils(port_, arg0, arg1, arg2),
+      parseSuccessData: _wire2api_String,
+      constMeta: kHalGenerateGetCoilsConstMeta,
+      argValues: [unitId, reg, count],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kHalGenerateGetCoilsConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "hal_generate_get_coils",
+        argNames: ["unitId", "reg", "count"],
+      );
+
+  Future<String> halGenerateSetCoils(
+      {required int unitId,
+      required int reg,
+      required Uint8List values,
+      dynamic hint}) {
+    var arg0 = api2wire_u8(unitId);
+    var arg1 = api2wire_u16(reg);
+    var arg2 = _platform.api2wire_uint_8_list(values);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) =>
+          _platform.inner.wire_hal_generate_set_coils(port_, arg0, arg1, arg2),
+      parseSuccessData: _wire2api_String,
+      constMeta: kHalGenerateSetCoilsConstMeta,
+      argValues: [unitId, reg, values],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kHalGenerateSetCoilsConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "hal_generate_set_coils",
+        argNames: ["unitId", "reg", "values"],
+      );
+
   Future<String> halGenerateSetHolding(
       {required int unitId,
       required int reg,
@@ -432,26 +498,22 @@ class NativeImpl implements Native {
         argNames: ["data"],
       );
 
-  Future<bool> halNewControl(
-      {required String id,
-      required int retry,
-      required int index,
+  Future<Uint8List> halNewControl(
+      {required int index,
       required int scene,
       required Com comIn,
       required Com comOut,
       dynamic hint}) {
-    var arg0 = _platform.api2wire_String(id);
-    var arg1 = api2wire_u8(retry);
-    var arg2 = api2wire_u8(index);
-    var arg3 = api2wire_u8(scene);
-    var arg4 = _platform.api2wire_box_autoadd_com(comIn);
-    var arg5 = _platform.api2wire_box_autoadd_com(comOut);
+    var arg0 = api2wire_u8(index);
+    var arg1 = api2wire_u8(scene);
+    var arg2 = _platform.api2wire_box_autoadd_com(comIn);
+    var arg3 = _platform.api2wire_box_autoadd_com(comOut);
     return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner
-          .wire_hal_new_control(port_, arg0, arg1, arg2, arg3, arg4, arg5),
-      parseSuccessData: _wire2api_bool,
+      callFfi: (port_) =>
+          _platform.inner.wire_hal_new_control(port_, arg0, arg1, arg2, arg3),
+      parseSuccessData: _wire2api_uint_8_list,
       constMeta: kHalNewControlConstMeta,
-      argValues: [id, retry, index, scene, comIn, comOut],
+      argValues: [index, scene, comIn, comOut],
       hint: hint,
     ));
   }
@@ -459,7 +521,70 @@ class NativeImpl implements Native {
   FlutterRustBridgeTaskConstMeta get kHalNewControlConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
         debugName: "hal_new_control",
-        argNames: ["id", "retry", "index", "scene", "comIn", "comOut"],
+        argNames: ["index", "scene", "comIn", "comOut"],
+      );
+
+  Future<String> halControl(
+      {required int unitId,
+      required int index,
+      required int scene,
+      required Uint8List v1,
+      required Uint8List v2,
+      required Uint8List v3,
+      required Uint8List v4,
+      required Uint8List v5,
+      required Uint8List v6,
+      dynamic hint}) {
+    var arg0 = api2wire_u8(unitId);
+    var arg1 = api2wire_u8(index);
+    var arg2 = api2wire_u8(scene);
+    var arg3 = _platform.api2wire_uint_8_list(v1);
+    var arg4 = _platform.api2wire_uint_8_list(v2);
+    var arg5 = _platform.api2wire_uint_8_list(v3);
+    var arg6 = _platform.api2wire_uint_8_list(v4);
+    var arg7 = _platform.api2wire_uint_8_list(v5);
+    var arg8 = _platform.api2wire_uint_8_list(v6);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner.wire_hal_control(
+          port_, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8),
+      parseSuccessData: _wire2api_String,
+      constMeta: kHalControlConstMeta,
+      argValues: [unitId, index, scene, v1, v2, v3, v4, v5, v6],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kHalControlConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "hal_control",
+        argNames: [
+          "unitId",
+          "index",
+          "scene",
+          "v1",
+          "v2",
+          "v3",
+          "v4",
+          "v5",
+          "v6"
+        ],
+      );
+
+  Future<String> halDisplayCom({required Com com, dynamic hint}) {
+    var arg0 = _platform.api2wire_box_autoadd_com(com);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner.wire_hal_display_com(port_, arg0),
+      parseSuccessData: _wire2api_String,
+      constMeta: kHalDisplayComConstMeta,
+      argValues: [com],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kHalDisplayComConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "hal_display_com",
+        argNames: ["com"],
       );
 
   Future<Com> halNewCom({required int value, dynamic hint}) {
@@ -781,21 +906,36 @@ class NativeWire implements FlutterRustBridgeWireBase {
   void wire_ble_response_parse_u16(
     int port_,
     ffi.Pointer<wire_uint_8_list> data,
-    int unit_id,
   ) {
     return _wire_ble_response_parse_u16(
       port_,
       data,
-      unit_id,
     );
   }
 
   late final _wire_ble_response_parse_u16Ptr = _lookup<
       ffi.NativeFunction<
-          ffi.Void Function(ffi.Int64, ffi.Pointer<wire_uint_8_list>,
-              ffi.Uint8)>>('wire_ble_response_parse_u16');
+          ffi.Void Function(ffi.Int64,
+              ffi.Pointer<wire_uint_8_list>)>>('wire_ble_response_parse_u16');
   late final _wire_ble_response_parse_u16 = _wire_ble_response_parse_u16Ptr
-      .asFunction<void Function(int, ffi.Pointer<wire_uint_8_list>, int)>();
+      .asFunction<void Function(int, ffi.Pointer<wire_uint_8_list>)>();
+
+  void wire_ble_response_parse_bool(
+    int port_,
+    ffi.Pointer<wire_uint_8_list> data,
+  ) {
+    return _wire_ble_response_parse_bool(
+      port_,
+      data,
+    );
+  }
+
+  late final _wire_ble_response_parse_boolPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Int64,
+              ffi.Pointer<wire_uint_8_list>)>>('wire_ble_response_parse_bool');
+  late final _wire_ble_response_parse_bool = _wire_ble_response_parse_boolPtr
+      .asFunction<void Function(int, ffi.Pointer<wire_uint_8_list>)>();
 
   void wire_ble_get_ndid(
     int port_,
@@ -1089,6 +1229,49 @@ class NativeWire implements FlutterRustBridgeWireBase {
       _wire_hal_generate_get_holdingsPtr
           .asFunction<void Function(int, int, int, int)>();
 
+  void wire_hal_generate_get_coils(
+    int port_,
+    int unit_id,
+    int reg,
+    int count,
+  ) {
+    return _wire_hal_generate_get_coils(
+      port_,
+      unit_id,
+      reg,
+      count,
+    );
+  }
+
+  late final _wire_hal_generate_get_coilsPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Int64, ffi.Uint8, ffi.Uint16,
+              ffi.Uint16)>>('wire_hal_generate_get_coils');
+  late final _wire_hal_generate_get_coils = _wire_hal_generate_get_coilsPtr
+      .asFunction<void Function(int, int, int, int)>();
+
+  void wire_hal_generate_set_coils(
+    int port_,
+    int unit_id,
+    int reg,
+    ffi.Pointer<wire_uint_8_list> values,
+  ) {
+    return _wire_hal_generate_set_coils(
+      port_,
+      unit_id,
+      reg,
+      values,
+    );
+  }
+
+  late final _wire_hal_generate_set_coilsPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(ffi.Int64, ffi.Uint8, ffi.Uint16,
+              ffi.Pointer<wire_uint_8_list>)>>('wire_hal_generate_set_coils');
+  late final _wire_hal_generate_set_coils =
+      _wire_hal_generate_set_coilsPtr.asFunction<
+          void Function(int, int, int, ffi.Pointer<wire_uint_8_list>)>();
+
   void wire_hal_generate_set_holding(
     int port_,
     int unit_id,
@@ -1146,8 +1329,6 @@ class NativeWire implements FlutterRustBridgeWireBase {
 
   void wire_hal_new_control(
     int port_,
-    ffi.Pointer<wire_uint_8_list> id,
-    int retry,
     int index,
     int scene,
     ffi.Pointer<wire_Com> com_in,
@@ -1155,8 +1336,6 @@ class NativeWire implements FlutterRustBridgeWireBase {
   ) {
     return _wire_hal_new_control(
       port_,
-      id,
-      retry,
       index,
       scene,
       com_in,
@@ -1168,15 +1347,82 @@ class NativeWire implements FlutterRustBridgeWireBase {
       ffi.NativeFunction<
           ffi.Void Function(
               ffi.Int64,
-              ffi.Pointer<wire_uint_8_list>,
-              ffi.Uint8,
               ffi.Uint8,
               ffi.Uint8,
               ffi.Pointer<wire_Com>,
               ffi.Pointer<wire_Com>)>>('wire_hal_new_control');
   late final _wire_hal_new_control = _wire_hal_new_controlPtr.asFunction<
-      void Function(int, ffi.Pointer<wire_uint_8_list>, int, int, int,
-          ffi.Pointer<wire_Com>, ffi.Pointer<wire_Com>)>();
+      void Function(
+          int, int, int, ffi.Pointer<wire_Com>, ffi.Pointer<wire_Com>)>();
+
+  void wire_hal_control(
+    int port_,
+    int unit_id,
+    int index,
+    int scene,
+    ffi.Pointer<wire_uint_8_list> v1,
+    ffi.Pointer<wire_uint_8_list> v2,
+    ffi.Pointer<wire_uint_8_list> v3,
+    ffi.Pointer<wire_uint_8_list> v4,
+    ffi.Pointer<wire_uint_8_list> v5,
+    ffi.Pointer<wire_uint_8_list> v6,
+  ) {
+    return _wire_hal_control(
+      port_,
+      unit_id,
+      index,
+      scene,
+      v1,
+      v2,
+      v3,
+      v4,
+      v5,
+      v6,
+    );
+  }
+
+  late final _wire_hal_controlPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Int64,
+              ffi.Uint8,
+              ffi.Uint8,
+              ffi.Uint8,
+              ffi.Pointer<wire_uint_8_list>,
+              ffi.Pointer<wire_uint_8_list>,
+              ffi.Pointer<wire_uint_8_list>,
+              ffi.Pointer<wire_uint_8_list>,
+              ffi.Pointer<wire_uint_8_list>,
+              ffi.Pointer<wire_uint_8_list>)>>('wire_hal_control');
+  late final _wire_hal_control = _wire_hal_controlPtr.asFunction<
+      void Function(
+          int,
+          int,
+          int,
+          int,
+          ffi.Pointer<wire_uint_8_list>,
+          ffi.Pointer<wire_uint_8_list>,
+          ffi.Pointer<wire_uint_8_list>,
+          ffi.Pointer<wire_uint_8_list>,
+          ffi.Pointer<wire_uint_8_list>,
+          ffi.Pointer<wire_uint_8_list>)>();
+
+  void wire_hal_display_com(
+    int port_,
+    ffi.Pointer<wire_Com> com,
+  ) {
+    return _wire_hal_display_com(
+      port_,
+      com,
+    );
+  }
+
+  late final _wire_hal_display_comPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Void Function(
+              ffi.Int64, ffi.Pointer<wire_Com>)>>('wire_hal_display_com');
+  late final _wire_hal_display_com = _wire_hal_display_comPtr
+      .asFunction<void Function(int, ffi.Pointer<wire_Com>)>();
 
   void wire_hal_new_com(
     int port_,

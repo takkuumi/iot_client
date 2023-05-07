@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:iot_client/ffi.dart';
+import 'package:iot_client/futs/hal.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
@@ -41,14 +42,14 @@ Map<int, String> _comout = Map.from({
   5: "Q6(517)",
   6: "Q7(518)",
   7: "Q8(519)",
-  8: "Q9(510)",
-  9: "Q10(9)",
-  10: "Q11(10)",
-  11: "Q12(11)",
-  12: "Q13(12)",
-  13: "Q14(13)",
-  14: "Q15(14)",
-  15: "Q16(15)",
+  8: "Q9(520)",
+  9: "Q10(521)",
+  10: "Q11(522)",
+  11: "Q12(523)",
+  12: "Q13(524)",
+  13: "Q14(525)",
+  14: "Q15(526)",
+  15: "Q16(527)",
 });
 
 Map<int, String> _comin = Map.from({
@@ -144,6 +145,40 @@ class LogicRule {
       debugPrint("=>${element.toString()}");
     });
   }
+
+  Future<List<LogicControl>> toLogicControl() async {
+    List<LogicControl> logicControls = [];
+
+    String? rtudata = await api.halControl(
+      unitId: 1,
+      index: index,
+      scene: rule,
+      v1: Uint8List.fromList(comIn[0]),
+      v2: Uint8List.fromList(comIn[1]),
+      v3: Uint8List.fromList(comIn[2]),
+      v4: Uint8List.fromList(comOut[0]),
+      v5: Uint8List.fromList(comOut[1]),
+      v6: Uint8List.fromList(comOut[2]),
+    );
+
+    debugPrint(comIn[0].join(','));
+    debugPrint(comIn[1].join(','));
+    debugPrint(comIn[2].join(','));
+
+    debugPrint(comOut[0].join(','));
+    debugPrint(comOut[1].join(','));
+    debugPrint(comOut[2].join(','));
+
+    if (rtudata != null) {
+      debugPrint("RTU:$rtudata");
+      bool res = await setHoldings(rtudata);
+      if (res) {
+        showSnackBar("保存成功");
+      }
+    }
+
+    return logicControls;
+  }
 }
 
 class LogicRuleItem extends StatefulWidget {
@@ -159,6 +194,10 @@ class LogicRuleItem extends StatefulWidget {
 class _LogicRuleItemState extends State<LogicRuleItem> {
   int getWidgetIndex() {
     return widget.logicRule.index;
+  }
+
+  LogicRule getLogicRule() {
+    return widget.logicRule;
   }
 
   void submitRule(int? value) {
@@ -375,24 +414,7 @@ class _LogicControlSettingState extends State<LogicControlSetting> {
   List<LogicRule> rules = [];
   List<GlobalKey<_LogicRuleItemState>> keys = [];
 
-  final List<int> cominit = [
-    -1,
-    -1,
-    -1,
-    -1,
-    -1,
-    -1,
-    -1,
-    -1,
-    -1,
-    -1,
-    -1,
-    -1,
-    -1,
-    -1,
-    -1,
-    -1
-  ];
+  final List<int> cominit = [-1, -1, -1, -1];
   void addLogicRule() {
     rules.add(LogicRule(
       index: rules.length + 1,
@@ -435,8 +457,10 @@ class _LogicControlSettingState extends State<LogicControlSetting> {
             TextButton(
               onPressed: () => {
                 // 保存逻辑配置
-                keys.forEach((element) {
-                  debugPrint("KEY ${element.currentState?.getWidgetIndex()}");
+                keys
+                    .where((source) => source.currentState != null)
+                    .forEach((element) async {
+                  element.currentState?.getLogicRule().toLogicControl();
                 })
               },
               child: Text("保存"),

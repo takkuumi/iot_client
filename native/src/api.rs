@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use crate::hal::{self, Com};
 
 use super::{
@@ -10,8 +12,12 @@ pub fn ble_validate_response(data: Vec<u8>) -> bool {
   BytesParse::new(&data).validate()
 }
 
-pub fn ble_response_parse_u16(data: Vec<u8>, unit_id: u8) -> Option<Vec<u16>> {
-  BytesParse::new(&data).parse_u16(unit_id)
+pub fn ble_response_parse_u16(data: Vec<u8>) -> Option<Vec<u16>> {
+  BytesParse::new(&data).parse_u16()
+}
+
+pub fn ble_response_parse_bool(data: Vec<u8>) -> Option<Vec<u8>> {
+  BytesParse::new(&data).parse_bool()
 }
 
 pub fn ble_get_ndid() -> SerialResponse {
@@ -82,6 +88,18 @@ pub fn hal_generate_get_holdings(unit_id: u8, reg: u16, count: u16) -> String {
   hex::encode_upper(LogicControl::generate_get_holdings(unit_id, reg, count))
 }
 
+pub fn hal_generate_get_coils(unit_id: u8, reg: u16, count: u16) -> String {
+  hex::encode_upper(LogicControl::generate_get_coils(unit_id, reg, count))
+}
+
+pub fn hal_generate_set_coils(unit_id: u8, reg: u16, values: Vec<u8>) -> String {
+  let mut result = Vec::new();
+  for value in values {
+    result.push(value != 0);
+  }
+  hex::encode_upper(LogicControl::generate_set_coils(unit_id, reg, &result))
+}
+
 pub fn hal_generate_set_holding(unit_id: u8, reg: u16, value: u16) -> String {
   hex::encode_upper(LogicControl::generate_set_holding(unit_id, reg, value))
 }
@@ -94,32 +112,35 @@ pub fn hex_decode(data: String) -> Vec<u8> {
   hex::decode(data).unwrap_or_default()
 }
 
-pub fn hal_new_control(
-  id: String,
-  retry: u8,
-  index: u8,
-  scene: u8,
-  com_in: hal::Com,
-  com_out: hal::Com,
-) -> bool {
+pub fn hal_new_control(index: u8, scene: u8, com_in: hal::Com, com_out: hal::Com) -> Vec<u8> {
   let logic_control = hal::LogicControl {
     index,
     scene,
     com_in,
     com_out,
   };
-  let bytes = logic_control.bytes_u16();
-  let mut start = 2300 + index as u16 * 10;
-  for (index, value) in bytes.into_iter().enumerate() {
-    let reg = start + index as u16;
-    let data = hal::LogicControl::generate_set_holding(1, reg, value);
 
-    if at_command::at_ndrpt_data(&id, &data, retry).is_err() {
-      return false;
-    }
-  }
+  logic_control.to_modbus()
+}
 
-  true
+pub fn hal_control(
+  unit_id: u8,
+  index: u8,
+  scene: u8,
+  v1: Vec<u8>,
+  v2: Vec<u8>,
+  v3: Vec<u8>,
+  v4: Vec<u8>,
+  v5: Vec<u8>,
+  v6: Vec<u8>,
+) -> String {
+  let res = hal::LogicControl::generate_set_holdings(unit_id, index, scene, v1, v2, v3, v4, v5, v6);
+
+  hex::encode_upper(res)
+}
+
+pub fn hal_display_com(com: Com) -> String {
+  format!("{:032b}", com.deref())
 }
 
 pub fn hal_new_com(value: u32) -> Com {
@@ -129,7 +150,7 @@ pub fn hal_new_com(value: u32) -> Com {
 }
 
 pub fn hal_get_com_indexs(indexs: Vec<u8>) -> Com {
-  let mut com = Com::default();
+  let mut com = Com(0);
   for index in indexs {
     com.set_index(index + 1);
   }

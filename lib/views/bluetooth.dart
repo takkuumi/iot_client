@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'package:iot_client/ffi.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_scan_bluetooth/flutter_scan_bluetooth.dart';
@@ -32,17 +31,6 @@ class _BluetoothState extends State<Bluetooth> {
   }
 
   Future<void> scanBleDevice() async {
-    if (isScaning) {
-      return;
-    }
-
-    if (mounted) {
-      mountedState(() {
-        isScaning = true;
-        stateMsg = '正在扫描';
-      });
-    }
-
     try {
       String responseText = '';
 
@@ -78,11 +66,6 @@ class _BluetoothState extends State<Bluetooth> {
       mountedState(() {
         stateMsg = '扫描失败，请手动点击扫描按扭重试！';
       });
-    } finally {
-      mountedState(() {
-        isScaning = false;
-        stateMsg = '';
-      });
     }
   }
 
@@ -104,8 +87,24 @@ class _BluetoothState extends State<Bluetooth> {
   Timer? timer;
 
   void setTimer() {
+    if (timer != null) {
+      timer?.cancel();
+      timer = null;
+    }
     timer = Timer.periodic(timerDuration, (timer) async {
-      scanBleDevice();
+      if (isScaning) {
+        return;
+      }
+
+      mountedState(() {
+        isScaning = true;
+        stateMsg = '正在扫描';
+      });
+      await scanBleDevice();
+      mountedState(() {
+        isScaning = false;
+        stateMsg = '';
+      });
     });
   }
 
@@ -144,7 +143,6 @@ class _BluetoothState extends State<Bluetooth> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (mounted) {
-        await scanBleDevice();
         setTimer();
       }
     });

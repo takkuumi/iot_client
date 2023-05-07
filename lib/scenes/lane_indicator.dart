@@ -74,7 +74,7 @@ class _LaneIndicatorState extends State<LaneIndicator>
   int? ot3_4;
 
   @override
-  bool get wantKeepAlive => false;
+  bool get wantKeepAlive => true;
 
   void tabListener() {
     if (tabController.index == 0) {
@@ -163,9 +163,8 @@ class _LaneIndicatorState extends State<LaneIndicator>
   void initState() {
     super.initState();
     tabController = TabController(length: 2, vsync: this);
-    tabController.animateTo(0);
-
     tabController.addListener(tabListener);
+    tabController.animateTo(0);
   }
 
   void setTimer() {

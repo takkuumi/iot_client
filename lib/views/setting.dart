@@ -88,7 +88,9 @@ class _SettingAppState extends State<SettingApp> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await readHoldings1();
+      if (mounted) {
+        await readHoldings1();
+      }
     });
   }
 

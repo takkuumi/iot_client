@@ -143,8 +143,10 @@ class _BluetoothState extends State<Bluetooth> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      scanBleDevice();
-      setTimer();
+      if (mounted) {
+        await scanBleDevice();
+        setTimer();
+      }
     });
   }
 

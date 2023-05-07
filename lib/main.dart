@@ -4,7 +4,7 @@ import 'my_app.dart';
 import 'package:json_theme/json_theme.dart';
 import 'dart:convert'; // For jsonDecode
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final themeStr = await rootBundle.loadString('assets/appainter_theme.json');
@@ -19,10 +19,9 @@ void main() async {
   //   SystemUiMode.manual,
   //   overlays: <SystemUiOverlay>[SystemUiOverlay.top],
   // );
-  SystemChrome.setPreferredOrientations([
+  await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
-  ]).then((_) {
-    runApp(MyApp(theme: theme));
-  });
+  ]);
+  runApp(MyApp(theme: theme));
 }

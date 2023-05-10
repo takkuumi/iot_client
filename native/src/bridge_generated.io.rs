@@ -82,11 +82,6 @@ pub extern "C" fn wire_ble_lecconn(port_: i64, addr: *mut wire_uint_8_list, add_
 }
 
 #[no_mangle]
-pub extern "C" fn wire_ble_lecconn2(port_: i64, addr: *mut wire_uint_8_list, add_type: u8) {
-  wire_ble_lecconn2_impl(port_, addr, add_type)
-}
-
-#[no_mangle]
 pub extern "C" fn wire_ble_lecconn_addr(port_: i64, addr: *mut wire_uint_8_list) {
   wire_ble_lecconn_addr_impl(port_, addr)
 }

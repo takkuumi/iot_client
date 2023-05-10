@@ -31,30 +31,34 @@ class _BluetoothState extends State<Bluetooth> {
   }
 
   Future<void> scanBleDevice() async {
+    isScaning = true;
+    mountedState(() {
+      stateMsg = '正在扫描';
+    });
     try {
+      debugPrint(">>>>>>>>>>>>>>>>>>>>>>>>start scan");
       String responseText = '';
 
       SerialResponse scanRes = await api.bleScan(typee: 1);
 
       if (scanRes.data != null) {
         responseText += String.fromCharCodes(scanRes.data!);
-        debugPrint(responseText);
       } else {
         mountedState(() {
           stateMsg = '扫描失败，等待下一次重试！';
         });
       }
 
-      SerialResponse chinfoRes = await api.bleChinfo();
+      // SerialResponse chinfoRes = await api.bleChinfo();
 
-      if (chinfoRes.data != null) {
-        responseText += String.fromCharCodes(chinfoRes.data!);
-        debugPrint(responseText);
-      } else {
-        mountedState(() {
-          stateMsg = '查询设备信息失败，请手动点击扫描按扭重试！';
-        });
-      }
+      // if (chinfoRes.data != null) {
+      //   responseText += String.fromCharCodes(chinfoRes.data!);
+      //   debugPrint(responseText);
+      // } else {
+      //   mountedState(() {
+      //     stateMsg = '查询设备信息失败，请手动点击扫描按扭重试！';
+      //   });
+      // }
 
       List<Device> items = parseDevices(responseText);
       for (Device element in items) {
@@ -62,6 +66,7 @@ class _BluetoothState extends State<Bluetooth> {
 
         devices.add(element);
       }
+      debugPrint(">>>>>>>>>>>>>>>>>>>>>>>>end scan");
     } catch (_) {
       mountedState(() {
         stateMsg = '扫描失败，请手动点击扫描按扭重试！';
@@ -69,88 +74,102 @@ class _BluetoothState extends State<Bluetooth> {
     }
   }
 
-  Future<bool> connect(String addr) async {
-    debugPrint("connect: $addr");
-    SerialResponse res = await api.bleLecconnAddr(addr: addr);
-    if (res.data == null) {
-      return false;
-    }
+  Future<bool> connect(int index, String mac, int type) async {
+    debugPrint("connect to: $mac$type");
+    SerialResponse res = await api.bleLecconn(addr: mac, addType: type);
 
+    debugPrint("connect result: ${String.fromCharCodes(res.data!)}");
     SerialResponse res2 = await api.bleChinfo();
     if (res2.data == null) {
       return false;
     }
-    debugPrint(String.fromCharCodes(res2.data!));
-    return true;
+    String chinfos = String.fromCharCodes(res2.data!);
+    debugPrint("chinfo: $chinfos");
+    if (chinfos.contains(mac)) {
+      bool res = chinfos
+          .split(RegExp(r"\r\n"))
+          .where((s) => s.startsWith("+CHINFO=") && s.contains(mac))
+          .any((element) {
+        RegExp m = RegExp("\\+CHINFO=$index,3,(1|0),$mac");
+        return m.hasMatch(element);
+      });
+
+      return res;
+    }
+    return false;
   }
 
   Timer? timer;
 
-  void setTimer() {
+  void scanComplete() {
+    isScaning = false;
+    mountedState(() {
+      stateMsg = '';
+    });
+  }
+
+  void cleanTimer() {
     if (timer != null) {
       timer?.cancel();
       timer = null;
     }
-    timer = Timer.periodic(timerDuration, (timer) async {
+  }
+
+  void setTimer() {
+    cleanTimer();
+    timer = Timer.periodic(const Duration(seconds: 60), (timer) {
       if (isScaning) {
         return;
       }
-
-      mountedState(() {
-        isScaning = true;
-        stateMsg = '正在扫描';
-      });
-      await scanBleDevice();
-      mountedState(() {
-        isScaning = false;
-        stateMsg = '';
-      });
+      scanBleDevice().whenComplete(scanComplete);
     });
-  }
-
-  Future<void> connectDevice(Device device) async {
-    debugPrint("connectDevice ${device.toString()}");
-    bool? result = await showSettingDialog();
-    if (result != null && result) {
-      final connAddr = '${device.mac}${device.addressType}';
-      timer?.cancel();
-      final conn = await connect(connAddr);
-      setTimer();
-      debugPrint('connection: $conn');
-      final prefs = await _prefs;
-
-      // 查找已存在的地址断开连接
-      final int? index = prefs.getInt("index");
-      if (index != null) {
-        await api.bleLedisc(index: index);
-      }
-
-      //设置新连接
-      bool saved = await prefs.setString("mesh", connAddr);
-      await prefs.setInt("index", device.no);
-
-      if (saved) {
-        showSnackBar("设置成功");
-      } else {
-        showSnackBar("设置失败");
-      }
-    }
   }
 
   @override
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (mounted) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      scanBleDevice().then((value) {
         setTimer();
-      }
+      }).whenComplete(scanComplete);
     });
+  }
+
+  Future<void> connectDevice(Device device) async {
+    bool? result = await showSettingDialog();
+    if (result != null && result) {
+      await api.bleLedisc(index: device.no);
+      // 查找已存在的地址断开连接
+      final prefs = await _prefs;
+      int? current = prefs.getInt("index");
+      if (current != null) {
+        await api.bleLedisc(index: current);
+      }
+
+      final conn = await connect(device.no, device.mac, device.addressType);
+
+      if (!conn) {
+        showSnackBar("连接失败");
+        return;
+      }
+
+      showSnackBar("连接成功");
+      debugPrint('connection: $conn');
+
+      // 设置连接状态
+      devices.where((d) => d.mac == device.mac).first.connected = true;
+      mountedState(() {});
+
+      //设置新连接的地址
+      await prefs.setString("mesh", '${device.mac}${device.addressType}');
+      await prefs.setInt("index", device.no);
+    }
   }
 
   @override
   void dispose() {
-    timer?.cancel();
+    cleanTimer();
     super.dispose();
   }
 
@@ -182,6 +201,27 @@ class _BluetoothState extends State<Bluetooth> {
     child: Text("没有发现设备,请点击扫描按钮进行扫描"),
   );
 
+  final decoration = BoxDecoration(
+    borderRadius: BorderRadius.circular(10),
+    boxShadow: const [
+      BoxShadow(
+        color: Color.fromRGBO(221, 221, 221, 1),
+        offset: Offset(
+          5.0,
+          5.0,
+        ),
+        blurRadius: 10.0,
+        spreadRadius: 2.0,
+      ), //BoxShadow
+      BoxShadow(
+        color: Colors.white,
+        offset: Offset(0.0, 0.0),
+        blurRadius: 0.0,
+        spreadRadius: 0.0,
+      ), //BoxShadow
+    ],
+  );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -197,12 +237,26 @@ class _BluetoothState extends State<Bluetooth> {
                       itemCount: devices.length,
                       itemBuilder: (BuildContext context, int index) {
                         final Device device = devices[index];
-                        return ListTile(
-                          title: Text('名 称: ${device.name}'),
-                          subtitle: Text('MAC地址: ${device.mac}'),
-                          onTap: () async {
-                            await connectDevice(device);
-                          },
+
+                        return Container(
+                          padding: EdgeInsets.all(10),
+                          decoration: decoration,
+                          child: ListTile(
+                            leading: Icon(Icons.bluetooth,
+                                color: device.connected
+                                    ? Colors.blueAccent
+                                    : Colors.grey),
+                            title: Text('${device.name}'),
+                            subtitle: Text('MAC: ${device.mac}'),
+                            trailing: Text('RSSI:${device.rssi}'),
+                            dense: true,
+                            onTap: () async {
+                              // 清理定时器
+                              cleanTimer();
+                              await connectDevice(device);
+                              setTimer();
+                            },
+                          ),
                         );
                       },
                     ),

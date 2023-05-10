@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:iot_client/futs/ble.dart';
 import 'package:iot_client/views/bluetooth.dart';
 import 'package:iot_client/views/setting.dart';
 
@@ -20,6 +21,17 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   int _bottomNavigationBarIndex = homeTab;
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      disconectAll().whenComplete(() {
+        debugPrint("断开所有蓝牙连接");
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

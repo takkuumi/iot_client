@@ -1,3 +1,10 @@
+mod device;
+mod eui48;
+mod indexed;
+mod memory;
+pub mod serial;
+mod utils;
+
 use std::ops::{BitOr, Deref};
 
 use bitflags::bitflags;

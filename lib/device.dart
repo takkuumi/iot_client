@@ -4,8 +4,12 @@ class Device {
   int no;
   int addressType;
   String mac;
+  int rssi;
   String name;
-  Device(this.no, this.addressType, this.mac, this.name);
+  bool connected = false;
+
+  Device(this.no, this.addressType, this.mac, this.rssi, this.name,
+      this.connected);
 
   bool contains(String name) {
     return this.name == name;
@@ -37,11 +41,12 @@ List<Device> parseDevices(String text) {
       int no = int.parse(items[0]);
       int addressType = int.parse(items[1]);
       String mac = items[2];
+      int rssi = int.parse(items[3]);
       int length = int.parse(items[4]);
       String name = items[5];
 
       if (name.length == length) {
-        devices.add(Device(no, addressType, mac, name));
+        devices.add(Device(no, addressType, mac, rssi, name, false));
       }
     }
   });

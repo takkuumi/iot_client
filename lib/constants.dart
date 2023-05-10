@@ -13,13 +13,13 @@ void showSnackBar(String msg, [GlobalKey<ScaffoldMessengerState>? key]) {
   if (key != null) {
     key.currentState?.showSnackBar(SnackBar(
       content: Text(msg),
-      duration: Duration(milliseconds: 260),
+      duration: Duration(milliseconds: 1000),
     ));
     return;
   }
   rootScaffoldMessengerKey.currentState?.showSnackBar(SnackBar(
     content: Text(msg),
-    duration: Duration(milliseconds: 260),
+    duration: Duration(milliseconds: 1000),
   ));
 }
 

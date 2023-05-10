@@ -294,16 +294,6 @@ class _SettingAppState extends State<SettingApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('逻辑控制配置'),
-        centerTitle: true,
-        actions: [
-          TextButton(
-            onPressed: readHoldings1,
-            child: Text("读取"),
-          )
-        ],
-      ),
       body: SettingsList(
         platform: selectedPlatform,
         sections: [
@@ -447,6 +437,11 @@ class _SettingAppState extends State<SettingApp> {
             ],
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.sync),
+        tooltip: "同步",
+        onPressed: readHoldings1,
       ),
     );
   }

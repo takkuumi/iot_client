@@ -63,11 +63,6 @@ pub fn ble_scan(typee: u8) -> SerialResponse {
 pub fn ble_lecconn(addr: String, add_type: u8) -> SerialResponse {
   at_command::lecconn(addr.as_str(), add_type)
 }
-
-pub fn ble_lecconn2(addr: String, add_type: u8) -> SerialResponse {
-  at_command::lecconn2(addr.as_str(), add_type)
-}
-
 pub fn ble_lecconn_addr(addr: String) -> SerialResponse {
   at_command::lecconn_addr(addr.as_str())
 }

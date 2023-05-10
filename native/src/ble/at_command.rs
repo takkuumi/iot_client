@@ -1,4 +1,4 @@
-use crate::serial::{send_scan_serialport, send_utilok_serialport};
+use crate::serial::send_serialport_until;
 
 use super::{crc_16, send_serialport, SerialResponse};
 
@@ -38,13 +38,15 @@ fn try_until(data: &[u8], retry: u8) -> SerialResponse {
   let mut max_retry: u8 = 0;
   loop {
     if max_retry > retry {
-      return SerialResponse::new_err();
+      let mut resp = SerialResponse::default();
+      resp.set_err(crate::serial::ResponseState::MaxRetry);
+      return resp;
     }
     let res = send_serialport(data);
     if res.is_err() {
       let _ = send_serialport(ble_at::AT_REBOOT.as_bytes());
       eprintln!("start reboot...");
-      std::thread::sleep(core::time::Duration::from_millis(100));
+      std::thread::sleep(core::time::Duration::from_millis(10));
       eprintln!("rebooted!");
       max_retry += 1;
       continue;
@@ -54,28 +56,28 @@ fn try_until(data: &[u8], retry: u8) -> SerialResponse {
 }
 
 pub fn scan(typee: u8) -> SerialResponse {
-  let data = format!("{}={}\r\n", ble_at::AT_SCAN, typee);
-  send_scan_serialport(data.as_bytes())
+  let data = format!("{}={}", ble_at::AT_SCAN, typee);
+  send_serialport_until(data.as_bytes(), 100, b"}\r\n")
 }
 
 pub fn lecconn(addr: &str, add_type: u8) -> SerialResponse {
   let data = format!("{}={}{}", ble_at::AT_LECCONN, addr, add_type);
-  send_serialport(data.as_bytes())
+  send_serialport_until(data.as_bytes(), 50, b"OK\r\n")
 }
 
-pub fn lecconn2(addr: &str, add_type: u8) -> SerialResponse {
-  let data = format!("{}={}{},FFF0,FFF2,FFF1", ble_at::AT_LECCONN, addr, add_type);
-  send_serialport(data.as_bytes())
-}
+// pub fn lecconn2(addr: &str, add_type: u8) -> SerialResponse {
+//   let data = format!("{}={}{},FFF0,FFF2,FFF1", ble_at::AT_LECCONN, addr, add_type);
+//   send_serialport(data.as_bytes())
+// }
 
 pub fn lecconn_addr(addr: &str) -> SerialResponse {
   let data = format!("{}={}", ble_at::AT_LECCONN, addr);
-  send_serialport(data.as_bytes())
+  send_serialport_until(data.as_bytes(), 50, b"OK\r\n")
 }
 
 pub fn ledisc(index: u8) -> SerialResponse {
   let data = format!("{}={}", ble_at::AT_LEDISC, index);
-  send_serialport(data.as_bytes())
+  send_serialport_until(data.as_bytes(), 5, b"OK\r\n")
 }
 
 pub fn lesend(index: u8, data: &str) -> SerialResponse {
@@ -84,7 +86,7 @@ pub fn lesend(index: u8, data: &str) -> SerialResponse {
 }
 
 pub fn chinfo() -> SerialResponse {
-  send_serialport(ble_at::AT_CHINFO.as_bytes())
+  send_serialport_until(ble_at::AT_CHINFO.as_bytes(), 100, b"OK\r\n")
 }
 
 pub fn get_ndid() -> SerialResponse {

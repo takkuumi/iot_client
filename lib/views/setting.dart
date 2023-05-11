@@ -376,7 +376,7 @@ class _SettingAppState extends State<SettingApp> {
             title: Text('配置'),
             tiles: <SettingsTile>[
               SettingsTile.navigation(
-                leading: Icon(Icons.bluetooth_connected),
+                leading: Icon(Icons.settings_applications_outlined),
                 title: Text('逻辑配置服务'),
                 onPressed: (context) {
                   Navigation.navigateTo(
@@ -386,7 +386,7 @@ class _SettingAppState extends State<SettingApp> {
                 },
               ),
               SettingsTile.navigation(
-                leading: Icon(Icons.bluetooth_connected),
+                leading: Icon(Icons.settings_brightness_outlined),
                 title: Text('RS485配置'),
                 onPressed: (context) {
                   Navigation.navigateTo(
@@ -420,7 +420,7 @@ class _SettingAppState extends State<SettingApp> {
                 ),
               ),
               SettingsTile.navigation(
-                leading: Icon(Icons.logout),
+                leading: Icon(Icons.account_circle),
                 title: Text('关于我们'),
               ),
               SettingsTile.navigation(
@@ -437,7 +437,7 @@ class _SettingAppState extends State<SettingApp> {
         tooltip: "同步",
         onPressed: () async {
           if (mounted) {
-            await EasyLoading.show(status: '读取中...');
+            EasyLoading.show(status: '读取中...');
             await readHoldings1().whenComplete(() {
               debugPrint("读取完成");
               EasyLoading.dismiss();

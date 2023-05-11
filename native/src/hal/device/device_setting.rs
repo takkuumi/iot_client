@@ -1,7 +1,4 @@
-use super::hal_mmr;
-use super::utils::Hex;
-use super::Indexed;
-use super::{Setting, SettingDefault};
+use super::{hal_mmr, utils::Hex, Indexed, Setting, SettingDefault};
 use serde::{Deserialize, Serialize};
 use std::hash::Hash;
 

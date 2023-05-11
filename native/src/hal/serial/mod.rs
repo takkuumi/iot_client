@@ -202,9 +202,14 @@ impl TryInto<u16> for Configuration {
 #[cfg(test)]
 mod test {
 
-  use super::{baud_rate::BaudRate, Configuration};
   use super::{
-    data_bit::DataBit, parity::Parity, port_type::PortType, stop_bit::StopBit, undefine::Undefine,
+    baud_rate::BaudRate,
+    data_bit::DataBit,
+    parity::Parity,
+    port_type::PortType,
+    stop_bit::StopBit,
+    undefine::Undefine,
+    Configuration,
   };
 
   // 数据长度   b0         9位        （0为:8位  1为：9位）

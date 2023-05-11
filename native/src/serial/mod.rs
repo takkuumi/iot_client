@@ -56,7 +56,7 @@ fn open_tty_swk0(millis: u64) -> Result<Box<dyn serialport::SerialPort>, serialp
   serialport::new("/dev/ttySWK0", 115_200)
     .data_bits(DataBits::Eight)
     .stop_bits(StopBits::One)
-    .flow_control(FlowControl::Software)
+    .flow_control(FlowControl::None)
     .timeout(core::time::Duration::from_millis(millis))
     .open()
 }

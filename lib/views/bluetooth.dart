@@ -150,7 +150,7 @@ class _BluetoothState extends State<Bluetooth> {
       final conn = await connect(device.no, device.mac, device.addressType);
 
       if (!conn) {
-        showSnackBar("连接失败");
+        showSnackBar("连接失败,请重试");
         return;
       }
 
@@ -250,11 +250,10 @@ class _BluetoothState extends State<Bluetooth> {
                             subtitle: Text('MAC: ${device.mac}'),
                             trailing: Text('RSSI:${device.rssi}'),
                             dense: true,
-                            onTap: () async {
+                            onTap: () {
                               // 清理定时器
                               cleanTimer();
-                              await connectDevice(device);
-                              setTimer();
+                              connectDevice(device).whenComplete(setTimer);
                             },
                           ),
                         );
@@ -279,8 +278,12 @@ class _BluetoothState extends State<Bluetooth> {
         child: Icon(Icons.radar),
         tooltip: "扫描",
         onPressed: () {
-          timer?.cancel();
-          setTimer();
+          if (isScaning) {
+            return showSnackBar("正在扫描中,请稍后");
+          }
+          // 清理定时器
+          cleanTimer();
+          scanBleDevice().whenComplete(setTimer);
         },
       ),
     );

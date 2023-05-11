@@ -4,7 +4,8 @@ use serde::{Deserialize, Serialize};
 
 use super::{
   utils::{Hex, IPv4, MacAdd},
-  DeviceSetting, Setting,
+  DeviceSetting,
+  Setting,
 };
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]

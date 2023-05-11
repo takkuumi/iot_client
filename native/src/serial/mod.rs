@@ -1,3 +1,4 @@
+use regex::bytes::Regex;
 use serialport::{ClearBuffer, DataBits, FlowControl, StopBits};
 
 // serialport::new("/dev/tty.usbserial-1430", 115200)
@@ -232,4 +233,66 @@ pub fn send_serialport_until(data: &[u8], max_try: u16, needle: &[u8]) -> Serial
   let _ = port.write(&data);
 
   read_serialport_until(&mut port, max_try, needle)
+}
+
+fn read_lesend_data(port: &mut Box<dyn serialport::SerialPort>, max_try: u16) -> SerialResponse {
+  let mut response = SerialResponse::default();
+  let mut buffer = Vec::<u8>::with_capacity(80);
+
+  let mut retry: u16 = 0;
+  loop {
+    if buffer.len() > 10 {
+      let resp_text = String::from_utf8_lossy(&buffer);
+      if resp_text.contains("+DATA") {
+        let re: Regex = Regex::new(r"\+DATA=(?P<a>\d+),(?P<length>\d+),(?P<data>\S+)").unwrap();
+        if let Some(caps) = re.captures(&buffer) {
+          let length = caps.name("length");
+          let data = caps.name("data");
+
+          if let (Some(length), Some(data)) = (length, data) {
+            let length = String::from_utf8_lossy(length.as_bytes())
+              .parse::<usize>()
+              .unwrap();
+            if data.len() == length {
+              response.set_ok(&buffer);
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    if retry >= max_try {
+      response.set_err(ResponseState::MaxRetry);
+      break;
+    }
+    let mut resp_buf = [0_u8; 6];
+    if let Ok(size) = port.read(&mut resp_buf) {
+      if size > 0 {
+        eprintln!("{}", String::from_utf8_lossy(&resp_buf));
+        buffer.extend_from_slice(&resp_buf[..size]);
+      }
+    } else {
+      retry += 1;
+    }
+  }
+
+  response
+}
+
+#[must_use]
+pub fn lesend_serialport(data: &[u8], max_try: u16) -> SerialResponse {
+  let mut response = SerialResponse::default();
+
+  let tty_device = open_tty_swk0(500);
+  if tty_device.is_err() {
+    response.state = ResponseState::FailedOpenDevice;
+    return response;
+  }
+  let mut port = tty_device.unwrap();
+
+  let data = wrap_send_data(data);
+  let _ = port.write(&data);
+
+  read_lesend_data(&mut port, max_try)
 }

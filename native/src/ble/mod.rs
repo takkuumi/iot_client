@@ -1,7 +1,7 @@
 pub mod at_command;
 mod crc16;
 
-use super::serial::{send_serialport, SerialResponse};
+use super::serial::{lesend_serialport, send_serialport, send_serialport_until, SerialResponse};
 use crc16::crc_16;
 use regex::Regex;
 use rmodbus::{client::ModbusRequest, ModbusProto};
@@ -211,6 +211,7 @@ mod test {
     time::Duration,
   };
 
+  use regex::bytes::Regex;
   use rmodbus::{client::ModbusRequest, guess_response_frame_len, ModbusProto};
 
   #[test]
@@ -225,6 +226,24 @@ mod test {
       let res = pa.parse_u16();
       eprintln!("{:?}", res);
     }
+  }
+
+  #[test]
+  fn match_works() {
+    let text = "\r\n+DATA=0,170,010350000200C8006401F401F501F601F713881389138A138B00C000A8000100C800FF00FF00FF000000C000A8000100010072007200720072000000100039000F00710045138900C000A800010096000110003F06\r\n";
+
+    let re: Regex = Regex::new(r"\+DATA=(?P<a>\d+),(?P<length>\d+),(?P<data>\S+)").unwrap();
+
+    let res = re.is_match(text.as_bytes());
+
+    eprintln!("res: {}", res);
+
+    let caps = re.captures(text.as_bytes()).unwrap();
+    let res1 = caps.name("length");
+    eprintln!("res1: {:?}", res1);
+
+    let res2 = caps.name("data");
+    eprintln!("res1: {:?}", res2);
   }
 
   #[test]

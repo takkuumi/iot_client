@@ -23,8 +23,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 Future<List<int>> getHoldings(int reg, int count) async {
   List<int> res = List<int>.empty(growable: true);
 
-  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-  final SharedPreferences prefs = await _prefs;
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
   String? addr = prefs.getString("mesh");
 
   if (addr != null) {
@@ -55,8 +54,7 @@ Future<List<int>> getHoldings(int reg, int count) async {
 }
 
 Future<int?> getCoils(int reg, int count) async {
-  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-  final SharedPreferences prefs = await _prefs;
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
   String? addr = prefs.getString("mesh");
 
   if (addr != null) {
@@ -87,8 +85,7 @@ Future<int?> getCoils(int reg, int count) async {
 }
 
 Future<bool?> getCoil(int reg) async {
-  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-  final SharedPreferences prefs = await _prefs;
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
   String? addr = prefs.getString("mesh");
 
   if (addr != null) {
@@ -118,8 +115,7 @@ Future<bool?> getCoil(int reg) async {
 }
 
 Future<bool> setCoils(int reg, List<bool> values) async {
-  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-  final SharedPreferences prefs = await _prefs;
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
   String? addr = prefs.getString("mesh");
 
   if (addr != null) {
@@ -147,8 +143,7 @@ Future<bool> setCoils(int reg, List<bool> values) async {
 }
 
 Future<bool> setHoldings(String data) async {
-  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-  final SharedPreferences prefs = await _prefs;
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
   String? addr = prefs.getString("mesh");
 
   if (addr != null) {

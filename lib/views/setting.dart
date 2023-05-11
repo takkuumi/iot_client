@@ -63,6 +63,8 @@ class _SettingAppState extends State<SettingApp> {
 
     List<int> data = data1 + data2;
 
+    debugPrint("data: ${data.join(',')}");
+
     if (data.length < 80) {
       return;
     }
@@ -89,7 +91,9 @@ class _SettingAppState extends State<SettingApp> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (mounted) {
-        await readHoldings1();
+        await readHoldings1().whenComplete(() {
+          debugPrint("读取完成");
+        });
       }
     });
   }
@@ -441,7 +445,13 @@ class _SettingAppState extends State<SettingApp> {
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.sync),
         tooltip: "同步",
-        onPressed: readHoldings1,
+        onPressed: () async {
+          if (mounted) {
+            await readHoldings1().whenComplete(() {
+              debugPrint("读取完成");
+            });
+          }
+        },
       ),
     );
   }

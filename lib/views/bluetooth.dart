@@ -6,6 +6,7 @@ import 'package:iot_client/device.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
+import '../futs/ble.dart';
 
 class Bluetooth extends StatefulWidget {
   const Bluetooth({Key? key}) : super(key: key);
@@ -77,26 +78,11 @@ class _BluetoothState extends State<Bluetooth> {
   Future<bool> connect(int index, String mac, int type) async {
     debugPrint("connect to: $mac$type");
     SerialResponse res = await api.bleLecconn(addr: mac, addType: type);
-
-    debugPrint("connect result: ${String.fromCharCodes(res.data!)}");
-    SerialResponse res2 = await api.bleChinfo();
-    if (res2.data == null) {
-      return false;
+    if (res.data != null) {
+      debugPrint("connect result: ${String.fromCharCodes(res.data!)}");
     }
-    String chinfos = String.fromCharCodes(res2.data!);
-    debugPrint("chinfo: $chinfos");
-    if (chinfos.contains(mac)) {
-      bool res = chinfos
-          .split(RegExp(r"\r\n"))
-          .where((s) => s.startsWith("+CHINFO=") && s.contains(mac))
-          .any((element) {
-        RegExp m = RegExp("\\+CHINFO=$index,3,(1|0),$mac");
-        return m.hasMatch(element);
-      });
-
-      return res;
-    }
-    return false;
+    bool res1 = await checkConnection(index, mac);
+    return res1;
   }
 
   Timer? timer;
@@ -142,7 +128,7 @@ class _BluetoothState extends State<Bluetooth> {
       await api.bleLedisc(index: device.no);
       // 查找已存在的地址断开连接
       final prefs = await _prefs;
-      int? current = prefs.getInt("index");
+      int? current = prefs.getInt("no");
       if (current != null) {
         await api.bleLedisc(index: current);
       }
@@ -162,8 +148,9 @@ class _BluetoothState extends State<Bluetooth> {
       mountedState(() {});
 
       //设置新连接的地址
-      await prefs.setString("mesh", '${device.mac}${device.addressType}');
-      await prefs.setInt("index", device.no);
+      await prefs.setInt("addressType", device.addressType);
+      await prefs.setString("mac", device.mac);
+      await prefs.setInt("no", device.no);
     }
   }
 

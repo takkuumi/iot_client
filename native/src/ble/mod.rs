@@ -3,7 +3,7 @@ mod crc16;
 
 use super::serial::{lesend_serialport, send_serialport, send_serialport_until, SerialResponse};
 use crc16::crc_16;
-use regex::Regex;
+use regex::bytes::Regex;
 use rmodbus::{client::ModbusRequest, ModbusProto};
 use std::ops::Deref;
 
@@ -26,88 +26,21 @@ impl<'s> BytesParse<'s> {
   }
 
   pub fn validate(&self) -> bool {
-    let bytes = self.deref();
-    let len = bytes.len();
-    if len <= 4 {
-      return false;
-    }
-    if !bytes.starts_with(BITS_END) && !bytes.ends_with(BITS_END) {
-      return false;
-    }
+    let re: Regex = Regex::new(r"\+DATA=(?P<a>\d+),(?P<length>\d+),(?P<data>\S+)").unwrap();
 
-    let seq_data = b"+DATA=";
-    let rang_s = 2;
-    let rang_e = rang_s + seq_data.len();
-    let sub = &bytes[rang_s..rang_e];
-    eprintln!("sub: {:?}", String::from_utf8_lossy(sub));
-    let seq_data_res = sub.eq(seq_data);
-    if !seq_data_res {
-      return false;
+    if let Some(caps) = re.captures(self.deref()) {
+      let length = caps.name("length");
+      let data = caps.name("data");
+
+      if let (Some(length), Some(data)) = (length, data) {
+        let length = String::from_utf8_lossy(length.as_bytes())
+          .parse::<usize>()
+          .unwrap();
+        return data.len() == length;
+      }
     }
 
-    // +DATA=0,014,0103020000B844
-
-    let id_reg = Regex::new(r"^\d$").unwrap();
-
-    let rang_s = rang_e;
-    let rang_e = rang_s + 1;
-    let sub = &bytes[rang_s..rang_e];
-    eprintln!("sub: {:?}", String::from_utf8_lossy(sub));
-    if !id_reg.is_match(&String::from_utf8_lossy(sub)) {
-      return false;
-    }
-
-    // +DATA=0,014,0103020000B844
-
-    let rang_s = rang_e;
-    let rang_e = rang_s + 1;
-    let sub = &bytes[rang_s..rang_e];
-    eprintln!("sub: {:?}", String::from_utf8_lossy(sub));
-    if !sub.eq(b",") {
-      return false;
-    }
-
-    let count_reg = Regex::new(r"^\d{3}$").unwrap();
-
-    let rang_s = rang_e;
-    let rang_e = rang_s + 3;
-    let sub_count = &bytes[rang_s..rang_e];
-    eprintln!("count: {:?}", String::from_utf8_lossy(sub));
-    if !count_reg.is_match(&String::from_utf8_lossy(sub_count)) {
-      return false;
-    }
-    let Ok(count) = String::from_utf8_lossy(sub_count).parse::<usize>()  else {
-        return false;
-    };
-    eprintln!("count: {:?}", count);
-
-    let rang_s = rang_e;
-    let rang_e = rang_s + 1;
-    let sub = &bytes[rang_s..rang_e];
-    eprintln!("sub: {:?}", String::from_utf8_lossy(sub));
-    if !sub.eq(b",") {
-      return false;
-    }
-
-    // +DATA=0,014,0103020000B844
-
-    if count < 10 {
-      return false;
-    }
-
-    let Some(index) = bytes.iter().rposition(|x| x == &b',') else {
-      return false;
-    };
-
-    let data_seq = &bytes[index + 1..];
-
-    eprintln!("-----> {}", data_seq.len());
-    eprintln!("-----> {}", count);
-    if (data_seq.len() - 2) != count {
-      return false;
-    }
-
-    true
+    false
   }
 
   pub fn get_index(&self) -> Option<usize> {
@@ -143,24 +76,51 @@ impl<'s> BytesParse<'s> {
       return None;
     }
 
-    // +DATA=0,014,0103020000B844
-    let rang_e = self.deref().len() - 6;
-    let data = &self.deref()[20..rang_e];
+    let re: Regex = Regex::new(r"\+DATA=\d+,\d+,(?P<data>\S+)").unwrap();
+    if let Some(m) = re.captures(self.deref()).and_then(|caps| caps.name("data")) {
+      // +DATA=0,014,0103020000B844
+      let re2: Regex =
+        Regex::new(r"(?P<id>\S{2})(?P<fc>\S{2})(?P<count>\S{2})(?P<content>\S+)").unwrap();
 
-    let text = String::from_utf8_lossy(data);
-    let res = hex::decode(text.as_ref()).unwrap();
+      if let Some(caps) = re2.captures(m.as_bytes()) {
+        let id = caps.name("id").unwrap();
+        let fc = caps.name("fc").unwrap();
+        let count = caps.name("count").unwrap();
+        let content = caps.name("content").unwrap();
 
-    let chunks = res.chunks(2);
+        let id = String::from_utf8_lossy(id.as_bytes())
+          .parse::<u8>()
+          .unwrap();
+        let fc = String::from_utf8_lossy(fc.as_bytes())
+          .parse::<u8>()
+          .unwrap();
+        let count = String::from_utf8_lossy(count.as_bytes())
+          .parse::<u16>()
+          .unwrap();
 
-    let mut result = Vec::new();
-    for chunk in chunks {
-      let mut buf = [0u8; 2];
-      buf.copy_from_slice(chunk);
-      let val = u16::from_be_bytes(buf);
-      result.push(val);
-    }
+        eprintln!("id: {}, fc: {}, count: {}", id, fc, count);
 
-    Some(result)
+        let content_bytes = content.as_bytes();
+
+        eprintln!("content_bytes len : {}", content_bytes.len());
+        let content = String::from_utf8_lossy(&content_bytes[..(content_bytes.len() - 4)]);
+        let res = hex::decode(content.as_ref()).unwrap();
+
+        let chunks = res.chunks(2);
+
+        let mut result = Vec::new();
+        for chunk in chunks {
+          let mut buf = [0u8; 2];
+          buf.copy_from_slice(chunk);
+          let val = u16::from_be_bytes(buf);
+          result.push(val);
+        }
+
+        return Some(result);
+      }
+    };
+
+    None
   }
 
   pub fn parse_bool(&self) -> Option<Vec<u8>> {
@@ -168,7 +128,6 @@ impl<'s> BytesParse<'s> {
       return None;
     }
 
-    // +DATA=0,014,0103020000B844
     let rang_e = self.deref().len() - 6;
     let data = &self.deref()[20..rang_e];
 
@@ -216,7 +175,7 @@ mod test {
 
   #[test]
   fn parse_works() {
-    let bytes = "\r\n+DATA=0,014,0103020000B844\r\n".as_bytes();
+    let bytes = "\r\n+DATA=0,170,01035032313433363500370000000000000000000042414443464500470000000000000000000080020001000200C80064800100010002019000C880020001000200C8006480020001000107D003E8800200012EF7\r\n".as_bytes();
 
     eprintln!("{}", String::from_utf8_lossy(&bytes));
     let pa = BytesParse::new(bytes);
@@ -230,7 +189,7 @@ mod test {
 
   #[test]
   fn match_works() {
-    let text = "\r\n+DATA=0,170,010350000200C8006401F401F501F601F713881389138A138B00C000A8000100C800FF00FF00FF000000C000A8000100010072007200720072000000100039000F00710045138900C000A800010096000110003F06\r\n";
+    let text = "\r\n+DATA=0,170,01035032313433363500370000000000000000000042414443464500470000000000000000000080020001000200C80064800100010002019000C880020001000200C8006480020001000107D003E8800200012EF7\r\n";
 
     let re: Regex = Regex::new(r"\+DATA=(?P<a>\d+),(?P<length>\d+),(?P<data>\S+)").unwrap();
 

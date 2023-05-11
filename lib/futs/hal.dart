@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:iot_client/ffi.dart';
+import 'package:iot_client/futs/ble.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Future<int?> getHolding(int index, int reg) async {
@@ -24,14 +25,19 @@ Future<List<int>> getHoldings(int reg, int count) async {
   List<int> res = List<int>.empty(growable: true);
 
   final SharedPreferences prefs = await SharedPreferences.getInstance();
-  String? addr = prefs.getString("mesh");
 
-  if (addr != null) {
-    await api.bleLecconnAddr(addr: addr);
-  }
-  int? index = prefs.getInt("index");
+  int? index = prefs.getInt("no");
   if (index == null) {
-    return res;
+    throw Exception("未设置连接");
+  }
+
+  String? mac = prefs.getString("mac");
+  if (mac == null) {
+    throw Exception("未设置连接");
+  }
+  bool connectState = await checkConnection(index, mac);
+  if (!connectState) {
+    throw Exception("设备未连接或已断开连接，请重新连接设备");
   }
 
   String data =
@@ -55,14 +61,18 @@ Future<List<int>> getHoldings(int reg, int count) async {
 
 Future<int?> getCoils(int reg, int count) async {
   final SharedPreferences prefs = await SharedPreferences.getInstance();
-  String? addr = prefs.getString("mesh");
-
-  if (addr != null) {
-    await api.bleLecconnAddr(addr: addr);
-  }
-  int? index = prefs.getInt("index");
+  int? index = prefs.getInt("no");
   if (index == null) {
-    return null;
+    throw Exception("未设置连接");
+  }
+
+  String? mac = prefs.getString("mac");
+  if (mac == null) {
+    throw Exception("未设置连接");
+  }
+  bool connectState = await checkConnection(index, mac);
+  if (!connectState) {
+    throw Exception("设备未连接或已断开连接，请重新连接设备");
   }
 
   String data =
@@ -86,14 +96,19 @@ Future<int?> getCoils(int reg, int count) async {
 
 Future<bool?> getCoil(int reg) async {
   final SharedPreferences prefs = await SharedPreferences.getInstance();
-  String? addr = prefs.getString("mesh");
 
-  if (addr != null) {
-    await api.bleLecconnAddr(addr: addr);
-  }
-  int? index = prefs.getInt("index");
+  int? index = prefs.getInt("no");
   if (index == null) {
-    return null;
+    throw Exception("未设置连接");
+  }
+
+  String? mac = prefs.getString("mac");
+  if (mac == null) {
+    throw Exception("未设置连接");
+  }
+  bool connectState = await checkConnection(index, mac);
+  if (!connectState) {
+    throw Exception("设备未连接或已断开连接，请重新连接设备");
   }
 
   String data = await api.halGenerateGetCoils(unitId: 1, reg: reg, count: 1);
@@ -116,14 +131,19 @@ Future<bool?> getCoil(int reg) async {
 
 Future<bool> setCoils(int reg, List<bool> values) async {
   final SharedPreferences prefs = await SharedPreferences.getInstance();
-  String? addr = prefs.getString("mesh");
 
-  if (addr != null) {
-    await api.bleLecconnAddr(addr: addr);
-  }
-  int? index = prefs.getInt("index");
+  int? index = prefs.getInt("no");
   if (index == null) {
-    return false;
+    throw Exception("未设置连接");
+  }
+
+  String? mac = prefs.getString("mac");
+  if (mac == null) {
+    throw Exception("未设置连接");
+  }
+  bool connectState = await checkConnection(index, mac);
+  if (!connectState) {
+    throw Exception("设备未连接或已断开连接，请重新连接设备");
   }
 
   String data = await api.halGenerateSetCoils(
@@ -144,14 +164,19 @@ Future<bool> setCoils(int reg, List<bool> values) async {
 
 Future<bool> setHoldings(String data) async {
   final SharedPreferences prefs = await SharedPreferences.getInstance();
-  String? addr = prefs.getString("mesh");
 
-  if (addr != null) {
-    await api.bleLecconnAddr(addr: addr);
-  }
-  int? index = prefs.getInt("index");
+  int? index = prefs.getInt("no");
   if (index == null) {
-    return false;
+    throw Exception("未设置连接");
+  }
+
+  String? mac = prefs.getString("mac");
+  if (mac == null) {
+    throw Exception("未设置连接");
+  }
+  bool connectState = await checkConnection(index, mac);
+  if (!connectState) {
+    throw Exception("设备未连接或已断开连接，请重新连接设备");
   }
 
   SerialResponse sr = await api.bleLesend(index: index, data: data);

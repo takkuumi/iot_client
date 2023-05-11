@@ -99,6 +99,12 @@ pub fn hal_generate_set_holding(unit_id: u8, reg: u16, value: u16) -> String {
   hex::encode_upper(LogicControl::generate_set_holding(unit_id, reg, value))
 }
 
+pub fn hal_generate_set_holdings_bulk(unit_id: u8, reg: u16, values: Vec<u16>) -> String {
+  let res = hal::LogicControl::generate_set_holdings_bulk(unit_id, reg, values);
+
+  hex::encode_upper(res)
+}
+
 pub fn hex_encode(data: Vec<u8>) -> String {
   hex::encode_upper(data)
 }

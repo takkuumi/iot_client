@@ -445,6 +445,30 @@ class NativeImpl implements Native {
         argNames: ["unitId", "reg", "value"],
       );
 
+  Future<String> halGenerateSetHoldingsBulk(
+      {required int unitId,
+      required int reg,
+      required Uint16List values,
+      dynamic hint}) {
+    var arg0 = api2wire_u8(unitId);
+    var arg1 = api2wire_u16(reg);
+    var arg2 = _platform.api2wire_uint_16_list(values);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner
+          .wire_hal_generate_set_holdings_bulk(port_, arg0, arg1, arg2),
+      parseSuccessData: _wire2api_String,
+      constMeta: kHalGenerateSetHoldingsBulkConstMeta,
+      argValues: [unitId, reg, values],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kHalGenerateSetHoldingsBulkConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "hal_generate_set_holdings_bulk",
+        argNames: ["unitId", "reg", "values"],
+      );
+
   Future<String> hexEncode({required Uint8List data, dynamic hint}) {
     var arg0 = _platform.api2wire_uint_8_list(data);
     return _platform.executeNormal(FlutterRustBridgeTask(
@@ -749,6 +773,13 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
     final ptr = inner.new_box_autoadd_com_0();
     _api_fill_to_wire_com(raw, ptr.ref);
     return ptr;
+  }
+
+  @protected
+  ffi.Pointer<wire_uint_16_list> api2wire_uint_16_list(Uint16List raw) {
+    final ans = inner.new_uint_16_list_0(raw.length);
+    ans.ref.ptr.asTypedList(raw.length).setAll(0, raw);
+    return ans;
   }
 
   @protected
@@ -1255,6 +1286,29 @@ class NativeWire implements FlutterRustBridgeWireBase {
   late final _wire_hal_generate_set_holding = _wire_hal_generate_set_holdingPtr
       .asFunction<void Function(int, int, int, int)>();
 
+  void wire_hal_generate_set_holdings_bulk(
+    int port_,
+    int unit_id,
+    int reg,
+    ffi.Pointer<wire_uint_16_list> values,
+  ) {
+    return _wire_hal_generate_set_holdings_bulk(
+      port_,
+      unit_id,
+      reg,
+      values,
+    );
+  }
+
+  late final _wire_hal_generate_set_holdings_bulkPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int64, ffi.Uint8, ffi.Uint16,
+                  ffi.Pointer<wire_uint_16_list>)>>(
+      'wire_hal_generate_set_holdings_bulk');
+  late final _wire_hal_generate_set_holdings_bulk =
+      _wire_hal_generate_set_holdings_bulkPtr.asFunction<
+          void Function(int, int, int, ffi.Pointer<wire_uint_16_list>)>();
+
   void wire_hex_encode(
     int port_,
     ffi.Pointer<wire_uint_8_list> data,
@@ -1451,6 +1505,21 @@ class NativeWire implements FlutterRustBridgeWireBase {
   late final _new_box_autoadd_com_0 =
       _new_box_autoadd_com_0Ptr.asFunction<ffi.Pointer<wire_Com> Function()>();
 
+  ffi.Pointer<wire_uint_16_list> new_uint_16_list_0(
+    int len,
+  ) {
+    return _new_uint_16_list_0(
+      len,
+    );
+  }
+
+  late final _new_uint_16_list_0Ptr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<wire_uint_16_list> Function(
+              ffi.Int32)>>('new_uint_16_list_0');
+  late final _new_uint_16_list_0 = _new_uint_16_list_0Ptr
+      .asFunction<ffi.Pointer<wire_uint_16_list> Function(int)>();
+
   ffi.Pointer<wire_uint_8_list> new_uint_8_list_0(
     int len,
   ) {
@@ -1485,6 +1554,13 @@ class _Dart_Handle extends ffi.Opaque {}
 
 class wire_uint_8_list extends ffi.Struct {
   external ffi.Pointer<ffi.Uint8> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+class wire_uint_16_list extends ffi.Struct {
+  external ffi.Pointer<ffi.Uint16> ptr;
 
   @ffi.Int32()
   external int len;

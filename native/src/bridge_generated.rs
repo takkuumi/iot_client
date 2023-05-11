@@ -348,6 +348,32 @@ fn wire_hal_generate_set_holding_impl(
     },
   )
 }
+fn wire_hal_generate_set_holdings_bulk_impl(
+  port_: MessagePort,
+  unit_id: impl Wire2Api<u8> + UnwindSafe,
+  reg: impl Wire2Api<u16> + UnwindSafe,
+  values: impl Wire2Api<Vec<u16>> + UnwindSafe,
+) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "hal_generate_set_holdings_bulk",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || {
+      let api_unit_id = unit_id.wire2api();
+      let api_reg = reg.wire2api();
+      let api_values = values.wire2api();
+      move |task_callback| {
+        Ok(hal_generate_set_holdings_bulk(
+          api_unit_id,
+          api_reg,
+          api_values,
+        ))
+      }
+    },
+  )
+}
 fn wire_hex_encode_impl(port_: MessagePort, data: impl Wire2Api<Vec<u8>> + UnwindSafe) {
   FLUTTER_RUST_BRIDGE_HANDLER.wrap(
     WrapInfo {

@@ -224,6 +224,11 @@ typedef struct wire_uint_8_list {
   int32_t len;
 } wire_uint_8_list;
 
+typedef struct wire_uint_16_list {
+  uint16_t *ptr;
+  int32_t len;
+} wire_uint_16_list;
+
 typedef struct wire_Com {
   uint32_t field0;
 } wire_Com;
@@ -293,6 +298,11 @@ void wire_hal_generate_set_coils(int64_t port_,
 
 void wire_hal_generate_set_holding(int64_t port_, uint8_t unit_id, uint16_t reg, uint16_t value);
 
+void wire_hal_generate_set_holdings_bulk(int64_t port_,
+                                         uint8_t unit_id,
+                                         uint16_t reg,
+                                         struct wire_uint_16_list *values);
+
 void wire_hex_encode(int64_t port_, struct wire_uint_8_list *data);
 
 void wire_hex_decode(int64_t port_, struct wire_uint_8_list *data);
@@ -327,6 +337,8 @@ void wire_hal_read_logic_control(int64_t port_,
 
 struct wire_Com *new_box_autoadd_com_0(void);
 
+struct wire_uint_16_list *new_uint_16_list_0(int32_t len);
+
 struct wire_uint_8_list *new_uint_8_list_0(int32_t len);
 
 void free_WireSyncReturn(WireSyncReturn ptr);
@@ -355,6 +367,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_hal_generate_get_coils);
     dummy_var ^= ((int64_t) (void*) wire_hal_generate_set_coils);
     dummy_var ^= ((int64_t) (void*) wire_hal_generate_set_holding);
+    dummy_var ^= ((int64_t) (void*) wire_hal_generate_set_holdings_bulk);
     dummy_var ^= ((int64_t) (void*) wire_hex_encode);
     dummy_var ^= ((int64_t) (void*) wire_hex_decode);
     dummy_var ^= ((int64_t) (void*) wire_hal_new_control);
@@ -364,6 +377,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_hal_get_com_indexs);
     dummy_var ^= ((int64_t) (void*) wire_hal_read_logic_control);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_com_0);
+    dummy_var ^= ((int64_t) (void*) new_uint_16_list_0);
     dummy_var ^= ((int64_t) (void*) new_uint_8_list_0);
     dummy_var ^= ((int64_t) (void*) free_WireSyncReturn);
     dummy_var ^= ((int64_t) (void*) store_dart_post_cobject);

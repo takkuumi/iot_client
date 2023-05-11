@@ -60,12 +60,12 @@ pub fn scan(typee: u8) -> SerialResponse {
 
 pub fn lecconn(addr: &str, add_type: u8) -> SerialResponse {
   let data = format!("{}={}{}", ble_at::AT_LECCONN, addr, add_type);
-  send_serialport_until(data.as_bytes(), 50, b"OK\r\n")
+  send_serialport_until(data.as_bytes(), 20, b"OK\r\n")
 }
 
 pub fn lecconn_addr(addr: &str) -> SerialResponse {
   let data = format!("{}={}", ble_at::AT_LECCONN, addr);
-  send_serialport_until(data.as_bytes(), 50, b"OK\r\n")
+  send_serialport_until(data.as_bytes(), 20, b"OK\r\n")
 }
 
 pub fn ledisc(index: u8) -> SerialResponse {
@@ -75,11 +75,11 @@ pub fn ledisc(index: u8) -> SerialResponse {
 
 pub fn lesend(index: u8, data: &str) -> SerialResponse {
   let data = format!("{}={},{},{}", ble_at::AT_LESEND, index, data.len(), data);
-  lesend_serialport(data.as_bytes(), 100)
+  lesend_serialport(data.as_bytes(), 20)
 }
 
 pub fn chinfo() -> SerialResponse {
-  send_serialport_until(ble_at::AT_CHINFO.as_bytes(), 100, b"OK\r\n")
+  send_serialport_until(ble_at::AT_CHINFO.as_bytes(), 20, b"OK\r\n")
 }
 
 pub fn get_ndid() -> SerialResponse {

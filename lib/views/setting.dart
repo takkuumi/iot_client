@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:iot_client/ffi.dart';
@@ -40,6 +41,7 @@ class _SettingAppState extends State<SettingApp> {
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _ipFormKey = GlobalKey<FormState>();
 
   final TextEditingController _textEditingController = TextEditingController();
 
@@ -57,12 +59,7 @@ class _SettingAppState extends State<SettingApp> {
     }
   }
 
-  Future<void> readHoldings1() async {
-    List<int> data1 = await getHoldings(2196, 40);
-    List<int> data2 = await getHoldings(2236, 40);
-
-    List<int> data = data1 + data2;
-
+  void updateUi(List<int> data) {
     debugPrint("data: ${data.join(',')}");
 
     if (data.length < 80) {
@@ -73,7 +70,6 @@ class _SettingAppState extends State<SettingApp> {
         List.of([data[67], data[68], data[69], data[70], data[71], data[72]])
             .map((e) => e.toRadixString(16).toUpperCase().padLeft(2, '0'))
             .join('-');
-
     String ipstr = List.of([data[51], data[52], data[53], data[54]]).join('.');
     String subnetstr =
         List.of([data[55], data[56], data[57], data[58]]).join('.');
@@ -86,11 +82,39 @@ class _SettingAppState extends State<SettingApp> {
     mountedState(() {});
   }
 
+  Future<void> readCache() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    String? mac = prefs.getString("mac");
+    if (mac == null) {
+      return showSnackBar("未设置连接");
+    }
+
+    String? deviceData = prefs.getString(mac);
+    if (deviceData == null) {
+      return showSnackBar("未设置连接");
+    }
+
+    List<int> data = deviceData.split(',').map((e) => int.parse(e)).toList();
+    updateUi(data);
+  }
+
+  Future<void> readHoldings1() async {
+    try {
+      List<int> data = await readDevice();
+      updateUi(data);
+    } catch (err) {
+      debugPrint(err.toString());
+      showSnackBar(err.toString());
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (mounted) {
+        readCache();
         await readHoldings1().whenComplete(() {
           debugPrint("读取完成");
         });
@@ -239,30 +263,32 @@ class _SettingAppState extends State<SettingApp> {
   }
 
   Future<void> settingIplDialog(BuildContext context) async {
-    BuildContext _c = context;
     return await showDialog(
         context: context,
-        builder: (context) {
+        builder: (dialogContext) {
           bool isChecked = false;
           return StatefulBuilder(builder: (context, mountedState) {
             return AlertDialog(
               content: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextFormField(
-                        keyboardType: TextInputType.url,
-                        maxLength: 100,
-                        maxLines: 5,
-                        controller: _ipEditingController,
-                        validator: (value) {
-                          return value!.isNotEmpty ? null : "请输入IP地址";
-                        },
-                        decoration: InputDecoration(hintText: ""),
+                key: _ipFormKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      keyboardType: TextInputType.url,
+                      maxLength: 15,
+                      maxLines: 1,
+                      controller: _ipEditingController,
+                      validator: (value) {
+                        return value!.isNotEmpty ? null : "请输入IP地址";
+                      },
+                      decoration: InputDecoration(
+                        hintText: "IP地址(如:192.169.1.100)",
                       ),
-                    ],
-                  )),
+                    ),
+                  ],
+                ),
+              ),
               title: Text('修改IP地址'),
               actions: <Widget>[
                 TextButton(
@@ -273,18 +299,27 @@ class _SettingAppState extends State<SettingApp> {
                 ),
                 TextButton(
                   onPressed: () async {
-                    if (_formKey.currentState?.validate() ?? false) {
-                      String url = _textEditingController.text;
-                      List<String> ips = url.trim().split(".");
-                      String req = await api.halGenerateSetHolding(
-                          unitId: 1, reg: 2247, value: int.parse(ips[0]));
+                    if (_ipFormKey.currentState?.validate() ?? false) {
+                      String url = _ipEditingController.text;
+                      debugPrint("URL: $url");
+                      List<int> values = url
+                          .trim()
+                          .split(".")
+                          .map((e) => int.parse(e))
+                          .toList();
+                      String req = await api.halGenerateSetHoldingsBulk(
+                          unitId: 1,
+                          reg: 2247,
+                          values: Uint16List.fromList(values));
                       bool res = await setHoldings(req);
 
                       if (res) {
                         showSnackBar("修改成功");
+                        await readHoldings1();
+                      } else {
+                        showSnackBar("修改失败，请重试");
                       }
-
-                      Navigator.canPop(_c);
+                      Navigator.of(context).maybePop();
                     }
                   },
                   child: Text('修改'),

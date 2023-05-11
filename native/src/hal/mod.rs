@@ -199,6 +199,17 @@ impl LogicControl {
     request
   }
 
+  pub fn generate_set_holdings_bulk(unit_id: u8, reg: u16, values: Vec<u16>) -> Vec<u8> {
+    // create request object
+    let mut mreq = ModbusRequest::new(unit_id, ModbusProto::Rtu);
+
+    let mut request = Vec::<u8>::new();
+    mreq
+      .generate_set_holdings_bulk(reg, &values, &mut request)
+      .unwrap();
+    request
+  }
+
   pub fn generate_get_holdings(unit_id: u8, reg: u16, count: u16) -> Vec<u8> {
     // create request object
     let mut mreq = ModbusRequest::new(unit_id, ModbusProto::Rtu);

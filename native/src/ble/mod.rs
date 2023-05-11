@@ -177,7 +177,7 @@ mod test {
   fn parse_works() {
     let bytes = "\r\n+DATA=0,170,01035032313433363500370000000000000000000042414443464500470000000000000000000080020001000200C80064800100010002019000C880020001000200C8006480020001000107D003E8800200012EF7\r\n".as_bytes();
 
-    eprintln!("{}", String::from_utf8_lossy(&bytes));
+    eprintln!("{}", String::from_utf8_lossy(bytes));
     let pa = BytesParse::new(bytes);
     let res = pa.validate();
     eprintln!("= {}", res);

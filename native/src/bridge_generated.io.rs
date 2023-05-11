@@ -127,6 +127,16 @@ pub extern "C" fn wire_hal_generate_set_holding(port_: i64, unit_id: u8, reg: u1
 }
 
 #[no_mangle]
+pub extern "C" fn wire_hal_generate_set_holdings_bulk(
+  port_: i64,
+  unit_id: u8,
+  reg: u16,
+  values: *mut wire_uint_16_list,
+) {
+  wire_hal_generate_set_holdings_bulk_impl(port_, unit_id, reg, values)
+}
+
+#[no_mangle]
 pub extern "C" fn wire_hex_encode(port_: i64, data: *mut wire_uint_8_list) {
   wire_hex_encode_impl(port_, data)
 }
@@ -196,6 +206,15 @@ pub extern "C" fn new_box_autoadd_com_0() -> *mut wire_Com {
 }
 
 #[no_mangle]
+pub extern "C" fn new_uint_16_list_0(len: i32) -> *mut wire_uint_16_list {
+  let ans = wire_uint_16_list {
+    ptr: support::new_leak_vec_ptr(Default::default(), len),
+    len,
+  };
+  support::new_leak_box_ptr(ans)
+}
+
+#[no_mangle]
 pub extern "C" fn new_uint_8_list_0(len: i32) -> *mut wire_uint_8_list {
   let ans = wire_uint_8_list {
     ptr: support::new_leak_vec_ptr(Default::default(), len),
@@ -226,6 +245,14 @@ impl Wire2Api<Com> for wire_Com {
   }
 }
 
+impl Wire2Api<Vec<u16>> for *mut wire_uint_16_list {
+  fn wire2api(self) -> Vec<u16> {
+    unsafe {
+      let wrap = support::box_from_leak_ptr(self);
+      support::vec_from_leak_ptr(wrap.ptr, wrap.len)
+    }
+  }
+}
 impl Wire2Api<Vec<u8>> for *mut wire_uint_8_list {
   fn wire2api(self) -> Vec<u8> {
     unsafe {
@@ -240,6 +267,13 @@ impl Wire2Api<Vec<u8>> for *mut wire_uint_8_list {
 #[derive(Clone)]
 pub struct wire_Com {
   field0: u32,
+}
+
+#[repr(C)]
+#[derive(Clone)]
+pub struct wire_uint_16_list {
+  ptr: *mut u16,
+  len: i32,
 }
 
 #[repr(C)]

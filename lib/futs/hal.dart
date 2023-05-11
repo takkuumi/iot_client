@@ -189,3 +189,28 @@ Future<bool> setHoldings(String data) async {
 
   return text.contains("011008");
 }
+
+Future<List<int>> readDevice() async {
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  int? index = prefs.getInt("no");
+  if (index == null) {
+    throw Exception("未设置连接");
+  }
+
+  String? mac = prefs.getString("mac");
+  if (mac == null) {
+    throw Exception("未设置连接");
+  }
+  bool connectState = await checkConnection(index, mac);
+  if (!connectState) {
+    throw Exception("设备未连接或已断开连接，请重新连接设备");
+  }
+  List<int> data1 = await getHoldings(2196, 40);
+  List<int> data2 = await getHoldings(2236, 40);
+
+  List<int> data = data1 + data2;
+
+  prefs.setString(mac, data.join(","));
+
+  return data;
+}

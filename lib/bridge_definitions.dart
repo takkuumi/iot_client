@@ -125,6 +125,14 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kHalGenerateSetHoldingConstMeta;
 
+  Future<String> halGenerateSetHoldingsBulk(
+      {required int unitId,
+      required int reg,
+      required Uint16List values,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kHalGenerateSetHoldingsBulkConstMeta;
+
   Future<String> hexEncode({required Uint8List data, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kHexEncodeConstMeta;

@@ -131,34 +131,45 @@ class _BluetoothState extends State<Bluetooth> {
 
   Future<void> connectDevice(Device device) async {
     bool? result = await showSettingDialog();
-    if (result != null && result) {
-      await api.bleLedisc(index: device.no);
-      // 查找已存在的地址断开连接
-      final prefs = await _prefs;
-      int? current = prefs.getInt("no");
-      if (current != null) {
-        await api.bleLedisc(index: current);
+    if (result != null) {
+      if (result) {
+        await api.bleLedisc(index: device.no);
+        // 查找已存在的地址断开连接
+        final prefs = await _prefs;
+        int? current = prefs.getInt("no");
+        if (current != null) {
+          await api.bleLedisc(index: current);
+        }
+
+        final conn = await connect(device.no, device.mac, device.addressType);
+
+        if (!conn) {
+          showSnackBar("连接失败,请重试");
+          debugPrint("连接失败");
+          return;
+        }
+
+        showSnackBar("连接成功");
+        debugPrint("连接成功");
+
+        // 设置连接状态
+        devices.where((d) => d.mac == device.mac).first.connected = true;
+        mountedState(() {});
+
+        //设置新连接的地址
+        await prefs.setInt("addressType", device.addressType);
+        await prefs.setString("mac", device.mac);
+        await prefs.setInt("no", device.no);
+      } else {
+        await api.bleLedisc(index: device.no);
+        // 查找已存在的地址断开连接
+        final prefs = await _prefs;
+        int? current = prefs.getInt("no");
+        if (current != null) {
+          await api.bleLedisc(index: current);
+        }
+        showSnackBar("已断开连接");
       }
-
-      final conn = await connect(device.no, device.mac, device.addressType);
-
-      if (!conn) {
-        showSnackBar("连接失败,请重试");
-        debugPrint("连接失败");
-        return;
-      }
-
-      showSnackBar("连接成功");
-      debugPrint("连接成功");
-
-      // 设置连接状态
-      devices.where((d) => d.mac == device.mac).first.connected = true;
-      mountedState(() {});
-
-      //设置新连接的地址
-      await prefs.setInt("addressType", device.addressType);
-      await prefs.setString("mac", device.mac);
-      await prefs.setInt("no", device.no);
     }
   }
 
@@ -178,7 +189,13 @@ class _BluetoothState extends State<Bluetooth> {
           actions: <Widget>[
             TextButton(
               child: Text("取消"),
-              onPressed: () => Navigator.of(context).pop(false),
+              onPressed: () => Navigator.of(context).pop(null),
+            ),
+            TextButton(
+              child: Text("断开连接"),
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
             ),
             TextButton(
               child: Text("连接"),

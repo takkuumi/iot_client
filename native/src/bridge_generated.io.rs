@@ -151,10 +151,9 @@ pub extern "C" fn wire_hal_new_control(
   port_: i64,
   index: u8,
   scene: u8,
-  com_in: *mut wire_Com,
-  com_out: *mut wire_Com,
+  coms: *mut wire_uint_8_list,
 ) {
-  wire_hal_new_control_impl(port_, index, scene, com_in, com_out)
+  wire_hal_new_control_impl(port_, index, scene, coms)
 }
 
 #[no_mangle]
@@ -163,14 +162,9 @@ pub extern "C" fn wire_hal_control(
   unit_id: u8,
   index: u8,
   scene: u8,
-  v1: *mut wire_uint_8_list,
-  v2: *mut wire_uint_8_list,
-  v3: *mut wire_uint_8_list,
-  v4: *mut wire_uint_8_list,
-  v5: *mut wire_uint_8_list,
-  v6: *mut wire_uint_8_list,
+  values: *mut wire_uint_8_list,
 ) {
-  wire_hal_control_impl(port_, unit_id, index, scene, v1, v2, v3, v4, v5, v6)
+  wire_hal_control_impl(port_, unit_id, index, scene, values)
 }
 
 #[no_mangle]

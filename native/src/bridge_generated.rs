@@ -404,8 +404,7 @@ fn wire_hal_new_control_impl(
   port_: MessagePort,
   index: impl Wire2Api<u8> + UnwindSafe,
   scene: impl Wire2Api<u8> + UnwindSafe,
-  com_in: impl Wire2Api<Com> + UnwindSafe,
-  com_out: impl Wire2Api<Com> + UnwindSafe,
+  coms: impl Wire2Api<Vec<u8>> + UnwindSafe,
 ) {
   FLUTTER_RUST_BRIDGE_HANDLER.wrap(
     WrapInfo {
@@ -416,16 +415,8 @@ fn wire_hal_new_control_impl(
     move || {
       let api_index = index.wire2api();
       let api_scene = scene.wire2api();
-      let api_com_in = com_in.wire2api();
-      let api_com_out = com_out.wire2api();
-      move |task_callback| {
-        Ok(hal_new_control(
-          api_index,
-          api_scene,
-          api_com_in,
-          api_com_out,
-        ))
-      }
+      let api_coms = coms.wire2api();
+      move |task_callback| Ok(hal_new_control(api_index, api_scene, api_coms))
     },
   )
 }
@@ -434,12 +425,7 @@ fn wire_hal_control_impl(
   unit_id: impl Wire2Api<u8> + UnwindSafe,
   index: impl Wire2Api<u8> + UnwindSafe,
   scene: impl Wire2Api<u8> + UnwindSafe,
-  v1: impl Wire2Api<Vec<u8>> + UnwindSafe,
-  v2: impl Wire2Api<Vec<u8>> + UnwindSafe,
-  v3: impl Wire2Api<Vec<u8>> + UnwindSafe,
-  v4: impl Wire2Api<Vec<u8>> + UnwindSafe,
-  v5: impl Wire2Api<Vec<u8>> + UnwindSafe,
-  v6: impl Wire2Api<Vec<u8>> + UnwindSafe,
+  values: impl Wire2Api<Vec<u8>> + UnwindSafe,
 ) {
   FLUTTER_RUST_BRIDGE_HANDLER.wrap(
     WrapInfo {
@@ -451,25 +437,8 @@ fn wire_hal_control_impl(
       let api_unit_id = unit_id.wire2api();
       let api_index = index.wire2api();
       let api_scene = scene.wire2api();
-      let api_v1 = v1.wire2api();
-      let api_v2 = v2.wire2api();
-      let api_v3 = v3.wire2api();
-      let api_v4 = v4.wire2api();
-      let api_v5 = v5.wire2api();
-      let api_v6 = v6.wire2api();
-      move |task_callback| {
-        Ok(hal_control(
-          api_unit_id,
-          api_index,
-          api_scene,
-          api_v1,
-          api_v2,
-          api_v3,
-          api_v4,
-          api_v5,
-          api_v6,
-        ))
-      }
+      let api_values = values.wire2api();
+      move |task_callback| Ok(hal_control(api_unit_id, api_index, api_scene, api_values))
     },
   )
 }
@@ -585,8 +554,7 @@ impl support::IntoDart for LogicControl {
     vec![
       self.index.into_dart(),
       self.scene.into_dart(),
-      self.com_in.into_dart(),
-      self.com_out.into_dart(),
+      self.coms.into_dart(),
     ]
     .into_dart()
   }

@@ -104,8 +104,7 @@ impl Com {
 pub struct LogicControl {
   pub index: u8,
   pub scene: u8,
-  pub com_in: Com,
-  pub com_out: Com,
+  pub coms: Vec<u8>,
 }
 
 impl LogicControl {
@@ -113,8 +112,7 @@ impl LogicControl {
     let mut result = [0u8; 10];
     result[0] = self.scene;
     result[1] = self.index;
-    result[2..6].copy_from_slice(&self.com_in.bits());
-    result[6..10].copy_from_slice(&self.com_out.bits());
+    result[2..10].copy_from_slice(&self.coms);
     result
   }
 
@@ -140,52 +138,28 @@ impl LogicControl {
     request
   }
 
-  pub fn generate_set_holdings(
-    unit_id: u8,
-    index: u8,
-    scene: u8,
-    v1: Vec<u8>,
-    v2: Vec<u8>,
-    v3: Vec<u8>,
-    v4: Vec<u8>,
-    v5: Vec<u8>,
-    v6: Vec<u8>,
-  ) -> Vec<u8> {
+  pub fn generate_set_holdings(unit_id: u8, index: u8, scene: u8, values: &[u8]) -> Vec<u8> {
     // create request object
     let mut mreq = ModbusRequest::new(unit_id, ModbusProto::Rtu);
 
-    let mut values = Vec::<u16>::with_capacity(5);
+    let mut req_values = Vec::<u16>::with_capacity(5);
 
-    values.push(u16::from_be_bytes([0, index]));
-    values.push(u16::from_be_bytes([0, scene]));
+    req_values.push(u16::from_be_bytes([index, scene]));
 
-    for ele in v1 {
-      values.push(u16::from_be_bytes([0, ele]));
+    let chunks = values.chunks_exact(2);
+    let rem = chunks.remainder();
+
+    for chunk in chunks {
+      req_values.push(u16::from_be_bytes([chunk[0], chunk[1]]));
     }
 
-    for ele in v2 {
-      values.push(u16::from_be_bytes([0, ele]));
-    }
-
-    for ele in v3 {
-      values.push(u16::from_be_bytes([0, ele]));
-    }
-
-    for ele in v4 {
-      values.push(u16::from_be_bytes([0, ele]));
-    }
-
-    for ele in v5 {
-      values.push(u16::from_be_bytes([0, ele]));
-    }
-
-    for ele in v6 {
-      values.push(u16::from_be_bytes([0, ele]));
+    if rem.len() == 1 {
+      req_values.push(u16::from_be_bytes([rem[0], 0]));
     }
 
     let mut request = Vec::<u8>::new();
     mreq
-      .generate_set_holdings_bulk(2300, &values, &mut request)
+      .generate_set_holdings_bulk(2300 + (index as u16) * 8, &req_values, &mut request)
       .unwrap();
     request
   }
@@ -262,8 +236,7 @@ mod test {
     let lc = super::LogicControl {
       index: 1,
       scene: super::Scenes::A.bits(),
-      com_in: super::Com::default(),
-      com_out: super::Com::default(),
+      coms: vec![1, 2, 3],
     };
 
     let data = LogicControl::generate_set_holding(1, 2300, 1);

@@ -113,29 +113,14 @@ pub fn hex_decode(data: String) -> Vec<u8> {
   hex::decode(data).unwrap_or_default()
 }
 
-pub fn hal_new_control(index: u8, scene: u8, com_in: hal::Com, com_out: hal::Com) -> Vec<u8> {
-  let logic_control = hal::LogicControl {
-    index,
-    scene,
-    com_in,
-    com_out,
-  };
+pub fn hal_new_control(index: u8, scene: u8, coms: Vec<u8>) -> Vec<u8> {
+  let logic_control = hal::LogicControl { index, scene, coms };
 
   logic_control.to_modbus()
 }
 
-pub fn hal_control(
-  unit_id: u8,
-  index: u8,
-  scene: u8,
-  v1: Vec<u8>,
-  v2: Vec<u8>,
-  v3: Vec<u8>,
-  v4: Vec<u8>,
-  v5: Vec<u8>,
-  v6: Vec<u8>,
-) -> String {
-  let res = hal::LogicControl::generate_set_holdings(unit_id, index, scene, v1, v2, v3, v4, v5, v6);
+pub fn hal_control(unit_id: u8, index: u8, scene: u8, values: Vec<u8>) -> String {
+  let res = hal::LogicControl::generate_set_holdings(unit_id, index, scene, &values);
 
   hex::encode_upper(res)
 }

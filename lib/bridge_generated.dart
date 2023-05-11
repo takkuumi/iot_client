@@ -506,19 +506,17 @@ class NativeImpl implements Native {
   Future<Uint8List> halNewControl(
       {required int index,
       required int scene,
-      required Com comIn,
-      required Com comOut,
+      required Uint8List coms,
       dynamic hint}) {
     var arg0 = api2wire_u8(index);
     var arg1 = api2wire_u8(scene);
-    var arg2 = _platform.api2wire_box_autoadd_com(comIn);
-    var arg3 = _platform.api2wire_box_autoadd_com(comOut);
+    var arg2 = _platform.api2wire_uint_8_list(coms);
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) =>
-          _platform.inner.wire_hal_new_control(port_, arg0, arg1, arg2, arg3),
+          _platform.inner.wire_hal_new_control(port_, arg0, arg1, arg2),
       parseSuccessData: _wire2api_uint_8_list,
       constMeta: kHalNewControlConstMeta,
-      argValues: [index, scene, comIn, comOut],
+      argValues: [index, scene, coms],
       hint: hint,
     ));
   }
@@ -526,35 +524,25 @@ class NativeImpl implements Native {
   FlutterRustBridgeTaskConstMeta get kHalNewControlConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
         debugName: "hal_new_control",
-        argNames: ["index", "scene", "comIn", "comOut"],
+        argNames: ["index", "scene", "coms"],
       );
 
   Future<String> halControl(
       {required int unitId,
       required int index,
       required int scene,
-      required Uint8List v1,
-      required Uint8List v2,
-      required Uint8List v3,
-      required Uint8List v4,
-      required Uint8List v5,
-      required Uint8List v6,
+      required Uint8List values,
       dynamic hint}) {
     var arg0 = api2wire_u8(unitId);
     var arg1 = api2wire_u8(index);
     var arg2 = api2wire_u8(scene);
-    var arg3 = _platform.api2wire_uint_8_list(v1);
-    var arg4 = _platform.api2wire_uint_8_list(v2);
-    var arg5 = _platform.api2wire_uint_8_list(v3);
-    var arg6 = _platform.api2wire_uint_8_list(v4);
-    var arg7 = _platform.api2wire_uint_8_list(v5);
-    var arg8 = _platform.api2wire_uint_8_list(v6);
+    var arg3 = _platform.api2wire_uint_8_list(values);
     return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_hal_control(
-          port_, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8),
+      callFfi: (port_) =>
+          _platform.inner.wire_hal_control(port_, arg0, arg1, arg2, arg3),
       parseSuccessData: _wire2api_String,
       constMeta: kHalControlConstMeta,
-      argValues: [unitId, index, scene, v1, v2, v3, v4, v5, v6],
+      argValues: [unitId, index, scene, values],
       hint: hint,
     ));
   }
@@ -562,17 +550,7 @@ class NativeImpl implements Native {
   FlutterRustBridgeTaskConstMeta get kHalControlConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
         debugName: "hal_control",
-        argNames: [
-          "unitId",
-          "index",
-          "scene",
-          "v1",
-          "v2",
-          "v3",
-          "v4",
-          "v5",
-          "v6"
-        ],
+        argNames: ["unitId", "index", "scene", "values"],
       );
 
   Future<String> halDisplayCom({required Com com, dynamic hint}) {
@@ -682,13 +660,12 @@ class NativeImpl implements Native {
 
   LogicControl _wire2api_logic_control(dynamic raw) {
     final arr = raw as List<dynamic>;
-    if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return LogicControl(
       index: _wire2api_u8(arr[0]),
       scene: _wire2api_u8(arr[1]),
-      comIn: _wire2api_com(arr[2]),
-      comOut: _wire2api_com(arr[3]),
+      coms: _wire2api_uint_8_list(arr[2]),
     );
   }
 
@@ -1347,81 +1324,45 @@ class NativeWire implements FlutterRustBridgeWireBase {
     int port_,
     int index,
     int scene,
-    ffi.Pointer<wire_Com> com_in,
-    ffi.Pointer<wire_Com> com_out,
+    ffi.Pointer<wire_uint_8_list> coms,
   ) {
     return _wire_hal_new_control(
       port_,
       index,
       scene,
-      com_in,
-      com_out,
+      coms,
     );
   }
 
   late final _wire_hal_new_controlPtr = _lookup<
       ffi.NativeFunction<
-          ffi.Void Function(
-              ffi.Int64,
-              ffi.Uint8,
-              ffi.Uint8,
-              ffi.Pointer<wire_Com>,
-              ffi.Pointer<wire_Com>)>>('wire_hal_new_control');
+          ffi.Void Function(ffi.Int64, ffi.Uint8, ffi.Uint8,
+              ffi.Pointer<wire_uint_8_list>)>>('wire_hal_new_control');
   late final _wire_hal_new_control = _wire_hal_new_controlPtr.asFunction<
-      void Function(
-          int, int, int, ffi.Pointer<wire_Com>, ffi.Pointer<wire_Com>)>();
+      void Function(int, int, int, ffi.Pointer<wire_uint_8_list>)>();
 
   void wire_hal_control(
     int port_,
     int unit_id,
     int index,
     int scene,
-    ffi.Pointer<wire_uint_8_list> v1,
-    ffi.Pointer<wire_uint_8_list> v2,
-    ffi.Pointer<wire_uint_8_list> v3,
-    ffi.Pointer<wire_uint_8_list> v4,
-    ffi.Pointer<wire_uint_8_list> v5,
-    ffi.Pointer<wire_uint_8_list> v6,
+    ffi.Pointer<wire_uint_8_list> values,
   ) {
     return _wire_hal_control(
       port_,
       unit_id,
       index,
       scene,
-      v1,
-      v2,
-      v3,
-      v4,
-      v5,
-      v6,
+      values,
     );
   }
 
   late final _wire_hal_controlPtr = _lookup<
       ffi.NativeFunction<
-          ffi.Void Function(
-              ffi.Int64,
-              ffi.Uint8,
-              ffi.Uint8,
-              ffi.Uint8,
-              ffi.Pointer<wire_uint_8_list>,
-              ffi.Pointer<wire_uint_8_list>,
-              ffi.Pointer<wire_uint_8_list>,
-              ffi.Pointer<wire_uint_8_list>,
-              ffi.Pointer<wire_uint_8_list>,
+          ffi.Void Function(ffi.Int64, ffi.Uint8, ffi.Uint8, ffi.Uint8,
               ffi.Pointer<wire_uint_8_list>)>>('wire_hal_control');
   late final _wire_hal_control = _wire_hal_controlPtr.asFunction<
-      void Function(
-          int,
-          int,
-          int,
-          int,
-          ffi.Pointer<wire_uint_8_list>,
-          ffi.Pointer<wire_uint_8_list>,
-          ffi.Pointer<wire_uint_8_list>,
-          ffi.Pointer<wire_uint_8_list>,
-          ffi.Pointer<wire_uint_8_list>,
-          ffi.Pointer<wire_uint_8_list>)>();
+      void Function(int, int, int, int, ffi.Pointer<wire_uint_8_list>)>();
 
   void wire_hal_display_com(
     int port_,

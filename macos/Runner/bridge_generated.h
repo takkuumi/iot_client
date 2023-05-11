@@ -310,19 +310,13 @@ void wire_hex_decode(int64_t port_, struct wire_uint_8_list *data);
 void wire_hal_new_control(int64_t port_,
                           uint8_t index,
                           uint8_t scene,
-                          struct wire_Com *com_in,
-                          struct wire_Com *com_out);
+                          struct wire_uint_8_list *coms);
 
 void wire_hal_control(int64_t port_,
                       uint8_t unit_id,
                       uint8_t index,
                       uint8_t scene,
-                      struct wire_uint_8_list *v1,
-                      struct wire_uint_8_list *v2,
-                      struct wire_uint_8_list *v3,
-                      struct wire_uint_8_list *v4,
-                      struct wire_uint_8_list *v5,
-                      struct wire_uint_8_list *v6);
+                      struct wire_uint_8_list *values);
 
 void wire_hal_display_com(int64_t port_, struct wire_Com *com);
 

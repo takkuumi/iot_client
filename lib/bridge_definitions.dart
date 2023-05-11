@@ -144,8 +144,7 @@ abstract class Native {
   Future<Uint8List> halNewControl(
       {required int index,
       required int scene,
-      required Com comIn,
-      required Com comOut,
+      required Uint8List coms,
       dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kHalNewControlConstMeta;
@@ -154,12 +153,7 @@ abstract class Native {
       {required int unitId,
       required int index,
       required int scene,
-      required Uint8List v1,
-      required Uint8List v2,
-      required Uint8List v3,
-      required Uint8List v4,
-      required Uint8List v5,
-      required Uint8List v6,
+      required Uint8List values,
       dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kHalControlConstMeta;
@@ -196,14 +190,12 @@ class Com {
 class LogicControl {
   final int index;
   final int scene;
-  final Com comIn;
-  final Com comOut;
+  final Uint8List coms;
 
   const LogicControl({
     required this.index,
     required this.scene,
-    required this.comIn,
-    required this.comOut,
+    required this.coms,
   });
 }
 

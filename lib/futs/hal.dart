@@ -59,7 +59,7 @@ Future<List<int>> getHoldings(int reg, int count) async {
   return v.toList();
 }
 
-Future<int?> getCoils(int reg, int count) async {
+Future<List<bool>?> getCoils(int reg, int count) async {
   final SharedPreferences prefs = await SharedPreferences.getInstance();
   int? index = prefs.getInt("no");
   if (index == null) {
@@ -77,21 +77,22 @@ Future<int?> getCoils(int reg, int count) async {
 
   String data =
       await api.halGenerateGetCoils(unitId: 1, reg: reg, count: count);
-  debugPrint('getHolding: $data');
   SerialResponse sr = await api.bleLesend(index: index, data: data);
   Uint8List? rdata = sr.data;
   if (rdata == null) {
     return null;
   }
   String text = String.fromCharCodes(rdata);
-  debugPrint("getCoils $text");
-
-  Uint16List? v = await api.bleResponseParseU16(data: rdata);
+  debugPrint("getCoils text: $text");
+  Uint8List? v = await api.bleResponseParseBool(data: rdata);
   if (v == null) {
     return null;
   }
 
-  return v.toList().first;
+  // 010103001000318E
+  //+DATA=0,016,010103001000318E
+  debugPrint("getCoils ----> ${v.join(',')}");
+  return v.map((e) => e != 0).toList();
 }
 
 Future<bool?> getCoil(int reg) async {
@@ -162,6 +163,38 @@ Future<bool> setCoils(int reg, List<bool> values) async {
   return text.contains("011008");
 }
 
+Future<bool> setCoil(int reg, bool value) async {
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+
+  int? index = prefs.getInt("no");
+  if (index == null) {
+    throw Exception("未设置连接");
+  }
+
+  // String? mac = prefs.getString("mac");
+  // if (mac == null) {
+  //   throw Exception("未设置连接");
+  // }
+  // bool connectState = await checkConnection(index, mac);
+  // if (!connectState) {
+  //   throw Exception("设备未连接或已断开连接，请重新连接设备");
+  // }
+
+  String data =
+      await api.halGenerateSetCoil(unitId: 1, reg: reg, value: value ? 1 : 0);
+
+  debugPrint("setCoil: $data");
+  SerialResponse sr = await api.bleLesend(index: index, data: data);
+  Uint8List? rdata = sr.data;
+  if (rdata == null) {
+    return false;
+  }
+  String text = String.fromCharCodes(rdata);
+  debugPrint(text);
+
+  return text.contains("011008");
+}
+
 Future<bool> setHoldings(String data) async {
   final SharedPreferences prefs = await SharedPreferences.getInstance();
 
@@ -207,6 +240,31 @@ Future<List<int>> readDevice() async {
   }
   List<int> data1 = await getHoldings(2196, 40);
   List<int> data2 = await getHoldings(2236, 40);
+
+  List<int> data = data1 + data2;
+
+  prefs.setString(mac, data.join(","));
+
+  return data;
+}
+
+Future<List<int>> readSettings() async {
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  int? index = prefs.getInt("no");
+  if (index == null) {
+    throw Exception("未设置连接");
+  }
+
+  String? mac = prefs.getString("mac");
+  if (mac == null) {
+    throw Exception("未设置连接");
+  }
+  bool connectState = await checkConnection(index, mac);
+  if (!connectState) {
+    throw Exception("设备未连接或已断开连接，请重新连接设备");
+  }
+  List<int> data1 = await getHoldings(2300, 40);
+  List<int> data2 = await getHoldings(2340, 40);
 
   List<int> data = data1 + data2;
 

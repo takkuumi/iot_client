@@ -296,6 +296,8 @@ void wire_hal_generate_set_coils(int64_t port_,
                                  uint16_t reg,
                                  struct wire_uint_8_list *values);
 
+void wire_hal_generate_set_coil(int64_t port_, uint8_t unit_id, uint16_t reg, uint8_t value);
+
 void wire_hal_generate_set_holding(int64_t port_, uint8_t unit_id, uint16_t reg, uint16_t value);
 
 void wire_hal_generate_set_holdings_bulk(int64_t port_,
@@ -329,6 +331,8 @@ void wire_hal_read_logic_control(int64_t port_,
                                  uint8_t retry,
                                  uint8_t index);
 
+void wire_parse_u16s_to_u8s(int64_t port_, struct wire_uint_16_list *data);
+
 struct wire_Com *new_box_autoadd_com_0(void);
 
 struct wire_uint_16_list *new_uint_16_list_0(int32_t len);
@@ -360,6 +364,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_hal_generate_get_holdings);
     dummy_var ^= ((int64_t) (void*) wire_hal_generate_get_coils);
     dummy_var ^= ((int64_t) (void*) wire_hal_generate_set_coils);
+    dummy_var ^= ((int64_t) (void*) wire_hal_generate_set_coil);
     dummy_var ^= ((int64_t) (void*) wire_hal_generate_set_holding);
     dummy_var ^= ((int64_t) (void*) wire_hal_generate_set_holdings_bulk);
     dummy_var ^= ((int64_t) (void*) wire_hex_encode);
@@ -370,6 +375,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_hal_new_com);
     dummy_var ^= ((int64_t) (void*) wire_hal_get_com_indexs);
     dummy_var ^= ((int64_t) (void*) wire_hal_read_logic_control);
+    dummy_var ^= ((int64_t) (void*) wire_parse_u16s_to_u8s);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_com_0);
     dummy_var ^= ((int64_t) (void*) new_uint_16_list_0);
     dummy_var ^= ((int64_t) (void*) new_uint_8_list_0);

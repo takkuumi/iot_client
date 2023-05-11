@@ -1,13 +1,9 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:iot_client/ffi.dart';
 import 'package:iot_client/futs/ble.dart';
-import 'package:iot_client/futs/hal.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../constants.dart';
 
 Map<int, String> _rules = Map.from({
   0: "无（默认）",
@@ -148,12 +144,12 @@ class LogicRule {
   Future<List<LogicControl>> toLogicControl(int no) async {
     List<LogicControl> logicControls = [];
 
-    for (List<int> com in coms) {
+    for (int idx = 0; idx < coms.length; idx++) {
       String rtudata = await api.halControl(
         unitId: 1,
-        index: index,
+        index: index - 1 + idx,
         scene: rule,
-        values: Uint8List.fromList(com),
+        values: Uint8List.fromList(coms[idx]),
       );
 
       debugPrint("rtudata: $rtudata");

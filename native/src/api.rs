@@ -95,6 +95,11 @@ pub fn hal_generate_set_coils(unit_id: u8, reg: u16, values: Vec<u8>) -> String 
   hex::encode_upper(LogicControl::generate_set_coils(unit_id, reg, &result))
 }
 
+pub fn hal_generate_set_coil(unit_id: u8, reg: u16, value: u8) -> String {
+  let value = value != 0;
+  hex::encode_upper(LogicControl::generate_set_coil(unit_id, reg, value))
+}
+
 pub fn hal_generate_set_holding(unit_id: u8, reg: u16, value: u16) -> String {
   hex::encode_upper(LogicControl::generate_set_holding(unit_id, reg, value))
 }
@@ -145,4 +150,13 @@ pub fn hal_get_com_indexs(indexs: Vec<u8>) -> Com {
 
 pub fn hal_read_logic_control(id: String, retry: u8, index: u8) -> Option<hal::LogicControl> {
   None
+}
+
+pub fn parse_u16s_to_u8s(data: Vec<u16>) -> Vec<u8> {
+  let mut result = Vec::new();
+  for value in data {
+    result.push((value >> 8) as u8);
+    result.push(value as u8);
+  }
+  result
 }

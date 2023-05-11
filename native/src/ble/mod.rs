@@ -128,24 +128,53 @@ impl<'s> BytesParse<'s> {
       return None;
     }
 
-    let rang_e = self.deref().len() - 6;
-    let data = &self.deref()[20..rang_e];
+    let re: Regex = Regex::new(r"\+DATA=\d+,\d+,(?P<data>\S+)").unwrap();
+    if let Some(m) = re.captures(self.deref()).and_then(|caps| caps.name("data")) {
+      // +DATA=0,014,0103020000B844
+      let re2: Regex =
+        Regex::new(r"(?P<id>\S{2})(?P<fc>\S{2})(?P<count>\S{2})(?P<content>\S+)").unwrap();
 
-    let text = String::from_utf8_lossy(data);
-    let res = hex::decode(text.as_ref()).unwrap();
+      if let Some(caps) = re2.captures(m.as_bytes()) {
+        let id = caps.name("id").unwrap();
+        let fc = caps.name("fc").unwrap();
+        let count = caps.name("count").unwrap();
+        let content = caps.name("content").unwrap();
 
-    let chunks = res.chunks(2);
+        let id = String::from_utf8_lossy(id.as_bytes())
+          .parse::<u8>()
+          .unwrap();
+        let fc = String::from_utf8_lossy(fc.as_bytes())
+          .parse::<u8>()
+          .unwrap();
+        let count = String::from_utf8_lossy(count.as_bytes())
+          .parse::<u16>()
+          .unwrap();
 
-    let mut result = Vec::new();
-    for chunk in chunks {
-      let mut buf = [0u8; 1];
-      buf.copy_from_slice(chunk);
+        eprintln!("id: {}, fc: {}, count: {}", id, fc, count);
 
-      let val = u8::from_be_bytes(buf);
-      result.push(val);
-    }
+        let content_bytes = content.as_bytes();
 
-    Some(result)
+        eprintln!("content_bytes len : {}", content_bytes.len());
+        let content = String::from_utf8_lossy(&content_bytes[..(content_bytes.len() - 4)]);
+        let res = hex::decode(content.as_ref()).unwrap();
+
+        let mut result = Vec::new();
+        for item in res {
+          let bits_str = format!("{:08b}", item);
+
+          let other = bits_str
+            .chars()
+            .rev()
+            .map(|a| a.to_string().parse::<u8>().unwrap())
+            .collect::<Vec<u8>>();
+          result.extend_from_slice(&other);
+        }
+
+        return Some(result);
+      }
+    };
+
+    None
   }
 
   pub fn get_from(&self) -> Option<String> {
@@ -183,6 +212,20 @@ mod test {
     eprintln!("= {}", res);
     if res {
       let res = pa.parse_u16();
+      eprintln!("{:?}", res);
+    }
+  }
+
+  #[test]
+  fn parse_bool_works() {
+    let bytes = "\r\n+DATA=0,016,01010301000318E\r\n".as_bytes();
+
+    eprintln!("{}", String::from_utf8_lossy(bytes));
+    let pa = BytesParse::new(bytes);
+    let res = pa.validate();
+    eprintln!("= {}", res);
+    if res {
+      let res = pa.parse_bool();
       eprintln!("{:?}", res);
     }
   }

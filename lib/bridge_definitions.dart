@@ -117,6 +117,14 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kHalGenerateSetCoilsConstMeta;
 
+  Future<String> halGenerateSetCoil(
+      {required int unitId,
+      required int reg,
+      required int value,
+      dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kHalGenerateSetCoilConstMeta;
+
   Future<String> halGenerateSetHolding(
       {required int unitId,
       required int reg,
@@ -177,6 +185,10 @@ abstract class Native {
       dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kHalReadLogicControlConstMeta;
+
+  Future<Uint8List> parseU16SToU8S({required Uint16List data, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kParseU16SToU8SConstMeta;
 }
 
 class Com {

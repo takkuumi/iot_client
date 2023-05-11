@@ -122,6 +122,11 @@ pub extern "C" fn wire_hal_generate_set_coils(
 }
 
 #[no_mangle]
+pub extern "C" fn wire_hal_generate_set_coil(port_: i64, unit_id: u8, reg: u16, value: u8) {
+  wire_hal_generate_set_coil_impl(port_, unit_id, reg, value)
+}
+
+#[no_mangle]
 pub extern "C" fn wire_hal_generate_set_holding(port_: i64, unit_id: u8, reg: u16, value: u16) {
   wire_hal_generate_set_holding_impl(port_, unit_id, reg, value)
 }
@@ -190,6 +195,11 @@ pub extern "C" fn wire_hal_read_logic_control(
   index: u8,
 ) {
   wire_hal_read_logic_control_impl(port_, id, retry, index)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_parse_u16s_to_u8s(port_: i64, data: *mut wire_uint_16_list) {
+  wire_parse_u16s_to_u8s_impl(port_, data)
 }
 
 // Section: allocate functions

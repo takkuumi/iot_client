@@ -4,14 +4,48 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:iot_client/ffi.dart';
 import 'package:iot_client/scenes/widgets/lane_indicator_components.dart';
-import 'package:iot_client/utils/at_parse.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
 import '../futs/hal.dart';
+
+class Port {
+  int q1;
+  int q2;
+  int i1;
+  int q3;
+  int q4;
+  int i2;
+
+  Port({
+    required this.q1,
+    required this.q2,
+    required this.i1,
+    required this.q3,
+    required this.q4,
+    required this.i2,
+  });
+
+  int get getQ1 => q1 + 512;
+  int get getQ2 => q2 + 512;
+
+  int get getQ3 => q3 + 512;
+  int get getQ4 => q4 + 512;
+
+  // 长度为 8 的 list
+  static Port fromList(List<int> list) {
+    return Port(
+      q1: list[2],
+      q2: list[3],
+      i1: list[4],
+      q3: list[5],
+      q4: list[6],
+      i2: list[7],
+    );
+  }
+}
 
 class LaneIndicator extends StatefulWidget {
   const LaneIndicator({Key? key}) : super(key: key);
@@ -43,38 +77,12 @@ class _LaneIndicatorState extends State<LaneIndicator>
 
   int? rule;
 
-  // 车一
-  int? in1_1;
-  int? in1_2;
-  int? in1_3;
-  int? in1_4;
-  int? ot1_1;
-  int? ot1_2;
-  int? ot1_3;
-  int? ot1_4;
-
-  // 车二
-  int? in2_1;
-  int? in2_2;
-  int? in2_3;
-  int? in2_4;
-  int? ot2_1;
-  int? ot2_2;
-  int? ot2_3;
-  int? ot2_4;
-
-  // 车三
-  int? in3_1;
-  int? in3_2;
-  int? in3_3;
-  int? in3_4;
-  int? ot3_1;
-  int? ot3_2;
-  int? ot3_3;
-  int? ot3_4;
+  Port? port1;
+  Port? port2;
+  Port? port3;
 
   @override
-  bool get wantKeepAlive => true;
+  bool get wantKeepAlive => false;
 
   void tabListener() {
     if (tabController.index == 0) {
@@ -83,41 +91,9 @@ class _LaneIndicatorState extends State<LaneIndicator>
       }).then((String? addr) async {
         timer?.cancel();
         timer = null;
-        await getHoldings(2300, 28).then((value) {
+        List<int> res = await getHoldings(2300, 24).then((value) {
           debugPrint(value.join(','));
-
-          rule = value[1];
-
-          in1_1 = value[2];
-
-          in1_2 = value[3];
-          in1_3 = value[4];
-          in1_4 = value[5];
-
-          ot1_1 = value[14];
-          ot1_2 = value[15];
-          ot1_3 = value[16];
-          ot1_4 = value[17];
-
-          in2_1 = value[6];
-          in2_2 = value[7];
-          in2_3 = value[8];
-          in2_4 = value[9];
-
-          ot2_1 = value[18];
-          ot2_2 = value[19];
-          ot2_3 = value[20];
-          ot2_4 = value[21];
-
-          in3_1 = value[10];
-          in3_2 = value[11];
-          in3_3 = value[12];
-          in3_4 = value[13];
-
-          ot3_1 = value[22];
-          ot3_2 = value[23];
-          ot3_3 = value[24];
-          ot3_4 = value[25];
+          return value;
         });
 
         await initLaneState();
@@ -163,8 +139,42 @@ class _LaneIndicatorState extends State<LaneIndicator>
   void initState() {
     super.initState();
     tabController = TabController(length: 2, vsync: this);
-    tabController.addListener(tabListener);
-    tabController.animateTo(0);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        List<int> settings = await readSettings();
+
+        debugPrint(
+            "length: ${settings.length} settings: ${settings.join(',')}");
+
+        Uint8List v =
+            await api.parseU16SToU8S(data: Uint16List.fromList(settings));
+        debugPrint("length: ${v.length} settings: ${v.join(',')}");
+
+        for (int i = 0; i < v.length; i += 8) {
+          int index = v[i];
+          int sence = v[i + 1];
+
+          Uint8List sub = v.sublist(i, i + 8);
+          debugPrint("sub: ${sub.join(',')}");
+          if ([1, 2, 4, 6, 8, 3, 5, 6, 7, 9].contains(sence)) {
+            if (index == 0) {
+              port1 = Port.fromList(sub);
+              break;
+            } else if (index == 1) {
+              port2 = Port.fromList(sub);
+            } else if (index == 2) {
+              port3 = Port.fromList(sub);
+            }
+          }
+        }
+      } catch (err) {
+        showSnackBar(err.toString());
+      }
+      if (mounted) {
+        tabController.addListener(tabListener);
+        tabController.animateTo(0);
+      }
+    });
   }
 
   void setTimer() {
@@ -178,31 +188,37 @@ class _LaneIndicatorState extends State<LaneIndicator>
   }
 
   Future<void> initLaneState() async {
-    bool? a = await getCoil(in1_1!);
-    if (a != null && a) {
-      mountedState(() {
-        state1 = LaneIndicatorState.green;
-      });
+    List<bool>? states = await getCoils(0, 24);
+
+    if (states == null) {
+      return;
     }
-    bool? b = await getCoil(in1_2!);
-    if (b != null && b) {
+
+    debugPrint("states: ${states.join(',')}");
+    List<bool> coils = states!;
+
+    if (port1 != null) {
+      debugPrint("port1: ${port1?.i1} ${port1?.i2}");
+      bool i1 = coils[port1?.i1 ?? 0];
+      bool i2 = coils[port1?.i2 ?? 0];
+
       mountedState(() {
-        state1 = LaneIndicatorState.red;
+        state1 = i1 ? LaneIndicatorState.green : LaneIndicatorState.red;
+        state2 = i2 ? LaneIndicatorState.green : LaneIndicatorState.red;
       });
     }
 
-    bool? c = await getCoil(in1_3!);
-    if (c != null && c) {
-      mountedState(() {
-        state2 = LaneIndicatorState.green;
-      });
+    if (port2 != null) {
+      bool i1 = coils[port2?.i1 ?? 0];
+      bool i2 = coils[port2?.i1 ?? 0];
     }
-    bool? d = await getCoil(in1_4!);
-    if (d != null && d) {
-      mountedState(() {
-        state2 = LaneIndicatorState.red;
-      });
+
+    if (port3 != null) {
+      bool i1 = coils[port3?.i1 ?? 0];
+      bool i2 = coils[port3?.i1 ?? 0];
     }
+
+    // todo
   }
 
   @override
@@ -227,22 +243,21 @@ class _LaneIndicatorState extends State<LaneIndicator>
         verticalLineOnly,
         GestureDetector(
           onTap: () async {
+            if (timer != null) {
+              timer!.cancel();
+              timer = null;
+            }
             LaneIndicatorState nextState = state1 == LaneIndicatorState.green
                 ? LaneIndicatorState.red
                 : LaneIndicatorState.green;
 
             if (nextState == LaneIndicatorState.green) {
-              await setCoils(ot1_1! + 512, [true, false]);
-              // if ([4, 5, 8, 9].contains(rule!)) {
-              await setCoils(ot1_3! + 512, [false, true]);
-              // }
+              await setCoil(port1?.getQ1 ?? 512, true);
+              await setCoil(port1?.getQ2 ?? 512, false);
             } else {
-              await setCoils(ot1_1! + 512, [false, true]);
-              // if ([4, 5, 8, 9].contains(rule!)) {
-              await setCoils(ot1_3! + 512, [true, false]);
-              // }
+              await setCoil(port1?.getQ1 ?? 512, false);
+              await setCoil(port1?.getQ2 ?? 512, true);
             }
-
             await initLaneState();
           },
           child: Container(
@@ -264,15 +279,11 @@ class _LaneIndicatorState extends State<LaneIndicator>
                 : LaneIndicatorState.green;
 
             if (nextState == LaneIndicatorState.green) {
-              await setCoils(ot1_3! + 512, [true, false]);
-              // if ([4, 5, 8, 9].contains(rule!)) {
-              await setCoils(ot1_1! + 512, [false, true]);
-              // }
+              await setCoil(port1?.getQ3 ?? 512, true);
+              await setCoil(port1?.getQ4 ?? 512, false);
             } else {
-              await setCoils(ot1_3! + 512, [false, true]);
-              // if ([4, 5, 8, 9].contains(rule!)) {
-              await setCoils(ot1_1! + 512, [true, false]);
-              //}
+              await setCoil(port1?.getQ3 ?? 512, false);
+              await setCoil(port1?.getQ4 ?? 512, true);
             }
 
             await initLaneState();
@@ -306,7 +317,10 @@ class _LaneIndicatorState extends State<LaneIndicator>
             getState(),
             textAlign: TextAlign.center,
             style: TextStyle(
-                color: Colors.white, fontSize: 17, fontWeight: FontWeight.w500),
+              color: Colors.white,
+              fontSize: 17,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ],

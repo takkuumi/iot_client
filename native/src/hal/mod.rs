@@ -108,11 +108,11 @@ pub struct LogicControl {
 }
 
 impl LogicControl {
-  pub fn bytes(&self) -> [u8; 10] {
-    let mut result = [0u8; 10];
-    result[0] = self.scene;
-    result[1] = self.index;
-    result[2..10].copy_from_slice(&self.coms);
+  pub fn bytes(&self) -> [u8; 8] {
+    let mut result = [0u8; 8];
+    result[0] = self.index;
+    result[1] = self.scene;
+    result[2..8].copy_from_slice(&self.coms);
     result
   }
 
@@ -120,7 +120,7 @@ impl LogicControl {
     self
       .bytes()
       .chunks(2)
-      .fold(Vec::<u16>::with_capacity(5), |mut res, item| {
+      .fold(Vec::<u16>::with_capacity(4), |mut res, item| {
         res.push(u16::from_be_bytes([item[0], item[1]]));
         res
       })
@@ -132,7 +132,11 @@ impl LogicControl {
 
     let mut request = Vec::<u8>::new();
     mreq
-      .generate_set_holdings_bulk(2300, &self.bytes_u16(), &mut request)
+      .generate_set_holdings_bulk(
+        2300 + (self.index as u16) * 8,
+        &self.bytes_u16(),
+        &mut request,
+      )
       .unwrap();
 
     request
@@ -214,6 +218,15 @@ impl LogicControl {
       .unwrap();
     request
   }
+
+  pub fn generate_set_coil(unit_id: u8, reg: u16, value: bool) -> Vec<u8> {
+    // create request object
+    let mut mreq = ModbusRequest::new(unit_id, ModbusProto::Rtu);
+
+    let mut request = Vec::<u8>::new();
+    mreq.generate_set_coil(reg, value, &mut request).unwrap();
+    request
+  }
 }
 
 #[cfg(test)]
@@ -236,7 +249,7 @@ mod test {
     let lc = super::LogicControl {
       index: 1,
       scene: super::Scenes::A.bits(),
-      coms: vec![1, 2, 3],
+      coms: vec![1, 2, 3, 4, 5, 6],
     };
 
     let data = LogicControl::generate_set_holding(1, 2300, 1);

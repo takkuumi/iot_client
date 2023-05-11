@@ -5,52 +5,11 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:iot_client/ffi.dart';
-import 'package:iot_client/scenes/widgets/lane_indicator_components.dart';
+import 'package:iot_client/scenes/widgets/lane_indicator_comp.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
 import '../futs/hal.dart';
-
-class Port {
-  int sence;
-  int q1;
-  int q2;
-  int i1;
-  int q3;
-  int q4;
-  int i2;
-
-  Port({
-    required this.sence,
-    required this.q1,
-    required this.q2,
-    required this.i1,
-    required this.q3,
-    required this.q4,
-    required this.i2,
-  });
-
-  int get getSence => sence;
-
-  int get getQ1 => q1 + 512;
-  int get getQ2 => q2 + 512;
-
-  int get getQ3 => q3 + 512;
-  int get getQ4 => q4 + 512;
-
-  // 长度为 8 的 list
-  static Port fromList(List<int> list) {
-    return Port(
-      sence: list[1],
-      q1: list[2],
-      q2: list[3],
-      i1: list[4],
-      q3: list[5],
-      q4: list[6],
-      i2: list[7],
-    );
-  }
-}
 
 class LaneIndicator extends StatefulWidget {
   const LaneIndicator({Key? key}) : super(key: key);
@@ -68,8 +27,12 @@ class _LaneIndicatorState extends State<LaneIndicator>
   late TabController tabController;
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
-  LaneIndicatorState state1 = LaneIndicatorState.red;
-  LaneIndicatorState state2 = LaneIndicatorState.red;
+  final key1 =
+      GlobalKey<LaneIndicatorUIState>(debugLabel: "LaneIndicatorUIState1");
+  final key2 =
+      GlobalKey<LaneIndicatorUIState>(debugLabel: "LaneIndicatorUIState2");
+  final key3 =
+      GlobalKey<LaneIndicatorUIState>(debugLabel: "LaneIndicatorUIState3");
 
   Future<String?> sn = Future.value(null);
   Future<String?> ip = Future.value(null);
@@ -80,14 +43,8 @@ class _LaneIndicatorState extends State<LaneIndicator>
     }
   }
 
-  int? rule;
-
-  Port? port1;
-  Port? port2;
-  Port? port3;
-
   @override
-  bool get wantKeepAlive => false;
+  bool get wantKeepAlive => true;
 
   void tabListener() {
     if (tabController.index == 0) {
@@ -96,23 +53,11 @@ class _LaneIndicatorState extends State<LaneIndicator>
       }).then((String? addr) async {
         timer?.cancel();
         timer = null;
-        List<int> res = await getHoldings(2300, 24).then((value) {
-          debugPrint(value.join(','));
-          return value;
-        });
 
         await initLaneState();
 
         setTimer();
       });
-
-      // readDevice(
-      //   readAt("0200"),
-      //   initLaneState,
-      //   () {
-      //     debugPrint("error");
-      //   },
-      // );
     }
     if (tabController.index == 1) {
       _prefs.then((SharedPreferences prefs) {
@@ -140,6 +85,10 @@ class _LaneIndicatorState extends State<LaneIndicator>
 
   Timer? timer;
 
+  Port? port1;
+  Port? port2;
+  Port? port3;
+
   @override
   void initState() {
     super.initState();
@@ -166,12 +115,13 @@ class _LaneIndicatorState extends State<LaneIndicator>
               port1 = Port.fromList(sub);
               break;
             } else if (index == 1) {
-              port2 = Port.fromList(sub);
+              key2.currentState?.updatePort(Port.fromList(sub));
             } else if (index == 2) {
-              port3 = Port.fromList(sub);
+              key3.currentState?.updatePort(Port.fromList(sub));
             }
           }
         }
+        mountedState(() {});
       } catch (err) {
         showSnackBar(err.toString());
       }
@@ -199,31 +149,9 @@ class _LaneIndicatorState extends State<LaneIndicator>
       return;
     }
 
-    debugPrint("states: ${states.join(',')}");
-    List<bool> coils = states!;
-
-    if (port1 != null) {
-      debugPrint("port1: ${port1?.i1} ${port1?.i2}");
-      bool i1 = coils[port1?.i1 ?? 0];
-      bool i2 = coils[port1?.i2 ?? 0];
-
-      mountedState(() {
-        state1 = i1 ? LaneIndicatorState.green : LaneIndicatorState.red;
-        state2 = i2 ? LaneIndicatorState.green : LaneIndicatorState.red;
-      });
-    }
-
-    if (port2 != null) {
-      bool i1 = coils[port2?.i1 ?? 0];
-      bool i2 = coils[port2?.i1 ?? 0];
-    }
-
-    if (port3 != null) {
-      bool i1 = coils[port3?.i1 ?? 0];
-      bool i2 = coils[port3?.i1 ?? 0];
-    }
-
-    // todo
+    key1.currentState?.updateState(states);
+    key2.currentState?.updateState(states);
+    key3.currentState?.updateState(states);
   }
 
   @override
@@ -239,194 +167,6 @@ class _LaneIndicatorState extends State<LaneIndicator>
     blurRadius: 7,
     offset: const Offset(0, 3),
   );
-
-  Widget createLane1() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        buildLaneIndictorTitle("车道一"),
-        verticalLineOnly,
-        GestureDetector(
-          onTap: () async {
-            if (timer != null) {
-              timer!.cancel();
-              timer = null;
-            }
-            LaneIndicatorState nextState = state1 == LaneIndicatorState.green
-                ? LaneIndicatorState.red
-                : LaneIndicatorState.green;
-            int sence = port1?.getSence ?? 0;
-            if ([2, 3, 4, 5].contains(sence)) {
-              if (nextState == LaneIndicatorState.green) {
-                await setCoil(port1?.getQ1 ?? 512, true);
-                await setCoil(port1?.getQ2 ?? 512, false);
-              } else {
-                await setCoil(port1?.getQ1 ?? 512, false);
-                await setCoil(port1?.getQ2 ?? 512, true);
-              }
-            } else if ([6, 7, 8, 9].contains(sence)) {
-              if (nextState == LaneIndicatorState.green) {
-                await setCoil(port1?.getQ1 ?? 512, true);
-                await setCoil(port1?.getQ2 ?? 512, false);
-                await setCoil(port1?.getQ3 ?? 512, false);
-                await setCoil(port1?.getQ4 ?? 512, true);
-              } else {
-                await setCoil(port1?.getQ1 ?? 512, false);
-                await setCoil(port1?.getQ2 ?? 512, true);
-                await setCoil(port1?.getQ3 ?? 512, true);
-                await setCoil(port1?.getQ4 ?? 512, false);
-              }
-            }
-
-            await initLaneState();
-          },
-          child: Container(
-            width: 100,
-            height: 100,
-            alignment: Alignment.center,
-            child: Image.asset(
-              state1 == LaneIndicatorState.green
-                  ? "images/light_inside/img_1@2x.png"
-                  : "images/light_inside/img_3@2x.png",
-            ),
-          ),
-        ),
-        verticalLine,
-        GestureDetector(
-          onTap: () async {
-            LaneIndicatorState nextState = state2 == LaneIndicatorState.green
-                ? LaneIndicatorState.red
-                : LaneIndicatorState.green;
-
-            int sence = port1?.getSence ?? 0;
-            if ([2, 3, 4, 5].contains(sence)) {
-              if (nextState == LaneIndicatorState.green) {
-                await setCoil(port1?.getQ3 ?? 512, true);
-                await setCoil(port1?.getQ4 ?? 512, false);
-              } else {
-                await setCoil(port1?.getQ3 ?? 512, false);
-                await setCoil(port1?.getQ4 ?? 512, true);
-              }
-            } else if ([6, 7, 8, 9].contains(sence)) {
-              if (nextState == LaneIndicatorState.green) {
-                await setCoil(port1?.getQ1 ?? 512, false);
-                await setCoil(port1?.getQ2 ?? 512, true);
-                await setCoil(port1?.getQ3 ?? 512, true);
-                await setCoil(port1?.getQ4 ?? 512, false);
-              } else {
-                await setCoil(port1?.getQ1 ?? 512, true);
-                await setCoil(port1?.getQ2 ?? 512, false);
-                await setCoil(port1?.getQ3 ?? 512, false);
-                await setCoil(port1?.getQ4 ?? 512, true);
-              }
-            }
-
-            await initLaneState();
-          },
-          child: Container(
-            width: 100,
-            height: 100,
-            alignment: Alignment.center,
-            child: Container(
-              width: 100,
-              height: 100,
-              alignment: Alignment.center,
-              child: Image.asset(
-                state2 == LaneIndicatorState.green
-                    ? "images/light_inside/img_1@2x.png"
-                    : "images/light_inside/img_3@2x.png",
-              ),
-            ),
-          ),
-        ),
-        verticalLine2,
-        Container(
-          width: 90,
-          height: 32,
-          decoration: BoxDecoration(
-            color: Color.fromRGBO(0, 84, 216, 1),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            getState(),
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 17,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  String getState() {
-    if (state1 == LaneIndicatorState.green &&
-        state2 == LaneIndicatorState.red) {
-      return "正行";
-    }
-    if (state1 == LaneIndicatorState.red &&
-        state2 == LaneIndicatorState.green) {
-      return "逆行";
-    }
-
-    return "禁行";
-  }
-
-  Widget createLane2() {
-    return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-      buildLaneIndictorTitle("车道二"),
-      verticalLineOnly,
-      buildOffState(),
-      verticalLine,
-      buildOffState(),
-      verticalLine2,
-      Container(
-        width: 90,
-        height: 32,
-        decoration: BoxDecoration(
-          color: Color.fromRGBO(197, 197, 197, 1),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          "无",
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500),
-        ),
-      ),
-    ]);
-  }
-
-  Widget createLane3() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        buildLaneIndictorTitle("车道三"),
-        verticalLineOnly,
-        buildOffState(),
-        verticalLine,
-        buildOffState(),
-        verticalLine2,
-        Container(
-          width: 90,
-          height: 32,
-          decoration: BoxDecoration(
-            color: Color.fromRGBO(197, 197, 197, 1),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            "无",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500),
-          ),
-        ),
-      ],
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -456,24 +196,15 @@ class _LaneIndicatorState extends State<LaneIndicator>
               SingleChildScrollView(
                 padding: EdgeInsets.symmetric(vertical: 50),
                 child: Container(
-                  alignment: Alignment.center,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                  width: 600,
+                  padding: EdgeInsets.symmetric(horizontal: 30),
+                  child: Wrap(
+                    alignment: WrapAlignment.spaceEvenly,
+                    spacing: 10,
                     children: [
-                      Container(
-                        width: 600,
-                        padding: EdgeInsets.symmetric(horizontal: 30),
-                        child: Wrap(
-                          alignment: WrapAlignment.spaceEvenly,
-                          spacing: 10,
-                          children: [
-                            createLane1(),
-                            createLane2(),
-                            createLane2(),
-                          ],
-                        ),
-                      ),
+                      LaneIndicatorUI(key: key1, title: "车道一", port: port1),
+                      LaneIndicatorUI(key: key2, title: "车道二", port: port2),
+                      LaneIndicatorUI(key: key3, title: "车道三", port: port3),
                     ],
                   ),
                 ),

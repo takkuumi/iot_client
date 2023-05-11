@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:iot_client/ffi.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_scan_bluetooth/flutter_scan_bluetooth.dart';
@@ -33,6 +34,7 @@ class _BluetoothState extends State<Bluetooth> {
 
   Future<void> scanBleDevice() async {
     isScaning = true;
+    await EasyLoading.show(status: '扫描中...');
     mountedState(() {
       stateMsg = '正在扫描';
     });
@@ -48,6 +50,8 @@ class _BluetoothState extends State<Bluetooth> {
         mountedState(() {
           stateMsg = '扫描失败，等待下一次重试！';
         });
+        EasyLoading.dismiss();
+        return;
       }
 
       // SerialResponse chinfoRes = await api.bleChinfo();
@@ -73,6 +77,7 @@ class _BluetoothState extends State<Bluetooth> {
         stateMsg = '扫描失败，请手动点击扫描按扭重试！';
       });
     }
+    EasyLoading.dismiss();
   }
 
   Future<bool> connect(int index, String mac, int type) async {

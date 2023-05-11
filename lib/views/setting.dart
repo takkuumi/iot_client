@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:iot_client/ffi.dart';
 import 'package:flutter/material.dart';
 import 'package:iot_client/futs/hal.dart';
@@ -42,10 +43,13 @@ class _SettingAppState extends State<SettingApp> {
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final GlobalKey<FormState> _ipFormKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _appTitleFormKey = GlobalKey<FormState>();
 
   final TextEditingController _textEditingController = TextEditingController();
 
   final TextEditingController _ipEditingController = TextEditingController();
+  final TextEditingController _appTitleEditingController =
+      TextEditingController();
 
   late Future<String?> ndid = Future.value(null);
   Future<String?> mac = Future.value(null);
@@ -135,133 +139,6 @@ class _SettingAppState extends State<SettingApp> {
     exit(0);
   }
 
-  Future<void> showInformationDialog(BuildContext context) async {
-    BuildContext _c = context;
-    return await showDialog(
-        context: context,
-        builder: (context) {
-          bool isChecked = false;
-          return StatefulBuilder(builder: (context, mountedState) {
-            return AlertDialog(
-              content: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextFormField(
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly
-                        ],
-                        maxLength: 4,
-                        maxLines: 1,
-                        controller: _textEditingController,
-                        validator: (value) {
-                          return value!.isNotEmpty ? null : "请输入ID";
-                        },
-                        decoration:
-                            InputDecoration(hintText: "四位蓝牙数字ID,如 1000"),
-                      ),
-                    ],
-                  )),
-              title: Text('修改本机蓝牙地址'),
-              actions: <Widget>[
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: Text('取消'),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    if (_formKey.currentState?.validate() ?? false) {
-                      String id = _textEditingController.text;
-
-                      SerialResponse r2 = await api.bleNdreset();
-                      Uint8List? data2 = r2.data;
-                      if (data2 != null) {
-                        showSnackBar(String.fromCharCodes(data2));
-                      }
-
-                      SerialResponse r1 = await api.bleSetNdid(id: id);
-                      Uint8List? data1 = r1.data;
-                      if (data1 != null) {
-                        showSnackBar(String.fromCharCodes(data1));
-                      }
-                      SerialResponse r4 = await api.bleSetMode(mode: 2);
-                      Uint8List? data4 = r4.data;
-                      if (data4 != null) {
-                        showSnackBar(String.fromCharCodes(data4));
-                      }
-                      SerialResponse r3 = await api.bleReboot();
-                      Uint8List? data3 = r3.data;
-                      if (data3 != null) {
-                        showSnackBar(String.fromCharCodes(data3));
-                      }
-
-                      // closeAppUsingSystemPop();
-                    }
-                  },
-                  child: Text('修改'),
-                )
-              ],
-            );
-          });
-        });
-  }
-
-  Future<void> settingNetworkUrlDialog(BuildContext context) async {
-    BuildContext _c = context;
-    return await showDialog(
-        context: context,
-        builder: (context) {
-          bool isChecked = false;
-          return StatefulBuilder(builder: (context, mountedState) {
-            return AlertDialog(
-              content: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextFormField(
-                        keyboardType: TextInputType.url,
-                        maxLength: 100,
-                        maxLines: 5,
-                        controller: _textEditingController,
-                        validator: (value) {
-                          return value!.isNotEmpty ? null : "请输入服务地址";
-                        },
-                        decoration: InputDecoration(hintText: ""),
-                      ),
-                    ],
-                  )),
-              title: Text('设置服务地址'),
-              actions: <Widget>[
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: Text('取消'),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    if (_formKey.currentState?.validate() ?? false) {
-                      String url = _textEditingController.text;
-                      SharedPreferences prefs = await _prefs;
-
-                      prefs.setString('network_url', url);
-
-                      Navigator.canPop(_c);
-                    }
-                  },
-                  child: Text('设置'),
-                )
-              ],
-            );
-          });
-        });
-  }
-
   Future<void> settingIplDialog(BuildContext context) async {
     return await showDialog(
         context: context,
@@ -282,20 +159,20 @@ class _SettingAppState extends State<SettingApp> {
                       validator: (value) {
                         return value!.isNotEmpty ? null : "请输入IP地址";
                       },
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         hintText: "IP地址(如:192.169.1.100)",
                       ),
                     ),
                   ],
                 ),
               ),
-              title: Text('修改IP地址'),
+              title: const Text('修改IP地址'),
               actions: <Widget>[
                 TextButton(
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  child: Text('取消'),
+                  child: const Text('取消'),
                 ),
                 TextButton(
                   onPressed: () async {
@@ -313,6 +190,65 @@ class _SettingAppState extends State<SettingApp> {
                           values: Uint16List.fromList(values));
                       bool res = await setHoldings(req);
 
+                      if (res) {
+                        showSnackBar("修改成功");
+                        await readHoldings1();
+                      } else {
+                        showSnackBar("修改失败，请重试");
+                      }
+                      Navigator.of(context).maybePop();
+                    }
+                  },
+                  child: Text('修改'),
+                )
+              ],
+            );
+          });
+        });
+  }
+
+  Future<void> settingAppTitle(BuildContext context) async {
+    return await showDialog(
+        context: context,
+        builder: (dialogContext) {
+          return StatefulBuilder(builder: (context, mountedState) {
+            return AlertDialog(
+              content: Form(
+                key: _appTitleFormKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      keyboardType: TextInputType.text,
+                      maxLength: 30,
+                      maxLines: 2,
+                      controller: _appTitleEditingController,
+                      validator: (value) {
+                        return value!.isNotEmpty ? null : "请输入公司名称";
+                      },
+                      decoration: const InputDecoration(
+                        hintText: "如:深圳市XXX有限公司",
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              title: const Text('设置应用标题'),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('取消'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    if (_appTitleFormKey.currentState?.validate() ?? false) {
+                      final SharedPreferences prefs =
+                          await SharedPreferences.getInstance();
+
+                      bool res = await prefs.setString(
+                          "appTitle", _appTitleEditingController.text);
                       if (res) {
                         showSnackBar("修改成功");
                         await readHoldings1();
@@ -465,6 +401,25 @@ class _SettingAppState extends State<SettingApp> {
             title: Text('帐户'),
             tiles: <SettingsTile>[
               SettingsTile.navigation(
+                title: Text('公司名称'),
+                onPressed: (c) {
+                  settingAppTitle(c);
+                },
+                value: FutureBuilder(
+                  future: _prefs.then((value) => value.getString("appTitle")),
+                  initialData: '',
+                  builder: (context, AsyncSnapshot<String?> snapshot) {
+                    if (snapshot.hasData &&
+                        snapshot.connectionState == ConnectionState.done) {
+                      String comName = snapshot.data ?? '';
+                      return Text(comName);
+                    }
+
+                    return Text('');
+                  },
+                ),
+              ),
+              SettingsTile.navigation(
                 leading: Icon(Icons.logout),
                 title: Text('关于我们'),
               ),
@@ -482,8 +437,10 @@ class _SettingAppState extends State<SettingApp> {
         tooltip: "同步",
         onPressed: () async {
           if (mounted) {
+            await EasyLoading.show(status: '读取中...');
             await readHoldings1().whenComplete(() {
               debugPrint("读取完成");
+              EasyLoading.dismiss();
             });
           }
         },

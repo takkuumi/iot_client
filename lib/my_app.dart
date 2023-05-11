@@ -3,6 +3,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:iot_client/futs/ble.dart';
 import 'package:iot_client/views/bluetooth.dart';
 import 'package:iot_client/views/setting.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'constants.dart';
 import 'views/home.dart';
@@ -21,12 +22,13 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   int _bottomNavigationBarIndex = homeTab;
+  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
   @override
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       disconectAll().whenComplete(() {
         debugPrint("断开所有蓝牙连接");
       });
@@ -55,7 +57,15 @@ class _MyAppState extends State<MyApp> {
         key: rootScaffoldMessengerKey,
         child: Scaffold(
           appBar: AppBar(
-            title: const Text('深圳市迈锐交通科技有限公司'),
+            title: FutureBuilder(
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    return Text(snapshot.data.toString());
+                  } else {
+                    return const Text('');
+                  }
+                },
+                future: _prefs.then((value) => value.getString('appTitle'))),
           ),
           body: body,
           bottomNavigationBar: BottomNavigationBar(

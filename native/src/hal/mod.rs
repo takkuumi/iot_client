@@ -78,7 +78,7 @@ impl LogicControl {
     let mut request = Vec::<u8>::new();
     mreq
       .generate_set_holdings_bulk(
-        2300 + (self.index as u16) * 8,
+        2300 + (self.index as u16) * 12,
         &self.bytes_u16(),
         &mut request,
       )
@@ -108,7 +108,7 @@ impl LogicControl {
 
     let mut request = Vec::<u8>::new();
     mreq
-      .generate_set_holdings_bulk(2300 + (index as u16) * 8, &req_values, &mut request)
+      .generate_set_holdings_bulk(2300 + (index as u16) * 12, &req_values, &mut request)
       .unwrap();
     request
   }

@@ -104,20 +104,20 @@ class _LaneIndicatorState extends State<LaneIndicator>
             await api.convertU16SToU8S(data: Uint16List.fromList(settings));
         debugPrint("length: ${v.length} settings: ${v.join(',')}");
 
-        for (int i = 0; i < v.length; i += 8) {
+        for (int i = 0; i < v.length; i += 12) {
           int index = v[i];
           int sence = v[i + 1];
 
-          Uint8List sub = v.sublist(i, i + 8);
+          Uint8List sub = v.sublist(i, i + 12);
           debugPrint("sub: ${sub.join(',')}");
           if ([1, 2, 4, 6, 8, 3, 5, 6, 7, 9].contains(sence)) {
             if (index == 0) {
               port1 = Port.fromList(sub);
               break;
             } else if (index == 1) {
-              key2.currentState?.updatePort(Port.fromList(sub));
+              // key2.currentState?.updatePort(Port.fromList(sub));
             } else if (index == 2) {
-              key3.currentState?.updatePort(Port.fromList(sub));
+              // key3.currentState?.updatePort(Port.fromList(sub));
             }
           }
         }

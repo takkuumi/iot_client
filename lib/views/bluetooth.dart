@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+
 import 'package:iot_client/ffi.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_scan_bluetooth/flutter_scan_bluetooth.dart';
@@ -39,7 +40,8 @@ class _BluetoothState extends State<Bluetooth> {
       stateMsg = '正在扫描';
     });
     try {
-      debugPrint(">>>>>>>>>>>>>>>>>>>>>>>>start scan");
+      debugPrint("操作 蓝牙 扫描蓝牙");
+
       String responseText = '';
 
       SerialResponse scanRes = await api.bleScan(typee: 1);
@@ -71,7 +73,7 @@ class _BluetoothState extends State<Bluetooth> {
 
         devices.add(element);
       }
-      debugPrint(">>>>>>>>>>>>>>>>>>>>>>>>end scan");
+      debugPrint("操作 蓝牙 扫描完成");
     } catch (_) {
       mountedState(() {
         stateMsg = '扫描失败，请手动点击扫描按扭重试！';
@@ -81,10 +83,10 @@ class _BluetoothState extends State<Bluetooth> {
   }
 
   Future<bool> connect(int index, String mac, int type) async {
-    debugPrint("connect to: $mac$type");
+    debugPrint("连接蓝牙至 $mac$type");
     SerialResponse res = await api.bleLecconn(addr: mac, addType: type);
     if (res.data != null) {
-      debugPrint("connect result: ${String.fromCharCodes(res.data!)}");
+      debugPrint("连接结果 ${String.fromCharCodes(res.data!)}");
     }
     bool res1 = await checkConnection(index, mac);
     return res1;
@@ -142,11 +144,12 @@ class _BluetoothState extends State<Bluetooth> {
 
       if (!conn) {
         showSnackBar("连接失败,请重试");
+        debugPrint("连接失败");
         return;
       }
 
       showSnackBar("连接成功");
-      debugPrint('connection: $conn');
+      debugPrint("连接成功");
 
       // 设置连接状态
       devices.where((d) => d.mac == device.mac).first.connected = true;

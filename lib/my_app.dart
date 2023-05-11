@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:iot_client/futs/ble.dart';
+import 'package:iot_client/views/about.dart';
 import 'package:iot_client/views/bluetooth.dart';
+import 'package:iot_client/views/recoder.dart';
 import 'package:iot_client/views/setting.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -11,6 +13,9 @@ import 'views/home.dart';
 const int homeTab = 0;
 const int bluetoothTab = 1;
 const int settingTab = 2;
+const int historyTab = 3;
+
+const int aboutTab = 4;
 
 class MyApp extends StatefulWidget {
   final ThemeData theme;
@@ -44,8 +49,12 @@ class _MyAppState extends State<MyApp> {
       body = const Home();
     } else if (_bottomNavigationBarIndex == bluetoothTab) {
       body = const Bluetooth();
+    } else if (_bottomNavigationBarIndex == historyTab) {
+      body = const Recoder();
     } else if (_bottomNavigationBarIndex == settingTab) {
       body = const SettingApp();
+    } else if (_bottomNavigationBarIndex == aboutTab) {
+      body = const About();
     }
 
     return MaterialApp(
@@ -56,17 +65,20 @@ class _MyAppState extends State<MyApp> {
       home: ScaffoldMessenger(
         key: rootScaffoldMessengerKey,
         child: Scaffold(
-          appBar: AppBar(
-            title: FutureBuilder(
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    return Text(snapshot.data.toString());
-                  } else {
-                    return const Text('');
-                  }
-                },
-                future: _prefs.then((value) => value.getString('appTitle'))),
-          ),
+          appBar: _bottomNavigationBarIndex == aboutTab
+              ? null
+              : AppBar(
+                  title: FutureBuilder(
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          return Text(snapshot.data.toString());
+                        } else {
+                          return const Text('');
+                        }
+                      },
+                      future:
+                          _prefs.then((value) => value.getString('appTitle'))),
+                ),
           body: body,
           bottomNavigationBar: BottomNavigationBar(
             currentIndex: _bottomNavigationBarIndex,
@@ -87,6 +99,14 @@ class _MyAppState extends State<MyApp> {
               BottomNavigationBarItem(
                 icon: Icon(Icons.settings),
                 label: '设置',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.history),
+                label: '历史记录',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.account_circle),
+                label: '关于我们',
               ),
             ],
           ),

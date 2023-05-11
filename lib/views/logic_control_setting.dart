@@ -127,7 +127,7 @@ class Directive {
 class LogicRule {
   int index;
   int rule;
-  List<List<int>> coms;
+  List<int> coms;
   List<Directive> directives;
 
   LogicRule({
@@ -144,21 +144,19 @@ class LogicRule {
   Future<List<LogicControl>> toLogicControl(int no) async {
     List<LogicControl> logicControls = [];
 
-    for (int idx = 0; idx < coms.length; idx++) {
-      LogicControl logicControl = await api.halNewLogicControl(
-        index: index - 1 + idx,
-        scene: rule,
-        values: Uint8List.fromList(coms[idx]),
-      );
+    LogicControl logicControl = await api.halNewLogicControl(
+      index: index - 1,
+      scene: rule,
+      values: Uint8List.fromList(coms),
+    );
 
-      String rtudata = await api.halGenerateSetLcHoldings(
-          unitId: 1, logicControl: logicControl);
+    String rtudata = await api.halGenerateSetLcHoldings(
+        unitId: 1, logicControl: logicControl);
 
-      debugPrint("rtudata: $rtudata");
-      SerialResponse resp = await api.bleLesend(index: no, data: rtudata);
-      if (resp.data != null) {
-        debugPrint("resp.data: ${String.fromCharCodes(resp.data!)}");
-      }
+    debugPrint("rtudata: $rtudata");
+    SerialResponse resp = await api.bleLesend(index: no, data: rtudata);
+    if (resp.data != null) {
+      debugPrint("resp.data: ${String.fromCharCodes(resp.data!)}");
     }
 
     return logicControls;
@@ -191,16 +189,16 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
     }
   }
 
-  void submitCom(int rowIndex, int itemIndex, int? value) async {
-    debugPrint("submitCom: ${widget.logicRule.coms[rowIndex].join(',')}");
+  void submitCom(int itemIndex, int? value) async {
+    debugPrint("submitCom: ${widget.logicRule.coms.join(',')}");
     if (value != null) {
-      widget.logicRule.coms[rowIndex][itemIndex] = value;
+      widget.logicRule.coms[itemIndex] = value;
       setState(() {});
     }
   }
 
-  int getCom(int rowIndex, int index) {
-    return widget.logicRule.coms[rowIndex][index];
+  int getCom(int index) {
+    return widget.logicRule.coms[index];
   }
 
   Widget buildSizedLine(double space) {
@@ -213,7 +211,7 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
     );
   }
 
-  Widget buildCominItem(int rowIndex, String label, int index) {
+  Widget buildCominItem(String label, int index) {
     return Container(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -229,10 +227,10 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
           ),
           DropdownButton<int>(
             alignment: Alignment.center,
-            value: getCom(rowIndex, index),
+            value: getCom(index),
             items: genDropdownItems(_comout),
             onChanged: (value) {
-              submitCom(rowIndex, index, value);
+              submitCom(index, value);
             },
           ),
         ],
@@ -240,7 +238,34 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
     );
   }
 
-  Widget buildComoutItem(int rowIndex, String label, int index) {
+  Widget buildCominColumnItem(String label, int index) {
+    return Container(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: Colors.redAccent,
+            ),
+          ),
+          DropdownButton<int>(
+            alignment: Alignment.center,
+            value: getCom(index),
+            items: genDropdownItems(_comout),
+            onChanged: (value) {
+              submitCom(index, value);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildComoutItem(String label, int index) {
     return Container(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -256,10 +281,10 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
           ),
           DropdownButton<int>(
             alignment: Alignment.center,
-            value: getCom(rowIndex, index),
+            value: getCom(index),
             items: genDropdownItems(_comin),
             onChanged: (value) {
-              submitCom(rowIndex, index, value);
+              submitCom(index, value);
             },
           ),
         ],
@@ -267,24 +292,103 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
     );
   }
 
-  Widget buildRow(int rowIndex) {
+  Widget buildComoutColumnItem(String label, int index) {
+    return Container(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: Colors.redAccent,
+            ),
+          ),
+          DropdownButton<int>(
+            alignment: Alignment.center,
+            value: getCom(index),
+            items: genDropdownItems(_comin),
+            onChanged: (value) {
+              submitCom(index, value);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildRow2() {
     return Container(
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              buildCominItem(rowIndex, "正面绿箭", 0),
-              buildCominItem(rowIndex, "正面红叉", 1),
-              buildComoutItem(rowIndex, "反馈点", 2),
+              buildCominItem("正面绿箭", 0),
+              buildCominItem("正面红叉", 1),
+              buildComoutItem("反馈点", 2),
             ],
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              buildCominItem(rowIndex, "背面绿箭", 3),
-              buildCominItem(rowIndex, "背面红叉", 4),
-              buildComoutItem(rowIndex, "反馈点", 5),
+              buildCominItem("背面绿箭", 3),
+              buildCominItem("背面红叉", 4),
+              buildComoutItem("反馈点", 5),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildRow() {
+    return Container(
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              buildCominItem("正面绿箭", 0),
+              buildCominItem("正面红叉", 1),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              buildCominItem("背面绿箭", 2),
+              buildCominItem("背面红叉", 3),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildRow3() {
+    return Container(
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              buildCominColumnItem("正面绿箭", 0),
+              buildCominColumnItem("正面红叉", 1),
+              buildCominColumnItem("正面右转", 2),
+              buildComoutColumnItem("反馈点", 3),
+              buildComoutColumnItem("反馈点", 4),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              buildCominColumnItem("背面绿箭", 5),
+              buildCominColumnItem("背面红叉", 6),
+              buildCominColumnItem("背面右转", 7),
+              buildComoutColumnItem("反馈点", 8),
+              buildComoutColumnItem("反馈点", 9),
             ],
           ),
         ],
@@ -294,25 +398,27 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
 
   Widget buildWidget() {
     int rule = widget.logicRule.rule;
-    if ([1, 2, 4, 6, 8].contains(rule)) {
+    if (rule == 1) {
       return Container(
         child: Column(
           children: [
-            buildRow(0),
-            buildSizedLine(15),
-            buildRow(1),
+            buildRow(),
           ],
         ),
       );
-    } else if ([3, 5, 6, 7, 9].contains(rule)) {
+    } else if ([2, 4, 6, 8].contains(rule)) {
       return Container(
         child: Column(
           children: [
-            buildRow(0),
-            buildSizedLine(15),
-            buildRow(1),
-            buildSizedLine(15),
-            buildRow(2),
+            buildRow2(),
+          ],
+        ),
+      );
+    } else if ([3, 5, 7, 9].contains(rule)) {
+      return Container(
+        child: Column(
+          children: [
+            buildRow3(),
           ],
         ),
       );
@@ -388,11 +494,11 @@ class _LogicControlSettingState extends State<LogicControlSetting> {
   List<LogicRule> rules = [];
   List<GlobalKey<_LogicRuleItemState>> keys = [];
 
-  final List<int> cominit = [-1, -1, -1, -1, -1, -1];
+  final List<int> cominit = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1];
   void addLogicRule() {
     rules.add(LogicRule(
       index: rules.length + 1,
-      coms: [List.from(cominit), List.from(cominit), List.from(cominit)],
+      coms: List.from(cominit),
     ));
     setState(() {});
   }

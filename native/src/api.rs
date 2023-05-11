@@ -1,7 +1,3 @@
-use std::ops::Deref;
-
-use crate::hal::{self, Com};
-
 use super::{
   ble::{at_command, BytesParse},
   hal::LogicControl,
@@ -105,7 +101,7 @@ pub fn hal_generate_set_holding(unit_id: u8, reg: u16, value: u16) -> String {
 }
 
 pub fn hal_generate_set_holdings_bulk(unit_id: u8, reg: u16, values: Vec<u16>) -> String {
-  let res = hal::LogicControl::generate_set_holdings_bulk(unit_id, reg, values);
+  let res = LogicControl::generate_set_holdings_bulk(unit_id, reg, values);
 
   hex::encode_upper(res)
 }
@@ -118,41 +114,26 @@ pub fn hex_decode(data: String) -> Vec<u8> {
   hex::decode(data).unwrap_or_default()
 }
 
-pub fn hal_new_control(index: u8, scene: u8, coms: Vec<u8>) -> Vec<u8> {
-  let logic_control = hal::LogicControl { index, scene, coms };
-
-  logic_control.to_modbus()
+pub fn hal_new_logic_control(index: u8, scene: u8, values: Vec<u8>) -> LogicControl {
+  LogicControl {
+    index,
+    scene,
+    values,
+  }
 }
 
-pub fn hal_control(unit_id: u8, index: u8, scene: u8, values: Vec<u8>) -> String {
-  let res = hal::LogicControl::generate_set_holdings(unit_id, index, scene, &values);
+pub fn hal_generate_set_lc_holdings(unit_id: u8, logic_control: LogicControl) -> String {
+  let LogicControl {
+    index,
+    scene,
+    values,
+  } = logic_control;
+  let res = LogicControl::generate_set_holdings(unit_id, index, scene, &values);
 
   hex::encode_upper(res)
 }
 
-pub fn hal_display_com(com: Com) -> String {
-  format!("{:032b}", com.deref())
-}
-
-pub fn hal_new_com(value: u32) -> Com {
-  let mut com = Com::default();
-  com.set_value(value);
-  com
-}
-
-pub fn hal_get_com_indexs(indexs: Vec<u8>) -> Com {
-  let mut com = Com(0);
-  for index in indexs {
-    com.set_index(index + 1);
-  }
-  com
-}
-
-pub fn hal_read_logic_control(id: String, retry: u8, index: u8) -> Option<hal::LogicControl> {
-  None
-}
-
-pub fn parse_u16s_to_u8s(data: Vec<u16>) -> Vec<u8> {
+pub fn convert_u16s_to_u8s(data: Vec<u16>) -> Vec<u8> {
   let mut result = Vec::new();
   for value in data {
     result.push((value >> 8) as u8);

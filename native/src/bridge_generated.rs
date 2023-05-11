@@ -19,7 +19,7 @@ use std::{ffi::c_void, sync::Arc};
 // Section: imports
 
 use crate::{
-  hal::{Com, LogicControl},
+  hal::LogicControl,
   serial::{ResponseState, SerialResponse},
 };
 
@@ -420,117 +420,54 @@ fn wire_hex_decode_impl(port_: MessagePort, data: impl Wire2Api<String> + Unwind
     },
   )
 }
-fn wire_hal_new_control_impl(
+fn wire_hal_new_logic_control_impl(
   port_: MessagePort,
-  index: impl Wire2Api<u8> + UnwindSafe,
-  scene: impl Wire2Api<u8> + UnwindSafe,
-  coms: impl Wire2Api<Vec<u8>> + UnwindSafe,
-) {
-  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
-    WrapInfo {
-      debug_name: "hal_new_control",
-      port: Some(port_),
-      mode: FfiCallMode::Normal,
-    },
-    move || {
-      let api_index = index.wire2api();
-      let api_scene = scene.wire2api();
-      let api_coms = coms.wire2api();
-      move |task_callback| Ok(hal_new_control(api_index, api_scene, api_coms))
-    },
-  )
-}
-fn wire_hal_control_impl(
-  port_: MessagePort,
-  unit_id: impl Wire2Api<u8> + UnwindSafe,
   index: impl Wire2Api<u8> + UnwindSafe,
   scene: impl Wire2Api<u8> + UnwindSafe,
   values: impl Wire2Api<Vec<u8>> + UnwindSafe,
 ) {
   FLUTTER_RUST_BRIDGE_HANDLER.wrap(
     WrapInfo {
-      debug_name: "hal_control",
+      debug_name: "hal_new_logic_control",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || {
+      let api_index = index.wire2api();
+      let api_scene = scene.wire2api();
+      let api_values = values.wire2api();
+      move |task_callback| Ok(hal_new_logic_control(api_index, api_scene, api_values))
+    },
+  )
+}
+fn wire_hal_generate_set_lc_holdings_impl(
+  port_: MessagePort,
+  unit_id: impl Wire2Api<u8> + UnwindSafe,
+  logic_control: impl Wire2Api<LogicControl> + UnwindSafe,
+) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "hal_generate_set_lc_holdings",
       port: Some(port_),
       mode: FfiCallMode::Normal,
     },
     move || {
       let api_unit_id = unit_id.wire2api();
-      let api_index = index.wire2api();
-      let api_scene = scene.wire2api();
-      let api_values = values.wire2api();
-      move |task_callback| Ok(hal_control(api_unit_id, api_index, api_scene, api_values))
+      let api_logic_control = logic_control.wire2api();
+      move |task_callback| Ok(hal_generate_set_lc_holdings(api_unit_id, api_logic_control))
     },
   )
 }
-fn wire_hal_display_com_impl(port_: MessagePort, com: impl Wire2Api<Com> + UnwindSafe) {
+fn wire_convert_u16s_to_u8s_impl(port_: MessagePort, data: impl Wire2Api<Vec<u16>> + UnwindSafe) {
   FLUTTER_RUST_BRIDGE_HANDLER.wrap(
     WrapInfo {
-      debug_name: "hal_display_com",
-      port: Some(port_),
-      mode: FfiCallMode::Normal,
-    },
-    move || {
-      let api_com = com.wire2api();
-      move |task_callback| Ok(hal_display_com(api_com))
-    },
-  )
-}
-fn wire_hal_new_com_impl(port_: MessagePort, value: impl Wire2Api<u32> + UnwindSafe) {
-  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
-    WrapInfo {
-      debug_name: "hal_new_com",
-      port: Some(port_),
-      mode: FfiCallMode::Normal,
-    },
-    move || {
-      let api_value = value.wire2api();
-      move |task_callback| Ok(hal_new_com(api_value))
-    },
-  )
-}
-fn wire_hal_get_com_indexs_impl(port_: MessagePort, indexs: impl Wire2Api<Vec<u8>> + UnwindSafe) {
-  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
-    WrapInfo {
-      debug_name: "hal_get_com_indexs",
-      port: Some(port_),
-      mode: FfiCallMode::Normal,
-    },
-    move || {
-      let api_indexs = indexs.wire2api();
-      move |task_callback| Ok(hal_get_com_indexs(api_indexs))
-    },
-  )
-}
-fn wire_hal_read_logic_control_impl(
-  port_: MessagePort,
-  id: impl Wire2Api<String> + UnwindSafe,
-  retry: impl Wire2Api<u8> + UnwindSafe,
-  index: impl Wire2Api<u8> + UnwindSafe,
-) {
-  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
-    WrapInfo {
-      debug_name: "hal_read_logic_control",
-      port: Some(port_),
-      mode: FfiCallMode::Normal,
-    },
-    move || {
-      let api_id = id.wire2api();
-      let api_retry = retry.wire2api();
-      let api_index = index.wire2api();
-      move |task_callback| Ok(hal_read_logic_control(api_id, api_retry, api_index))
-    },
-  )
-}
-fn wire_parse_u16s_to_u8s_impl(port_: MessagePort, data: impl Wire2Api<Vec<u16>> + UnwindSafe) {
-  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
-    WrapInfo {
-      debug_name: "parse_u16s_to_u8s",
+      debug_name: "convert_u16s_to_u8s",
       port: Some(port_),
       mode: FfiCallMode::Normal,
     },
     move || {
       let api_data = data.wire2api();
-      move |task_callback| Ok(parse_u16s_to_u8s(api_data))
+      move |task_callback| Ok(convert_u16s_to_u8s(api_data))
     },
   )
 }
@@ -562,11 +499,6 @@ impl Wire2Api<u16> for u16 {
     self
   }
 }
-impl Wire2Api<u32> for u32 {
-  fn wire2api(self) -> u32 {
-    self
-  }
-}
 impl Wire2Api<u8> for u8 {
   fn wire2api(self) -> u8 {
     self
@@ -575,19 +507,12 @@ impl Wire2Api<u8> for u8 {
 
 // Section: impl IntoDart
 
-impl support::IntoDart for Com {
-  fn into_dart(self) -> support::DartAbi {
-    vec![self.0.into_dart()].into_dart()
-  }
-}
-impl support::IntoDartExceptPrimitive for Com {}
-
 impl support::IntoDart for LogicControl {
   fn into_dart(self) -> support::DartAbi {
     vec![
       self.index.into_dart(),
       self.scene.into_dart(),
-      self.coms.into_dart(),
+      self.values.into_dart(),
     ]
     .into_dart()
   }

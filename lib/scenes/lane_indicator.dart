@@ -12,6 +12,7 @@ import '../constants.dart';
 import '../futs/hal.dart';
 
 class Port {
+  int sence;
   int q1;
   int q2;
   int i1;
@@ -20,6 +21,7 @@ class Port {
   int i2;
 
   Port({
+    required this.sence,
     required this.q1,
     required this.q2,
     required this.i1,
@@ -27,6 +29,8 @@ class Port {
     required this.q4,
     required this.i2,
   });
+
+  int get getSence => sence;
 
   int get getQ1 => q1 + 512;
   int get getQ2 => q2 + 512;
@@ -37,6 +41,7 @@ class Port {
   // 长度为 8 的 list
   static Port fromList(List<int> list) {
     return Port(
+      sence: list[1],
       q1: list[2],
       q2: list[3],
       i1: list[4],
@@ -147,7 +152,7 @@ class _LaneIndicatorState extends State<LaneIndicator>
             "length: ${settings.length} settings: ${settings.join(',')}");
 
         Uint8List v =
-            await api.parseU16SToU8S(data: Uint16List.fromList(settings));
+            await api.convertU16SToU8S(data: Uint16List.fromList(settings));
         debugPrint("length: ${v.length} settings: ${v.join(',')}");
 
         for (int i = 0; i < v.length; i += 8) {
@@ -250,14 +255,29 @@ class _LaneIndicatorState extends State<LaneIndicator>
             LaneIndicatorState nextState = state1 == LaneIndicatorState.green
                 ? LaneIndicatorState.red
                 : LaneIndicatorState.green;
-
-            if (nextState == LaneIndicatorState.green) {
-              await setCoil(port1?.getQ1 ?? 512, true);
-              await setCoil(port1?.getQ2 ?? 512, false);
-            } else {
-              await setCoil(port1?.getQ1 ?? 512, false);
-              await setCoil(port1?.getQ2 ?? 512, true);
+            int sence = port1?.getSence ?? 0;
+            if ([2, 3, 4, 5].contains(sence)) {
+              if (nextState == LaneIndicatorState.green) {
+                await setCoil(port1?.getQ1 ?? 512, true);
+                await setCoil(port1?.getQ2 ?? 512, false);
+              } else {
+                await setCoil(port1?.getQ1 ?? 512, false);
+                await setCoil(port1?.getQ2 ?? 512, true);
+              }
+            } else if ([6, 7, 8, 9].contains(sence)) {
+              if (nextState == LaneIndicatorState.green) {
+                await setCoil(port1?.getQ1 ?? 512, true);
+                await setCoil(port1?.getQ2 ?? 512, false);
+                await setCoil(port1?.getQ3 ?? 512, false);
+                await setCoil(port1?.getQ4 ?? 512, true);
+              } else {
+                await setCoil(port1?.getQ1 ?? 512, false);
+                await setCoil(port1?.getQ2 ?? 512, true);
+                await setCoil(port1?.getQ3 ?? 512, true);
+                await setCoil(port1?.getQ4 ?? 512, false);
+              }
             }
+
             await initLaneState();
           },
           child: Container(
@@ -278,12 +298,27 @@ class _LaneIndicatorState extends State<LaneIndicator>
                 ? LaneIndicatorState.red
                 : LaneIndicatorState.green;
 
-            if (nextState == LaneIndicatorState.green) {
-              await setCoil(port1?.getQ3 ?? 512, true);
-              await setCoil(port1?.getQ4 ?? 512, false);
-            } else {
-              await setCoil(port1?.getQ3 ?? 512, false);
-              await setCoil(port1?.getQ4 ?? 512, true);
+            int sence = port1?.getSence ?? 0;
+            if ([2, 3, 4, 5].contains(sence)) {
+              if (nextState == LaneIndicatorState.green) {
+                await setCoil(port1?.getQ3 ?? 512, true);
+                await setCoil(port1?.getQ4 ?? 512, false);
+              } else {
+                await setCoil(port1?.getQ3 ?? 512, false);
+                await setCoil(port1?.getQ4 ?? 512, true);
+              }
+            } else if ([6, 7, 8, 9].contains(sence)) {
+              if (nextState == LaneIndicatorState.green) {
+                await setCoil(port1?.getQ1 ?? 512, false);
+                await setCoil(port1?.getQ2 ?? 512, true);
+                await setCoil(port1?.getQ3 ?? 512, true);
+                await setCoil(port1?.getQ4 ?? 512, false);
+              } else {
+                await setCoil(port1?.getQ1 ?? 512, true);
+                await setCoil(port1?.getQ2 ?? 512, false);
+                await setCoil(port1?.getQ3 ?? 512, false);
+                await setCoil(port1?.getQ4 ?? 512, true);
+              }
             }
 
             await initLaneState();

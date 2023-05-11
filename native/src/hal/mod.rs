@@ -5,8 +5,6 @@ mod memory;
 pub mod serial;
 mod utils;
 
-use std::ops::{BitOr, Deref};
-
 use bitflags::bitflags;
 use rmodbus::{client::ModbusRequest, ModbusProto};
 
@@ -47,64 +45,11 @@ impl Index {
   }
 }
 
-#[derive(Default)]
-pub struct Com(pub u32);
-
-impl Deref for Com {
-  type Target = u32;
-
-  fn deref(&self) -> &Self::Target {
-    &self.0
-  }
-}
-
-impl BitOr for Com {
-  type Output = Self;
-
-  fn bitor(self, rhs: Self) -> Self::Output {
-    Self(self.0 | rhs.0)
-  }
-}
-
-impl Com {
-  pub fn set_index(&mut self, index: u8) {
-    self.0 |= 1 << (32 - index);
-  }
-
-  pub fn clear_index(&mut self, index: u8) {
-    self.0 &= !(1 << (32 - index));
-  }
-
-  pub fn get_index(&self, index: u8) -> bool {
-    self.0 & (1 << (32 - index)) != 0
-  }
-
-  pub fn set_value(&mut self, value: u32) {
-    self.0 = value;
-  }
-
-  pub fn to_index(&self) -> Vec<Index> {
-    let mut result = Vec::with_capacity(32);
-    for i in 1..33 {
-      let value = self.get_index(i);
-      result.push(Index {
-        index: i as u16,
-        value,
-      });
-    }
-    result
-  }
-
-  pub fn bits(&self) -> [u8; 4] {
-    self.0.to_be_bytes()
-  }
-}
-
 // |场景(u8高4位)|索引(u8低4位)|IO输入(u32)|IO输出(u32)|模式(u8)
 pub struct LogicControl {
   pub index: u8,
   pub scene: u8,
-  pub coms: Vec<u8>,
+  pub values: Vec<u8>,
 }
 
 impl LogicControl {
@@ -112,7 +57,7 @@ impl LogicControl {
     let mut result = [0u8; 8];
     result[0] = self.index;
     result[1] = self.scene;
-    result[2..8].copy_from_slice(&self.coms);
+    result[2..8].copy_from_slice(&self.values);
     result
   }
 
@@ -249,7 +194,7 @@ mod test {
     let lc = super::LogicControl {
       index: 1,
       scene: super::Scenes::A.bits(),
-      coms: vec![1, 2, 3, 4, 5, 6],
+      values: vec![1, 2, 3, 4, 5, 6],
     };
 
     let data = LogicControl::generate_set_holding(1, 2300, 1);

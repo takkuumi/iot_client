@@ -145,12 +145,14 @@ class LogicRule {
     List<LogicControl> logicControls = [];
 
     for (int idx = 0; idx < coms.length; idx++) {
-      String rtudata = await api.halControl(
-        unitId: 1,
+      LogicControl logicControl = await api.halNewLogicControl(
         index: index - 1 + idx,
         scene: rule,
         values: Uint8List.fromList(coms[idx]),
       );
+
+      String rtudata = await api.halGenerateSetLcHoldings(
+          unitId: 1, logicControl: logicControl);
 
       debugPrint("rtudata: $rtudata");
       SerialResponse resp = await api.bleLesend(index: no, data: rtudata);

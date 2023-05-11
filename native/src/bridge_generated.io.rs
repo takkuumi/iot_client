@@ -152,61 +152,34 @@ pub extern "C" fn wire_hex_decode(port_: i64, data: *mut wire_uint_8_list) {
 }
 
 #[no_mangle]
-pub extern "C" fn wire_hal_new_control(
+pub extern "C" fn wire_hal_new_logic_control(
   port_: i64,
-  index: u8,
-  scene: u8,
-  coms: *mut wire_uint_8_list,
-) {
-  wire_hal_new_control_impl(port_, index, scene, coms)
-}
-
-#[no_mangle]
-pub extern "C" fn wire_hal_control(
-  port_: i64,
-  unit_id: u8,
   index: u8,
   scene: u8,
   values: *mut wire_uint_8_list,
 ) {
-  wire_hal_control_impl(port_, unit_id, index, scene, values)
+  wire_hal_new_logic_control_impl(port_, index, scene, values)
 }
 
 #[no_mangle]
-pub extern "C" fn wire_hal_display_com(port_: i64, com: *mut wire_Com) {
-  wire_hal_display_com_impl(port_, com)
-}
-
-#[no_mangle]
-pub extern "C" fn wire_hal_new_com(port_: i64, value: u32) {
-  wire_hal_new_com_impl(port_, value)
-}
-
-#[no_mangle]
-pub extern "C" fn wire_hal_get_com_indexs(port_: i64, indexs: *mut wire_uint_8_list) {
-  wire_hal_get_com_indexs_impl(port_, indexs)
-}
-
-#[no_mangle]
-pub extern "C" fn wire_hal_read_logic_control(
+pub extern "C" fn wire_hal_generate_set_lc_holdings(
   port_: i64,
-  id: *mut wire_uint_8_list,
-  retry: u8,
-  index: u8,
+  unit_id: u8,
+  logic_control: *mut wire_LogicControl,
 ) {
-  wire_hal_read_logic_control_impl(port_, id, retry, index)
+  wire_hal_generate_set_lc_holdings_impl(port_, unit_id, logic_control)
 }
 
 #[no_mangle]
-pub extern "C" fn wire_parse_u16s_to_u8s(port_: i64, data: *mut wire_uint_16_list) {
-  wire_parse_u16s_to_u8s_impl(port_, data)
+pub extern "C" fn wire_convert_u16s_to_u8s(port_: i64, data: *mut wire_uint_16_list) {
+  wire_convert_u16s_to_u8s_impl(port_, data)
 }
 
 // Section: allocate functions
 
 #[no_mangle]
-pub extern "C" fn new_box_autoadd_com_0() -> *mut wire_Com {
-  support::new_leak_box_ptr(wire_Com::new_with_null_ptr())
+pub extern "C" fn new_box_autoadd_logic_control_0() -> *mut wire_LogicControl {
+  support::new_leak_box_ptr(wire_LogicControl::new_with_null_ptr())
 }
 
 #[no_mangle]
@@ -237,15 +210,19 @@ impl Wire2Api<String> for *mut wire_uint_8_list {
     String::from_utf8_lossy(&vec).into_owned()
   }
 }
-impl Wire2Api<Com> for *mut wire_Com {
-  fn wire2api(self) -> Com {
+impl Wire2Api<LogicControl> for *mut wire_LogicControl {
+  fn wire2api(self) -> LogicControl {
     let wrap = unsafe { support::box_from_leak_ptr(self) };
-    Wire2Api::<Com>::wire2api(*wrap).into()
+    Wire2Api::<LogicControl>::wire2api(*wrap).into()
   }
 }
-impl Wire2Api<Com> for wire_Com {
-  fn wire2api(self) -> Com {
-    Com(self.field0.wire2api())
+impl Wire2Api<LogicControl> for wire_LogicControl {
+  fn wire2api(self) -> LogicControl {
+    LogicControl {
+      index: self.index.wire2api(),
+      scene: self.scene.wire2api(),
+      values: self.values.wire2api(),
+    }
   }
 }
 
@@ -269,8 +246,10 @@ impl Wire2Api<Vec<u8>> for *mut wire_uint_8_list {
 
 #[repr(C)]
 #[derive(Clone)]
-pub struct wire_Com {
-  field0: u32,
+pub struct wire_LogicControl {
+  index: u8,
+  scene: u8,
+  values: *mut wire_uint_8_list,
 }
 
 #[repr(C)]
@@ -299,15 +278,17 @@ impl<T> NewWithNullPtr for *mut T {
   }
 }
 
-impl NewWithNullPtr for wire_Com {
+impl NewWithNullPtr for wire_LogicControl {
   fn new_with_null_ptr() -> Self {
     Self {
-      field0: Default::default(),
+      index: Default::default(),
+      scene: Default::default(),
+      values: core::ptr::null_mut(),
     }
   }
 }
 
-impl Default for wire_Com {
+impl Default for wire_LogicControl {
   fn default() -> Self {
     Self::new_with_null_ptr()
   }

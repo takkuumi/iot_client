@@ -527,145 +527,64 @@ class NativeImpl implements Native {
         argNames: ["data"],
       );
 
-  Future<Uint8List> halNewControl(
+  Future<LogicControl> halNewLogicControl(
       {required int index,
-      required int scene,
-      required Uint8List coms,
-      dynamic hint}) {
-    var arg0 = api2wire_u8(index);
-    var arg1 = api2wire_u8(scene);
-    var arg2 = _platform.api2wire_uint_8_list(coms);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) =>
-          _platform.inner.wire_hal_new_control(port_, arg0, arg1, arg2),
-      parseSuccessData: _wire2api_uint_8_list,
-      constMeta: kHalNewControlConstMeta,
-      argValues: [index, scene, coms],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kHalNewControlConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "hal_new_control",
-        argNames: ["index", "scene", "coms"],
-      );
-
-  Future<String> halControl(
-      {required int unitId,
-      required int index,
       required int scene,
       required Uint8List values,
       dynamic hint}) {
+    var arg0 = api2wire_u8(index);
+    var arg1 = api2wire_u8(scene);
+    var arg2 = _platform.api2wire_uint_8_list(values);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) =>
+          _platform.inner.wire_hal_new_logic_control(port_, arg0, arg1, arg2),
+      parseSuccessData: _wire2api_logic_control,
+      constMeta: kHalNewLogicControlConstMeta,
+      argValues: [index, scene, values],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kHalNewLogicControlConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "hal_new_logic_control",
+        argNames: ["index", "scene", "values"],
+      );
+
+  Future<String> halGenerateSetLcHoldings(
+      {required int unitId, required LogicControl logicControl, dynamic hint}) {
     var arg0 = api2wire_u8(unitId);
-    var arg1 = api2wire_u8(index);
-    var arg2 = api2wire_u8(scene);
-    var arg3 = _platform.api2wire_uint_8_list(values);
+    var arg1 = _platform.api2wire_box_autoadd_logic_control(logicControl);
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) =>
-          _platform.inner.wire_hal_control(port_, arg0, arg1, arg2, arg3),
+          _platform.inner.wire_hal_generate_set_lc_holdings(port_, arg0, arg1),
       parseSuccessData: _wire2api_String,
-      constMeta: kHalControlConstMeta,
-      argValues: [unitId, index, scene, values],
+      constMeta: kHalGenerateSetLcHoldingsConstMeta,
+      argValues: [unitId, logicControl],
       hint: hint,
     ));
   }
 
-  FlutterRustBridgeTaskConstMeta get kHalControlConstMeta =>
+  FlutterRustBridgeTaskConstMeta get kHalGenerateSetLcHoldingsConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
-        debugName: "hal_control",
-        argNames: ["unitId", "index", "scene", "values"],
+        debugName: "hal_generate_set_lc_holdings",
+        argNames: ["unitId", "logicControl"],
       );
 
-  Future<String> halDisplayCom({required Com com, dynamic hint}) {
-    var arg0 = _platform.api2wire_box_autoadd_com(com);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_hal_display_com(port_, arg0),
-      parseSuccessData: _wire2api_String,
-      constMeta: kHalDisplayComConstMeta,
-      argValues: [com],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kHalDisplayComConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "hal_display_com",
-        argNames: ["com"],
-      );
-
-  Future<Com> halNewCom({required int value, dynamic hint}) {
-    var arg0 = api2wire_u32(value);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_hal_new_com(port_, arg0),
-      parseSuccessData: _wire2api_com,
-      constMeta: kHalNewComConstMeta,
-      argValues: [value],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kHalNewComConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "hal_new_com",
-        argNames: ["value"],
-      );
-
-  Future<Com> halGetComIndexs({required Uint8List indexs, dynamic hint}) {
-    var arg0 = _platform.api2wire_uint_8_list(indexs);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_hal_get_com_indexs(port_, arg0),
-      parseSuccessData: _wire2api_com,
-      constMeta: kHalGetComIndexsConstMeta,
-      argValues: [indexs],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kHalGetComIndexsConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "hal_get_com_indexs",
-        argNames: ["indexs"],
-      );
-
-  Future<LogicControl?> halReadLogicControl(
-      {required String id,
-      required int retry,
-      required int index,
-      dynamic hint}) {
-    var arg0 = _platform.api2wire_String(id);
-    var arg1 = api2wire_u8(retry);
-    var arg2 = api2wire_u8(index);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) =>
-          _platform.inner.wire_hal_read_logic_control(port_, arg0, arg1, arg2),
-      parseSuccessData: _wire2api_opt_box_autoadd_logic_control,
-      constMeta: kHalReadLogicControlConstMeta,
-      argValues: [id, retry, index],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kHalReadLogicControlConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "hal_read_logic_control",
-        argNames: ["id", "retry", "index"],
-      );
-
-  Future<Uint8List> parseU16SToU8S({required Uint16List data, dynamic hint}) {
+  Future<Uint8List> convertU16SToU8S({required Uint16List data, dynamic hint}) {
     var arg0 = _platform.api2wire_uint_16_list(data);
     return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_parse_u16s_to_u8s(port_, arg0),
+      callFfi: (port_) => _platform.inner.wire_convert_u16s_to_u8s(port_, arg0),
       parseSuccessData: _wire2api_uint_8_list,
-      constMeta: kParseU16SToU8SConstMeta,
+      constMeta: kConvertU16SToU8SConstMeta,
       argValues: [data],
       hint: hint,
     ));
   }
 
-  FlutterRustBridgeTaskConstMeta get kParseU16SToU8SConstMeta =>
+  FlutterRustBridgeTaskConstMeta get kConvertU16SToU8SConstMeta =>
       const FlutterRustBridgeTaskConstMeta(
-        debugName: "parse_u16s_to_u8s",
+        debugName: "convert_u16s_to_u8s",
         argNames: ["data"],
       );
 
@@ -682,19 +601,6 @@ class NativeImpl implements Native {
     return raw as bool;
   }
 
-  LogicControl _wire2api_box_autoadd_logic_control(dynamic raw) {
-    return _wire2api_logic_control(raw);
-  }
-
-  Com _wire2api_com(dynamic raw) {
-    final arr = raw as List<dynamic>;
-    if (arr.length != 1)
-      throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
-    return Com(
-      field0: _wire2api_u32(arr[0]),
-    );
-  }
-
   int _wire2api_i32(dynamic raw) {
     return raw as int;
   }
@@ -706,12 +612,8 @@ class NativeImpl implements Native {
     return LogicControl(
       index: _wire2api_u8(arr[0]),
       scene: _wire2api_u8(arr[1]),
-      coms: _wire2api_uint_8_list(arr[2]),
+      values: _wire2api_uint_8_list(arr[2]),
     );
-  }
-
-  LogicControl? _wire2api_opt_box_autoadd_logic_control(dynamic raw) {
-    return raw == null ? null : _wire2api_box_autoadd_logic_control(raw);
   }
 
   Uint16List? _wire2api_opt_uint_16_list(dynamic raw) {
@@ -740,10 +642,6 @@ class NativeImpl implements Native {
     return raw as int;
   }
 
-  int _wire2api_u32(dynamic raw) {
-    return raw as int;
-  }
-
   int _wire2api_u8(dynamic raw) {
     return raw as int;
   }
@@ -765,11 +663,6 @@ int api2wire_u16(int raw) {
 }
 
 @protected
-int api2wire_u32(int raw) {
-  return raw;
-}
-
-@protected
 int api2wire_u8(int raw) {
   return raw;
 }
@@ -787,9 +680,10 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
   }
 
   @protected
-  ffi.Pointer<wire_Com> api2wire_box_autoadd_com(Com raw) {
-    final ptr = inner.new_box_autoadd_com_0();
-    _api_fill_to_wire_com(raw, ptr.ref);
+  ffi.Pointer<wire_LogicControl> api2wire_box_autoadd_logic_control(
+      LogicControl raw) {
+    final ptr = inner.new_box_autoadd_logic_control_0();
+    _api_fill_to_wire_logic_control(raw, ptr.ref);
     return ptr;
   }
 
@@ -810,13 +704,16 @@ class NativePlatform extends FlutterRustBridgeBase<NativeWire> {
 
 // Section: api_fill_to_wire
 
-  void _api_fill_to_wire_box_autoadd_com(
-      Com apiObj, ffi.Pointer<wire_Com> wireObj) {
-    _api_fill_to_wire_com(apiObj, wireObj.ref);
+  void _api_fill_to_wire_box_autoadd_logic_control(
+      LogicControl apiObj, ffi.Pointer<wire_LogicControl> wireObj) {
+    _api_fill_to_wire_logic_control(apiObj, wireObj.ref);
   }
 
-  void _api_fill_to_wire_com(Com apiObj, wire_Com wireObj) {
-    wireObj.field0 = api2wire_u32(apiObj.field0);
+  void _api_fill_to_wire_logic_control(
+      LogicControl apiObj, wire_LogicControl wireObj) {
+    wireObj.index = api2wire_u8(apiObj.index);
+    wireObj.scene = api2wire_u8(apiObj.scene);
+    wireObj.values = api2wire_uint_8_list(apiObj.values);
   }
 }
 
@@ -1382,148 +1279,76 @@ class NativeWire implements FlutterRustBridgeWireBase {
   late final _wire_hex_decode = _wire_hex_decodePtr
       .asFunction<void Function(int, ffi.Pointer<wire_uint_8_list>)>();
 
-  void wire_hal_new_control(
+  void wire_hal_new_logic_control(
     int port_,
-    int index,
-    int scene,
-    ffi.Pointer<wire_uint_8_list> coms,
-  ) {
-    return _wire_hal_new_control(
-      port_,
-      index,
-      scene,
-      coms,
-    );
-  }
-
-  late final _wire_hal_new_controlPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Int64, ffi.Uint8, ffi.Uint8,
-              ffi.Pointer<wire_uint_8_list>)>>('wire_hal_new_control');
-  late final _wire_hal_new_control = _wire_hal_new_controlPtr.asFunction<
-      void Function(int, int, int, ffi.Pointer<wire_uint_8_list>)>();
-
-  void wire_hal_control(
-    int port_,
-    int unit_id,
     int index,
     int scene,
     ffi.Pointer<wire_uint_8_list> values,
   ) {
-    return _wire_hal_control(
+    return _wire_hal_new_logic_control(
       port_,
-      unit_id,
       index,
       scene,
       values,
     );
   }
 
-  late final _wire_hal_controlPtr = _lookup<
+  late final _wire_hal_new_logic_controlPtr = _lookup<
       ffi.NativeFunction<
-          ffi.Void Function(ffi.Int64, ffi.Uint8, ffi.Uint8, ffi.Uint8,
-              ffi.Pointer<wire_uint_8_list>)>>('wire_hal_control');
-  late final _wire_hal_control = _wire_hal_controlPtr.asFunction<
-      void Function(int, int, int, int, ffi.Pointer<wire_uint_8_list>)>();
+          ffi.Void Function(ffi.Int64, ffi.Uint8, ffi.Uint8,
+              ffi.Pointer<wire_uint_8_list>)>>('wire_hal_new_logic_control');
+  late final _wire_hal_new_logic_control =
+      _wire_hal_new_logic_controlPtr.asFunction<
+          void Function(int, int, int, ffi.Pointer<wire_uint_8_list>)>();
 
-  void wire_hal_display_com(
+  void wire_hal_generate_set_lc_holdings(
     int port_,
-    ffi.Pointer<wire_Com> com,
+    int unit_id,
+    ffi.Pointer<wire_LogicControl> logic_control,
   ) {
-    return _wire_hal_display_com(
+    return _wire_hal_generate_set_lc_holdings(
       port_,
-      com,
+      unit_id,
+      logic_control,
     );
   }
 
-  late final _wire_hal_display_comPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(
-              ffi.Int64, ffi.Pointer<wire_Com>)>>('wire_hal_display_com');
-  late final _wire_hal_display_com = _wire_hal_display_comPtr
-      .asFunction<void Function(int, ffi.Pointer<wire_Com>)>();
+  late final _wire_hal_generate_set_lc_holdingsPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(
+                  ffi.Int64, ffi.Uint8, ffi.Pointer<wire_LogicControl>)>>(
+      'wire_hal_generate_set_lc_holdings');
+  late final _wire_hal_generate_set_lc_holdings =
+      _wire_hal_generate_set_lc_holdingsPtr.asFunction<
+          void Function(int, int, ffi.Pointer<wire_LogicControl>)>();
 
-  void wire_hal_new_com(
-    int port_,
-    int value,
-  ) {
-    return _wire_hal_new_com(
-      port_,
-      value,
-    );
-  }
-
-  late final _wire_hal_new_comPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Uint32)>>(
-          'wire_hal_new_com');
-  late final _wire_hal_new_com =
-      _wire_hal_new_comPtr.asFunction<void Function(int, int)>();
-
-  void wire_hal_get_com_indexs(
-    int port_,
-    ffi.Pointer<wire_uint_8_list> indexs,
-  ) {
-    return _wire_hal_get_com_indexs(
-      port_,
-      indexs,
-    );
-  }
-
-  late final _wire_hal_get_com_indexsPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Int64,
-              ffi.Pointer<wire_uint_8_list>)>>('wire_hal_get_com_indexs');
-  late final _wire_hal_get_com_indexs = _wire_hal_get_com_indexsPtr
-      .asFunction<void Function(int, ffi.Pointer<wire_uint_8_list>)>();
-
-  void wire_hal_read_logic_control(
-    int port_,
-    ffi.Pointer<wire_uint_8_list> id,
-    int retry,
-    int index,
-  ) {
-    return _wire_hal_read_logic_control(
-      port_,
-      id,
-      retry,
-      index,
-    );
-  }
-
-  late final _wire_hal_read_logic_controlPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Int64, ffi.Pointer<wire_uint_8_list>, ffi.Uint8,
-              ffi.Uint8)>>('wire_hal_read_logic_control');
-  late final _wire_hal_read_logic_control =
-      _wire_hal_read_logic_controlPtr.asFunction<
-          void Function(int, ffi.Pointer<wire_uint_8_list>, int, int)>();
-
-  void wire_parse_u16s_to_u8s(
+  void wire_convert_u16s_to_u8s(
     int port_,
     ffi.Pointer<wire_uint_16_list> data,
   ) {
-    return _wire_parse_u16s_to_u8s(
+    return _wire_convert_u16s_to_u8s(
       port_,
       data,
     );
   }
 
-  late final _wire_parse_u16s_to_u8sPtr = _lookup<
+  late final _wire_convert_u16s_to_u8sPtr = _lookup<
       ffi.NativeFunction<
           ffi.Void Function(ffi.Int64,
-              ffi.Pointer<wire_uint_16_list>)>>('wire_parse_u16s_to_u8s');
-  late final _wire_parse_u16s_to_u8s = _wire_parse_u16s_to_u8sPtr
+              ffi.Pointer<wire_uint_16_list>)>>('wire_convert_u16s_to_u8s');
+  late final _wire_convert_u16s_to_u8s = _wire_convert_u16s_to_u8sPtr
       .asFunction<void Function(int, ffi.Pointer<wire_uint_16_list>)>();
 
-  ffi.Pointer<wire_Com> new_box_autoadd_com_0() {
-    return _new_box_autoadd_com_0();
+  ffi.Pointer<wire_LogicControl> new_box_autoadd_logic_control_0() {
+    return _new_box_autoadd_logic_control_0();
   }
 
-  late final _new_box_autoadd_com_0Ptr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_Com> Function()>>(
-          'new_box_autoadd_com_0');
-  late final _new_box_autoadd_com_0 =
-      _new_box_autoadd_com_0Ptr.asFunction<ffi.Pointer<wire_Com> Function()>();
+  late final _new_box_autoadd_logic_control_0Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_LogicControl> Function()>>(
+          'new_box_autoadd_logic_control_0');
+  late final _new_box_autoadd_logic_control_0 =
+      _new_box_autoadd_logic_control_0Ptr
+          .asFunction<ffi.Pointer<wire_LogicControl> Function()>();
 
   ffi.Pointer<wire_uint_16_list> new_uint_16_list_0(
     int len,
@@ -1586,9 +1411,14 @@ class wire_uint_16_list extends ffi.Struct {
   external int len;
 }
 
-class wire_Com extends ffi.Struct {
-  @ffi.Uint32()
-  external int field0;
+class wire_LogicControl extends ffi.Struct {
+  @ffi.Uint8()
+  external int index;
+
+  @ffi.Uint8()
+  external int scene;
+
+  external ffi.Pointer<wire_uint_8_list> values;
 }
 
 typedef DartPostCObjectFnType = ffi.Pointer<

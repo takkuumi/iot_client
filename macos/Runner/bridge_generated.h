@@ -229,9 +229,11 @@ typedef struct wire_uint_16_list {
   int32_t len;
 } wire_uint_16_list;
 
-typedef struct wire_Com {
-  uint32_t field0;
-} wire_Com;
+typedef struct wire_LogicControl {
+  uint8_t index;
+  uint8_t scene;
+  struct wire_uint_8_list *values;
+} wire_LogicControl;
 
 typedef struct DartCObject *WireSyncReturn;
 
@@ -309,31 +311,18 @@ void wire_hex_encode(int64_t port_, struct wire_uint_8_list *data);
 
 void wire_hex_decode(int64_t port_, struct wire_uint_8_list *data);
 
-void wire_hal_new_control(int64_t port_,
-                          uint8_t index,
-                          uint8_t scene,
-                          struct wire_uint_8_list *coms);
+void wire_hal_new_logic_control(int64_t port_,
+                                uint8_t index,
+                                uint8_t scene,
+                                struct wire_uint_8_list *values);
 
-void wire_hal_control(int64_t port_,
-                      uint8_t unit_id,
-                      uint8_t index,
-                      uint8_t scene,
-                      struct wire_uint_8_list *values);
+void wire_hal_generate_set_lc_holdings(int64_t port_,
+                                       uint8_t unit_id,
+                                       struct wire_LogicControl *logic_control);
 
-void wire_hal_display_com(int64_t port_, struct wire_Com *com);
+void wire_convert_u16s_to_u8s(int64_t port_, struct wire_uint_16_list *data);
 
-void wire_hal_new_com(int64_t port_, uint32_t value);
-
-void wire_hal_get_com_indexs(int64_t port_, struct wire_uint_8_list *indexs);
-
-void wire_hal_read_logic_control(int64_t port_,
-                                 struct wire_uint_8_list *id,
-                                 uint8_t retry,
-                                 uint8_t index);
-
-void wire_parse_u16s_to_u8s(int64_t port_, struct wire_uint_16_list *data);
-
-struct wire_Com *new_box_autoadd_com_0(void);
+struct wire_LogicControl *new_box_autoadd_logic_control_0(void);
 
 struct wire_uint_16_list *new_uint_16_list_0(int32_t len);
 
@@ -369,14 +358,10 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_hal_generate_set_holdings_bulk);
     dummy_var ^= ((int64_t) (void*) wire_hex_encode);
     dummy_var ^= ((int64_t) (void*) wire_hex_decode);
-    dummy_var ^= ((int64_t) (void*) wire_hal_new_control);
-    dummy_var ^= ((int64_t) (void*) wire_hal_control);
-    dummy_var ^= ((int64_t) (void*) wire_hal_display_com);
-    dummy_var ^= ((int64_t) (void*) wire_hal_new_com);
-    dummy_var ^= ((int64_t) (void*) wire_hal_get_com_indexs);
-    dummy_var ^= ((int64_t) (void*) wire_hal_read_logic_control);
-    dummy_var ^= ((int64_t) (void*) wire_parse_u16s_to_u8s);
-    dummy_var ^= ((int64_t) (void*) new_box_autoadd_com_0);
+    dummy_var ^= ((int64_t) (void*) wire_hal_new_logic_control);
+    dummy_var ^= ((int64_t) (void*) wire_hal_generate_set_lc_holdings);
+    dummy_var ^= ((int64_t) (void*) wire_convert_u16s_to_u8s);
+    dummy_var ^= ((int64_t) (void*) new_box_autoadd_logic_control_0);
     dummy_var ^= ((int64_t) (void*) new_uint_16_list_0);
     dummy_var ^= ((int64_t) (void*) new_uint_8_list_0);
     dummy_var ^= ((int64_t) (void*) free_WireSyncReturn);

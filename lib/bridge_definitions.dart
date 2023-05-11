@@ -149,65 +149,33 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kHexDecodeConstMeta;
 
-  Future<Uint8List> halNewControl(
+  Future<LogicControl> halNewLogicControl(
       {required int index,
-      required int scene,
-      required Uint8List coms,
-      dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kHalNewControlConstMeta;
-
-  Future<String> halControl(
-      {required int unitId,
-      required int index,
       required int scene,
       required Uint8List values,
       dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta get kHalControlConstMeta;
+  FlutterRustBridgeTaskConstMeta get kHalNewLogicControlConstMeta;
 
-  Future<String> halDisplayCom({required Com com, dynamic hint});
+  Future<String> halGenerateSetLcHoldings(
+      {required int unitId, required LogicControl logicControl, dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta get kHalDisplayComConstMeta;
+  FlutterRustBridgeTaskConstMeta get kHalGenerateSetLcHoldingsConstMeta;
 
-  Future<Com> halNewCom({required int value, dynamic hint});
+  Future<Uint8List> convertU16SToU8S({required Uint16List data, dynamic hint});
 
-  FlutterRustBridgeTaskConstMeta get kHalNewComConstMeta;
-
-  Future<Com> halGetComIndexs({required Uint8List indexs, dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kHalGetComIndexsConstMeta;
-
-  Future<LogicControl?> halReadLogicControl(
-      {required String id,
-      required int retry,
-      required int index,
-      dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kHalReadLogicControlConstMeta;
-
-  Future<Uint8List> parseU16SToU8S({required Uint16List data, dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kParseU16SToU8SConstMeta;
-}
-
-class Com {
-  final int field0;
-
-  const Com({
-    required this.field0,
-  });
+  FlutterRustBridgeTaskConstMeta get kConvertU16SToU8SConstMeta;
 }
 
 class LogicControl {
   final int index;
   final int scene;
-  final Uint8List coms;
+  final Uint8List values;
 
   const LogicControl({
     required this.index,
     required this.scene,
-    required this.coms,
+    required this.values,
   });
 }
 

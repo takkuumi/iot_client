@@ -5,7 +5,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
-import 'package:iot_client/device.dart';
+import 'package:iot_client/model/device.dart';
 import 'package:iot_client/ffi.dart';
 import 'package:iot_client/futs/hal.dart';
 import 'package:iot_client/utils/at_parse.dart';
@@ -35,9 +35,10 @@ class _CoViState extends State<CoVi>
   Future<String?> sn = Future.value(null);
   Future<String?> ip = Future.value(null);
 
-  void mountedState(void Function() fn) {
+  @override
+  void setState(VoidCallback fn) {
     if (mounted) {
-      setState(fn);
+      super.setState(fn);
     }
   }
 
@@ -55,13 +56,13 @@ class _CoViState extends State<CoVi>
         if (addr != null) {
           getHoldings(2196, 9).then((value) {
             Uint8List v = Uint16List.fromList(value).buffer.asUint8List();
-            mountedState(() {
+            setState(() {
               sn = Future.value(String.fromCharCodes(v));
             });
           });
 
           getHoldings(2247, 4).then((value) {
-            mountedState(() {
+            setState(() {
               ip = Future.value(value.join('.'));
             });
           });
@@ -86,7 +87,7 @@ class _CoViState extends State<CoVi>
       }
     }
 
-    mountedState(() {
+    setState(() {
       windSpeed1 = "${recoder[0]} ppm";
       windSpeed2 = "${recoder[1]} ppm";
       windSpeed3 = "${recoder[2]} ppm";

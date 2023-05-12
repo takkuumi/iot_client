@@ -60,7 +60,6 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: widget.theme,
-      useInheritedMediaQuery: true,
       builder: EasyLoading.init(),
       home: ScaffoldMessenger(
         key: rootScaffoldMessengerKey,
@@ -80,35 +79,38 @@ class _MyAppState extends State<MyApp> {
                           _prefs.then((value) => value.getString('appTitle'))),
                 ),
           body: body,
-          bottomNavigationBar: BottomNavigationBar(
-            currentIndex: _bottomNavigationBarIndex,
-            onTap: (newBottomNavigationBarIndex) {
+          bottomNavigationBar: NavigationBar(
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+            selectedIndex: _bottomNavigationBarIndex,
+            onDestinationSelected: (newBottomNavigationBarIndex) {
               setState(() {
                 _bottomNavigationBarIndex = newBottomNavigationBarIndex;
               });
             },
-            items: [
-              BottomNavigationBarItem(
+            animationDuration: const Duration(seconds: 1),
+            destinations: [
+              NavigationDestination(
                 icon: Icon(Icons.home),
                 label: '首页',
               ),
-              BottomNavigationBarItem(
+              NavigationDestination(
                 icon: Icon(Icons.bluetooth_searching),
                 label: '蓝牙',
               ),
-              BottomNavigationBarItem(
+              NavigationDestination(
                 icon: Icon(Icons.settings),
                 label: '设置',
               ),
-              BottomNavigationBarItem(
+              NavigationDestination(
                 icon: Icon(Icons.history),
                 label: '历史记录',
               ),
-              BottomNavigationBarItem(
+              NavigationDestination(
                 icon: Icon(Icons.account_circle),
                 label: '关于我们',
               ),
             ],
+            backgroundColor: Theme.of(context).colorScheme.surface,
           ),
         ),
       ),

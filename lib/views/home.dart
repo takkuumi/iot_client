@@ -165,17 +165,17 @@ class _HomeState extends State<Home> {
             Container(
               child: CarouselSlider(
                 options: CarouselOptions(
-                  aspectRatio: 16 / 10,
+                  aspectRatio: 10 / 9,
                   enlargeCenterPage: true,
                   scrollDirection: Axis.horizontal,
                   autoPlay: true,
-                  height: 260,
+                  height: 245,
+                  viewportFraction: 0.7,
                 ),
                 items: createImageSliders(),
               ),
             ),
             Container(
-              padding: const EdgeInsets.all(10),
               alignment: Alignment.center,
               child: GridView.builder(
                   primary: false,

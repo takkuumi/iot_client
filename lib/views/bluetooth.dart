@@ -3,7 +3,6 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 
 import 'package:iot_client/ffi.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_scan_bluetooth/flutter_scan_bluetooth.dart';
 import 'package:iot_client/device.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -19,7 +18,6 @@ class Bluetooth extends StatefulWidget {
 
 class _BluetoothState extends State<Bluetooth> {
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-  late FlutterScanBluetooth bluetooth = FlutterScanBluetooth();
 
   List<Device> devices = [];
 

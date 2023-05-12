@@ -29,7 +29,7 @@ Widget createIcon(
   return GestureDetector(
     onTap: onTap,
     child: Container(
-      padding: EdgeInsets.all(10),
+      padding: EdgeInsets.all(15),
       decoration: decoration,
       child: Center(
         child: Column(

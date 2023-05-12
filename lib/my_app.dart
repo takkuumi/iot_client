@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:iot_client/futs/ble.dart';
+import 'package:iot_client/provider/app_provider.dart';
 import 'package:iot_client/views/about.dart';
 import 'package:iot_client/views/bluetooth.dart';
 import 'package:iot_client/views/recoder.dart';
@@ -36,14 +37,14 @@ class App extends HookConsumerWidget {
   }
 }
 
-class AppMainView extends StatefulWidget {
+class AppMainView extends StatefulHookConsumerWidget {
   const AppMainView({Key? key}) : super(key: key);
 
   @override
-  State<AppMainView> createState() => _AppMainView();
+  AppMainViewState createState() => AppMainViewState();
 }
 
-class _AppMainView extends State<AppMainView> {
+class AppMainViewState extends ConsumerState<AppMainView> {
   int _bottomNavigationBarIndex = homeTab;
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
@@ -122,7 +123,7 @@ class _AppMainView extends State<AppMainView> {
             label: '关于我们',
           ),
         ],
-        // backgroundColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: Colors.white24,
       ),
     );
   }

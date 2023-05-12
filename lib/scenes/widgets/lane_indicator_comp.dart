@@ -91,9 +91,12 @@ final decoration = BoxDecoration(
   borderRadius: BorderRadius.circular(4),
 );
 
+typedef FutureCallback = Future<void> Function();
+
 class LaneIndicatorUI extends StatefulWidget {
   String title;
   Port? port;
+
   LaneIndicatorUI({Key? key, required this.title, this.port}) : super(key: key);
 
   @override
@@ -230,24 +233,75 @@ class LaneIndicatorUIState extends State<LaneIndicatorUI> {
     return "禁行";
   }
 
-  void updateState(List<bool> coils) {
+  LaneIndicatorState nextState(LaneIndicatorState state) {
+    return state2 == LaneIndicatorState.green
+        ? LaneIndicatorState.red
+        : LaneIndicatorState.green;
+  }
+
+  LaneIndicatorState nextState3(LaneIndicatorState state) {
+    if (state == LaneIndicatorState.green) {
+      return LaneIndicatorState.red;
+    }
+    if (state == LaneIndicatorState.red) {
+      return LaneIndicatorState.right;
+    }
+    return LaneIndicatorState.green;
+  }
+
+  Future<void> updateState({List<bool>? coils, List<bool>? coils2}) async {
+    coils ??= await getCoils(0, 24);
+
+    if (coils == null) {
+      return;
+    }
+
+    coils2 ??= await getCoils(512, 24);
+
+    if (coils2 == null) {
+      return;
+    }
     int sence = widget.port?.getSence ?? -1;
     debugPrint("updateState: $sence");
     if (![1, 2, 3, 4, 5, 6, 7, 8, 9].contains(sence)) {
       return;
     }
-    if ([2, 4, 6, 8].contains(sence)) {
-      bool i1 = coils[widget.port?.getP2 ?? 0];
-      bool i2 = coils[widget.port?.getP5 ?? 0];
+
+    if (1 == sence) {
+      bool i1 = coils2[widget.port?.p0 ?? 0];
+      bool i2 = coils2[widget.port?.p1 ?? 0];
+      bool i3 = coils2[widget.port?.p2 ?? 0];
+      bool i4 = coils2[widget.port?.p3 ?? 0];
+
+      LaneIndicatorState s1 = LaneIndicatorState.green;
+      if (i1 && !i2) {
+        s1 = LaneIndicatorState.green;
+      } else if (!i1 && i2) {
+        s1 = LaneIndicatorState.red;
+      }
+
+      LaneIndicatorState s2 = LaneIndicatorState.green;
+      if (i3 && !i4) {
+        s2 = LaneIndicatorState.green;
+      } else if (!i3 && i4) {
+        s2 = LaneIndicatorState.red;
+      }
+      setState(() {
+        state1 = s1;
+        state2 = s2;
+      });
+    } else if ([2, 4, 6, 8].contains(sence)) {
+      bool i1 = coils[widget.port?.p2 ?? 0];
+      bool i2 = coils[widget.port?.p5 ?? 0];
       setState(() {
         state1 = i1 ? LaneIndicatorState.green : LaneIndicatorState.red;
         state2 = i2 ? LaneIndicatorState.green : LaneIndicatorState.red;
       });
     } else if ([3, 5, 7, 9].contains(sence)) {
-      bool i1 = coils[widget.port?.getP3 ?? 0];
-      bool i2 = coils[widget.port?.getP4 ?? 0];
-      bool i3 = coils[widget.port?.getP8 ?? 0];
-      bool i4 = coils[widget.port?.getP9 ?? 0];
+      bool i1 = coils[widget.port?.p3 ?? 0];
+      bool i2 = coils[widget.port?.p4 ?? 0];
+      bool i3 = coils[widget.port?.p8 ?? 0];
+      bool i4 = coils[widget.port?.p9 ?? 0];
 
       LaneIndicatorState s1 = LaneIndicatorState.green;
       if (i1 && !i2) {
@@ -274,6 +328,21 @@ class LaneIndicatorUIState extends State<LaneIndicatorUI> {
     }
   }
 
+  Image buildImage(LaneIndicatorState? state) {
+    if (state == LaneIndicatorState.green) {
+      return Image.asset("images/light_inside/img_1@2x.png");
+    }
+    if (state == LaneIndicatorState.red) {
+      return Image.asset("images/light_inside/img_3@2x.png");
+    }
+
+    if (state == LaneIndicatorState.right) {
+      return Image.asset("images/light_inside/img_4@2x.png");
+    }
+
+    return Image.asset("images/light_inside/img_2@2x.png");
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -283,20 +352,23 @@ class LaneIndicatorUIState extends State<LaneIndicatorUI> {
         verticalLineOnly,
         GestureDetector(
           onTap: () async {
-            LaneIndicatorState nextState = state1 == LaneIndicatorState.green
-                ? LaneIndicatorState.red
-                : LaneIndicatorState.green;
             int? sence = widget.port?.getSence ?? -1;
             debugPrint("sence: $sence");
             if (![1, 2, 3, 4, 5, 6, 7, 8, 9].contains(sence)) {
               return;
             }
             if (sence == 1) {
+              LaneIndicatorState ns = nextState(state1);
+              if (ns == LaneIndicatorState.green) {
+                await setCoil(widget.port?.getP2 ?? 512, true);
+                await setCoil(widget.port?.getP3 ?? 512, false);
+              } else {
+                await setCoil(widget.port?.getP2 ?? 512, false);
+                await setCoil(widget.port?.getP3 ?? 512, true);
+              }
             } else if ([2, 4, 6, 8].contains(sence)) {
-              LaneIndicatorState nextState = state1 == LaneIndicatorState.green
-                  ? LaneIndicatorState.red
-                  : LaneIndicatorState.green;
-              if (nextState == LaneIndicatorState.green) {
+              LaneIndicatorState ns = nextState(state1);
+              if (ns == LaneIndicatorState.green) {
                 await setCoil(widget.port?.getP0 ?? 512, true);
                 await setCoil(widget.port?.getP1 ?? 512, false);
               } else {
@@ -304,65 +376,75 @@ class LaneIndicatorUIState extends State<LaneIndicatorUI> {
                 await setCoil(widget.port?.getP1 ?? 512, true);
               }
             } else if ([3, 5, 7, 9].contains(sence)) {
-              LaneIndicatorState nextState = state1 == LaneIndicatorState.green
-                  ? LaneIndicatorState.red
-                  : LaneIndicatorState.green;
-              // if (nextState == LaneIndicatorState.green) {
-              //   await setCoil(widget.port?.getP0 ?? 512, true);
-              //   await setCoil(widget.port?.getQ2 ?? 512, false);
-              //   await setCoil(widget.port?.getQ3 ?? 512, false);
-              //   await setCoil(widget.port?.getQ4 ?? 512, true);
-              // } else {
-              //   await setCoil(widget.port?.getQ1 ?? 512, false);
-              //   await setCoil(widget.port?.getQ2 ?? 512, true);
-              //   await setCoil(widget.port?.getQ3 ?? 512, true);
-              //   await setCoil(widget.port?.getQ4 ?? 512, false);
-              // }
+              LaneIndicatorState ns = nextState3(state1);
+              if (ns == LaneIndicatorState.green) {
+                await setCoil(widget.port?.getP0 ?? 512, true);
+                await setCoil(widget.port?.getP1 ?? 512, false);
+                await setCoil(widget.port?.getP3 ?? 512, false);
+              } else if (ns == LaneIndicatorState.red) {
+                await setCoil(widget.port?.getP0 ?? 512, false);
+                await setCoil(widget.port?.getP1 ?? 512, true);
+                await setCoil(widget.port?.getP3 ?? 512, false);
+              } else {
+                await setCoil(widget.port?.getP0 ?? 512, false);
+                await setCoil(widget.port?.getP1 ?? 512, false);
+                await setCoil(widget.port?.getP3 ?? 512, true);
+              }
             }
+
+            await updateState();
           },
           child: Container(
             width: 100,
             height: 100,
             alignment: Alignment.center,
-            child: Image.asset(
-              state1 == LaneIndicatorState.green
-                  ? "images/light_inside/img_1@2x.png"
-                  : "images/light_inside/img_3@2x.png",
-            ),
+            child: buildImage(state1),
           ),
         ),
         verticalLine(),
         GestureDetector(
           onTap: () async {
-            LaneIndicatorState nextState = state2 == LaneIndicatorState.green
-                ? LaneIndicatorState.red
-                : LaneIndicatorState.green;
-
-            int? sence = widget.port?.getSence;
-            if (sence == null && ![1, 2, 3, 4, 5, 6, 7, 8, 9].contains(sence)) {
+            int? sence = widget.port?.getSence ?? -1;
+            debugPrint("sence: $sence");
+            if (![1, 2, 3, 4, 5, 6, 7, 8, 9].contains(sence)) {
               return;
             }
-            // if ([2, 3, 4, 5].contains(sence)) {
-            //   if (nextState == LaneIndicatorState.green) {
-            //     await setCoil(widget.port?.getQ3 ?? 512, true);
-            //     await setCoil(widget.port?.getQ4 ?? 512, false);
-            //   } else {
-            //     await setCoil(widget.port?.getQ3 ?? 512, false);
-            //     await setCoil(widget.port?.getQ4 ?? 512, true);
-            //   }
-            // } else if ([6, 7, 8, 9].contains(sence)) {
-            //   if (nextState == LaneIndicatorState.green) {
-            //     await setCoil(widget.port?.getQ1 ?? 512, false);
-            //     await setCoil(widget.port?.getQ2 ?? 512, true);
-            //     await setCoil(widget.port?.getQ3 ?? 512, true);
-            //     await setCoil(widget.port?.getQ4 ?? 512, false);
-            //   } else {
-            //     await setCoil(widget.port?.getQ1 ?? 512, true);
-            //     await setCoil(widget.port?.getQ2 ?? 512, false);
-            //     await setCoil(widget.port?.getQ3 ?? 512, false);
-            //     await setCoil(widget.port?.getQ4 ?? 512, true);
-            //   }
-            // }
+            if (sence == 1) {
+              LaneIndicatorState ns = nextState(state1);
+              if (ns == LaneIndicatorState.green) {
+                await setCoil(widget.port?.getP2 ?? 512, true);
+                await setCoil(widget.port?.getP3 ?? 512, false);
+              } else {
+                await setCoil(widget.port?.getP2 ?? 512, false);
+                await setCoil(widget.port?.getP3 ?? 512, true);
+              }
+            } else if ([2, 4, 6, 8].contains(sence)) {
+              LaneIndicatorState ns = nextState(state1);
+              if (ns == LaneIndicatorState.green) {
+                await setCoil(widget.port?.getP3 ?? 512, true);
+                await setCoil(widget.port?.getP4 ?? 512, false);
+              } else {
+                await setCoil(widget.port?.getP3 ?? 512, false);
+                await setCoil(widget.port?.getP4 ?? 512, true);
+              }
+            } else if ([3, 5, 7, 9].contains(sence)) {
+              LaneIndicatorState ns = nextState3(state1);
+              if (ns == LaneIndicatorState.green) {
+                await setCoil(widget.port?.getP5 ?? 512, true);
+                await setCoil(widget.port?.getP6 ?? 512, false);
+                await setCoil(widget.port?.getP7 ?? 512, false);
+              } else if (ns == LaneIndicatorState.red) {
+                await setCoil(widget.port?.getP5 ?? 512, false);
+                await setCoil(widget.port?.getP6 ?? 512, true);
+                await setCoil(widget.port?.getP7 ?? 512, false);
+              } else {
+                await setCoil(widget.port?.getP5 ?? 512, false);
+                await setCoil(widget.port?.getP6 ?? 512, false);
+                await setCoil(widget.port?.getP7 ?? 512, true);
+              }
+            }
+
+            await updateState();
           },
           child: Container(
             width: 100,
@@ -372,11 +454,7 @@ class LaneIndicatorUIState extends State<LaneIndicatorUI> {
               width: 100,
               height: 100,
               alignment: Alignment.center,
-              child: Image.asset(
-                state2 == LaneIndicatorState.green
-                    ? "images/light_inside/img_1@2x.png"
-                    : "images/light_inside/img_3@2x.png",
-              ),
+              child: buildImage(state2),
             ),
           ),
         ),

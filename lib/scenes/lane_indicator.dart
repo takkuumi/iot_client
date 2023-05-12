@@ -4,9 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:iot_client/ffi.dart';
 import 'package:iot_client/scenes/widgets/lane_indicator_comp.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../constants.dart';
 import '../futs/hal.dart';
@@ -25,7 +26,6 @@ class _LaneIndicatorState extends State<LaneIndicator>
   final GlobalKey<ScaffoldMessengerState> key =
       GlobalKey<ScaffoldMessengerState>(debugLabel: 'lane_indicator');
   late TabController tabController;
-  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
   final key1 =
       GlobalKey<LaneIndicatorUIState>(debugLabel: "LaneIndicatorUIState1");
@@ -45,10 +45,8 @@ class _LaneIndicatorState extends State<LaneIndicator>
   }
 
   Future<void> initMainState() async {
-    debugPrint("initMainState");
     try {
       await initLaneState();
-      setTimer();
     } catch (err) {
       showSnackBar(err.toString(), key);
     }
@@ -74,12 +72,8 @@ class _LaneIndicatorState extends State<LaneIndicator>
   }
 
   Future<void> tabListener() async {
+    EasyLoading.dismiss();
     if (tabController.indexIsChanging) {
-      debugPrint("tabListener========================:${tabController.index}");
-      if (timer != null) {
-        timer!.cancel();
-        timer = null;
-      }
       if (tabController.index == 0) {
         await initMainState();
       } else if (tabController.index == 1) {
@@ -87,8 +81,6 @@ class _LaneIndicatorState extends State<LaneIndicator>
       }
     }
   }
-
-  Timer? timer;
 
   Port? port1;
   Port? port2;
@@ -110,20 +102,26 @@ class _LaneIndicatorState extends State<LaneIndicator>
             await api.convertU16SToU8S(data: Uint16List.fromList(settings));
         debugPrint("length: ${v.length} settings: ${v.join(',')}");
 
+        List<int> indexs = [];
         for (int i = 0; i < v.length; i += 12) {
           int index = v[i];
           int sence = v[i + 1];
+
+          if (indexs.any((element) => element == index)) {
+            continue;
+          }
+
+          indexs.add(index);
 
           Uint8List sub = v.sublist(i, i + 12);
           debugPrint("sub: ${sub.join(',')}");
           if ([1, 2, 4, 6, 8, 3, 5, 6, 7, 9].contains(sence)) {
             if (index == 0) {
               port1 = Port.fromList(sub);
-              break;
             } else if (index == 1) {
-              // key2.currentState?.updatePort(Port.fromList(sub));
+              port2 = Port.fromList(sub);
             } else if (index == 2) {
-              // key3.currentState?.updatePort(Port.fromList(sub));
+              port3 = Port.fromList(sub);
             }
           }
         }
@@ -135,16 +133,6 @@ class _LaneIndicatorState extends State<LaneIndicator>
     });
   }
 
-  void setTimer() {
-    if (timer != null) {
-      timer!.cancel();
-      timer = null;
-    }
-    timer = Timer.periodic(timerDuration, (timer) async {
-      await initLaneState();
-    });
-  }
-
   Future<void> initLaneState() async {
     List<bool>? states = await getCoils(0, 24);
 
@@ -152,15 +140,22 @@ class _LaneIndicatorState extends State<LaneIndicator>
       return;
     }
 
-    key1.currentState?.updateState(states);
-    key2.currentState?.updateState(states);
-    key3.currentState?.updateState(states);
+    List<bool>? states2 = await getCoils(512, 24);
+
+    if (states2 == null) {
+      return;
+    }
+
+    key1.currentState?.updateState(coils: states, coils2: states2);
+    key2.currentState?.updateState(coils: states, coils2: states2);
+    key3.currentState?.updateState(coils: states, coils2: states2);
   }
 
   @override
   void dispose() {
+    EasyLoading.dismiss();
     tabController.removeListener(tabListener);
-    timer?.cancel();
+
     super.dispose();
   }
 
@@ -171,203 +166,221 @@ class _LaneIndicatorState extends State<LaneIndicator>
     offset: const Offset(0, 3),
   );
 
+  Widget buildPort(Key key, String title, Port? port) {
+    if (port == null) {
+      return Container();
+    }
+    return LaneIndicatorUI(key: key, title: title, port: port);
+  }
+
   @override
   Widget build(BuildContext context) {
     return ScaffoldMessenger(
       key: key,
       child: Scaffold(
-          appBar: AppBar(
-            title: const Text('车道指示器'),
-            centerTitle: true,
-            bottom: TabBar(
-              controller: tabController,
-              tabs: [
-                Tab(
-                  text: "控制信息",
-                ),
-                Tab(
-                  text: "服务信息",
-                ),
-              ],
-            ),
-          ),
-          body: TabBarView(
+        appBar: AppBar(
+          title: const Text('车道指示器'),
+          centerTitle: true,
+          bottom: TabBar(
             controller: tabController,
-            physics: BouncingScrollPhysics(),
-            dragStartBehavior: DragStartBehavior.down,
-            children: [
-              SingleChildScrollView(
-                padding: EdgeInsets.symmetric(vertical: 50),
-                child: Container(
-                  width: 600,
-                  padding: EdgeInsets.symmetric(horizontal: 30),
-                  child: Wrap(
-                    alignment: WrapAlignment.spaceEvenly,
-                    spacing: 10,
-                    children: [
-                      LaneIndicatorUI(key: key1, title: "车道一", port: port1),
-                      LaneIndicatorUI(key: key2, title: "车道二", port: port2),
-                      LaneIndicatorUI(key: key3, title: "车道三", port: port3),
-                    ],
-                  ),
+            tabs: [
+              Tab(
+                text: "控制信息",
+              ),
+              Tab(
+                text: "服务信息",
+              ),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          controller: tabController,
+          physics: BouncingScrollPhysics(),
+          dragStartBehavior: DragStartBehavior.down,
+          children: [
+            SingleChildScrollView(
+              padding: EdgeInsets.symmetric(vertical: 50),
+              child: Container(
+                width: 600,
+                padding: EdgeInsets.symmetric(horizontal: 30),
+                child: Wrap(
+                  alignment: WrapAlignment.spaceEvenly,
+                  spacing: 10,
+                  children: [
+                    buildPort(key1, "车道一", port1),
+                    buildPort(key2, "车道二", port2),
+                    buildPort(key3, "车道三", port3),
+                  ],
                 ),
               ),
-              SingleChildScrollView(
-                padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
-                child: Container(
-                  child: Column(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.symmetric(vertical: 5),
-                        child: Row(
-                          verticalDirection: VerticalDirection.down,
-                          children: [
-                            Text(
-                              "设备SN编号:",
-                              style: TextStyle(
-                                  fontSize: 17, fontWeight: FontWeight.w500),
-                            ),
-                            SizedBox.fromSize(
-                              size: Size(5, 0),
-                            ),
-                            FutureBuilder(
-                              future: sn,
-                              initialData: '',
-                              builder:
-                                  (context, AsyncSnapshot<String?> snapshot) {
-                                if (snapshot.hasData &&
-                                    snapshot.connectionState ==
-                                        ConnectionState.done) {
-                                  String id = snapshot.data ?? '';
-                                  return Text(
-                                    id,
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w300),
-                                  );
-                                }
-
+            ),
+            SingleChildScrollView(
+              padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+              child: Container(
+                child: Column(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.symmetric(vertical: 5),
+                      child: Row(
+                        verticalDirection: VerticalDirection.down,
+                        children: [
+                          Text(
+                            "设备SN编号:",
+                            style: TextStyle(
+                                fontSize: 17, fontWeight: FontWeight.w500),
+                          ),
+                          SizedBox.fromSize(
+                            size: Size(5, 0),
+                          ),
+                          FutureBuilder(
+                            future: sn,
+                            initialData: '',
+                            builder:
+                                (context, AsyncSnapshot<String?> snapshot) {
+                              if (snapshot.hasData &&
+                                  snapshot.connectionState ==
+                                      ConnectionState.done) {
+                                String id = snapshot.data ?? '';
                                 return Text(
-                                  "",
+                                  id,
                                   style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w300),
                                 );
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: EdgeInsets.symmetric(vertical: 5),
-                        child: Row(
-                          verticalDirection: VerticalDirection.down,
-                          children: [
-                            Text(
-                              "设备状态:",
-                              style: TextStyle(
-                                  fontSize: 17, fontWeight: FontWeight.w500),
-                            ),
-                            SizedBox.fromSize(
-                              size: Size(5, 0),
-                            ),
-                            Text(
-                              "运行中",
-                              style: TextStyle(
-                                  fontSize: 14, fontWeight: FontWeight.w300),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: EdgeInsets.symmetric(vertical: 5),
-                        child: Row(
-                          verticalDirection: VerticalDirection.down,
-                          children: [
-                            Text(
-                              "设备版本:",
-                              style: TextStyle(
-                                  fontSize: 17, fontWeight: FontWeight.w500),
-                            ),
-                            SizedBox.fromSize(
-                              size: Size(5, 0),
-                            ),
-                            Text(
-                              "v1.0.0",
-                              style: TextStyle(
-                                  fontSize: 14, fontWeight: FontWeight.w300),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: EdgeInsets.symmetric(vertical: 5),
-                        child: Row(
-                          verticalDirection: VerticalDirection.down,
-                          children: [
-                            Text(
-                              "设备IP:",
-                              style: TextStyle(
-                                  fontSize: 17, fontWeight: FontWeight.w500),
-                            ),
-                            SizedBox.fromSize(
-                              size: Size(5, 0),
-                            ),
-                            FutureBuilder(
-                              future: ip,
-                              initialData: '',
-                              builder:
-                                  (context, AsyncSnapshot<String?> snapshot) {
-                                if (snapshot.hasData &&
-                                    snapshot.connectionState ==
-                                        ConnectionState.done) {
-                                  String id = snapshot.data ?? '';
-                                  return Text(
-                                    id,
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w300),
-                                  );
-                                }
+                              }
 
+                              return Text(
+                                "",
+                                style: TextStyle(
+                                    fontSize: 14, fontWeight: FontWeight.w300),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(vertical: 5),
+                      child: Row(
+                        verticalDirection: VerticalDirection.down,
+                        children: [
+                          Text(
+                            "设备状态:",
+                            style: TextStyle(
+                                fontSize: 17, fontWeight: FontWeight.w500),
+                          ),
+                          SizedBox.fromSize(
+                            size: Size(5, 0),
+                          ),
+                          Text(
+                            "运行中",
+                            style: TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w300),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(vertical: 5),
+                      child: Row(
+                        verticalDirection: VerticalDirection.down,
+                        children: [
+                          Text(
+                            "设备版本:",
+                            style: TextStyle(
+                                fontSize: 17, fontWeight: FontWeight.w500),
+                          ),
+                          SizedBox.fromSize(
+                            size: Size(5, 0),
+                          ),
+                          Text(
+                            "v1.0.0",
+                            style: TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w300),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(vertical: 5),
+                      child: Row(
+                        verticalDirection: VerticalDirection.down,
+                        children: [
+                          Text(
+                            "设备IP:",
+                            style: TextStyle(
+                                fontSize: 17, fontWeight: FontWeight.w500),
+                          ),
+                          SizedBox.fromSize(
+                            size: Size(5, 0),
+                          ),
+                          FutureBuilder(
+                            future: ip,
+                            initialData: '',
+                            builder:
+                                (context, AsyncSnapshot<String?> snapshot) {
+                              if (snapshot.hasData &&
+                                  snapshot.connectionState ==
+                                      ConnectionState.done) {
+                                String id = snapshot.data ?? '';
                                 return Text(
-                                  "",
+                                  id,
                                   style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w300),
                                 );
-                              },
-                            ),
-                          ],
-                        ),
+                              }
+
+                              return Text(
+                                "",
+                                style: TextStyle(
+                                    fontSize: 14, fontWeight: FontWeight.w300),
+                              );
+                            },
+                          ),
+                        ],
                       ),
-                      Container(
-                        padding: EdgeInsets.symmetric(vertical: 5),
-                        child: Row(
-                          verticalDirection: VerticalDirection.down,
-                          children: [
-                            Text(
-                              "设备端口:",
-                              style: TextStyle(
-                                  fontSize: 17, fontWeight: FontWeight.w500),
-                            ),
-                            SizedBox.fromSize(
-                              size: Size(5, 0),
-                            ),
-                            Text(
-                              "5002",
-                              style: TextStyle(
-                                  fontSize: 14, fontWeight: FontWeight.w300),
-                            ),
-                          ],
-                        ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(vertical: 5),
+                      child: Row(
+                        verticalDirection: VerticalDirection.down,
+                        children: [
+                          Text(
+                            "设备端口:",
+                            style: TextStyle(
+                                fontSize: 17, fontWeight: FontWeight.w500),
+                          ),
+                          SizedBox.fromSize(
+                            size: Size(5, 0),
+                          ),
+                          Text(
+                            "5002",
+                            style: TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w300),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              )
-            ],
-          )),
+              ),
+            )
+          ],
+        ),
+        floatingActionButton: FloatingActionButton(
+          child: const Icon(Symbols.refresh),
+          onPressed: () async {
+            EasyLoading.show(status: '刷新数据中...');
+            if (tabController.index == 0) {
+              await initMainState();
+            } else if (tabController.index == 1) {
+              await initDeviceState();
+            }
+            EasyLoading.dismiss();
+          },
+        ),
+      ),
     );
   }
 }

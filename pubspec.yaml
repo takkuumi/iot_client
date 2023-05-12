@@ -131,6 +131,7 @@ flutter:
     - images/icons/more.png
     - images/icons/traffic-lights.png
     - images/light_inside/banner.png
+    - images/light_inside/img_4@2x.png
     - images/light_inside/img_3@2x.png
     - images/light_inside/img_2@2x.png
     - images/light_inside/img_1@2x.png

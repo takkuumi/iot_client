@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:iot_client/ffi.dart';
 import 'package:flutter/material.dart';
 import 'package:iot_client/model/device.dart';
@@ -35,6 +36,7 @@ class _BluetoothState extends State<Bluetooth> {
 
   Future<void> scanBleDevice() async {
     isScaning = true;
+    // EasyLoading.show(status: '扫描中...');
     setState(() {
       stateMsg = '正在扫描';
     });
@@ -51,6 +53,7 @@ class _BluetoothState extends State<Bluetooth> {
         setState(() {
           stateMsg = '扫描失败，等待下一次重试！';
         });
+        // EasyLoading.dismiss();
         return;
       }
       debugPrint("操作 蓝牙 扫描完成");
@@ -75,6 +78,7 @@ class _BluetoothState extends State<Bluetooth> {
         stateMsg = '扫描失败，请手动点击扫描按扭重试！';
       });
     }
+    // EasyLoading.dismiss();
   }
 
   Future<bool> connect(int index, String mac, int type) async {
@@ -111,8 +115,6 @@ class _BluetoothState extends State<Bluetooth> {
     setState(() {});
   }
 
-  Timer? timer;
-
   void scanComplete() {
     isScaning = false;
     setState(() {
@@ -120,25 +122,9 @@ class _BluetoothState extends State<Bluetooth> {
     });
   }
 
-  void cleanTimer() {
-    if (timer != null) {
-      timer?.cancel();
-      timer = null;
-    }
-  }
-
-  void setTimer() {
-    cleanTimer();
-    timer = Timer.periodic(const Duration(seconds: 60), (timer) {
-      if (isScaning) {
-        return;
-      }
-      scanBleDevice().whenComplete(scanComplete);
-    });
-  }
-
   @override
   void initState() {
+    // EasyLoading.dismiss();
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -146,19 +132,23 @@ class _BluetoothState extends State<Bluetooth> {
       final SharedPreferences prefs = await _prefs;
       String? responseText = prefs.getString("bles");
 
+      int? no = prefs.getInt("no");
+
       if (responseText != null) {
         List<Device> items = parseDevices(responseText);
         for (Device element in items) {
+          if (no != null && element.no == no) {
+            element.no = no;
+          }
           devices.removeWhere((e) => e.mac == element.mac);
 
           devices.add(element);
         }
       }
-
+      setState(() {});
       await tagConnectedDevice();
       debugPrint("初始化完成");
       await scanBleDevice().whenComplete(scanComplete);
-      setTimer();
     });
   }
 
@@ -209,7 +199,7 @@ class _BluetoothState extends State<Bluetooth> {
 
   @override
   void dispose() {
-    cleanTimer();
+    // EasyLoading.dismiss();
     super.dispose();
   }
 
@@ -305,7 +295,6 @@ class _BluetoothState extends State<Bluetooth> {
                             dense: true,
                             onTap: () {
                               // 清理定时器
-                              cleanTimer();
                               connectDevice(device);
                             },
                           ),
@@ -334,9 +323,7 @@ class _BluetoothState extends State<Bluetooth> {
           if (isScaning) {
             return showSnackBar("正在扫描中,请稍后");
           }
-          // 清理定时器
-          cleanTimer();
-          scanBleDevice();
+          scanBleDevice().whenComplete(scanComplete);
         },
       ),
     );

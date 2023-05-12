@@ -96,6 +96,9 @@ class AppMainViewState extends ConsumerState<AppMainView> {
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         selectedIndex: _bottomNavigationBarIndex,
         onDestinationSelected: (newBottomNavigationBarIndex) {
+          // if (EasyLoading.isShow) {
+          //   return showSnackBar("请等待操作完成");
+          // }
           setState(() {
             _bottomNavigationBarIndex = newBottomNavigationBarIndex;
           });

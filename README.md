@@ -64,4 +64,6 @@ at your option.
 
 The [SPDX](https://spdx.dev/) license identifier for this project is `MIT OR Apache-2.0`.
 
-scp -r ./build/app/outputs/flutter-apk/app-release.apk ling@tokio-takumi.asuscomm.com:/Users/ling/Workspace/binaries
+scp -r ./build/app/outputs/flutter-apk/app-release.apk <ling@tokio-takumi.asuscomm.com>:/Users/ling/Workspace/binaries
+
+flutter build apk --release --no-tree-shake-icons

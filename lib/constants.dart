@@ -11,6 +11,7 @@ void showSnackBar(String msg, [GlobalKey<ScaffoldMessengerState>? key]) {
     key.currentState?.showSnackBar(SnackBar(
       content: Text(msg),
       duration: const Duration(seconds: 1),
+      backgroundColor: Colors.blueGrey,
     ));
     return;
   }

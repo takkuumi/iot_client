@@ -104,9 +104,10 @@ class LaneIndicatorUIState extends State<LaneIndicatorUI> {
   LaneIndicatorState state1 = LaneIndicatorState.red;
   LaneIndicatorState state2 = LaneIndicatorState.red;
 
-  void mountedState(void Function() fn) {
+  @override
+  void setState(VoidCallback fn) {
     if (mounted) {
-      setState(fn);
+      super.setState(fn);
     }
   }
 
@@ -238,7 +239,7 @@ class LaneIndicatorUIState extends State<LaneIndicatorUI> {
     if ([2, 4, 6, 8].contains(sence)) {
       bool i1 = coils[widget.port?.getP2 ?? 0];
       bool i2 = coils[widget.port?.getP5 ?? 0];
-      mountedState(() {
+      setState(() {
         state1 = i1 ? LaneIndicatorState.green : LaneIndicatorState.red;
         state2 = i2 ? LaneIndicatorState.green : LaneIndicatorState.red;
       });
@@ -266,7 +267,7 @@ class LaneIndicatorUIState extends State<LaneIndicatorUI> {
         s2 = LaneIndicatorState.right;
       }
 
-      mountedState(() {
+      setState(() {
         state1 = s1;
         state2 = s2;
       });

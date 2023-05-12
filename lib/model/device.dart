@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 class Device {
   int no;
   int addressType;
@@ -34,7 +32,6 @@ List<Device> parseDevices(String text) {
       .where((element) => element.contains('FSC') || element.contains('Mesh'))
       .map((e) => e.replaceAll(RegExp(r'\+SCAN='), ''))
       .forEach((e) {
-    debugPrint(e);
     List<String> items = e.split(',').map((e) => e.trim()).toList();
 
     if (items.length == 6) {

@@ -10,6 +10,7 @@ import 'package:iot_client/futs/hal.dart';
 import 'package:iot_client/utils/navigation.dart';
 import 'package:iot_client/views/logic_control_setting.dart';
 import 'package:iot_client/views/rs485_setting.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:settings_ui/settings_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -57,9 +58,10 @@ class _SettingAppState extends State<SettingApp> {
   Future<String?> subnetMask = Future.value(null);
   Future<String?> gateway = Future.value(null);
 
-  void mountedState(void Function() fn) {
+  @override
+  void setState(VoidCallback fn) {
     if (mounted) {
-      setState(fn);
+      super.setState(fn);
     }
   }
 
@@ -83,7 +85,7 @@ class _SettingAppState extends State<SettingApp> {
     ip = Future.value(ipstr);
     subnetMask = Future.value(subnetstr);
     gateway = Future.value(gatawaystr);
-    mountedState(() {});
+    setState(() {});
   }
 
   Future<void> readCache() async {
@@ -433,7 +435,7 @@ class _SettingAppState extends State<SettingApp> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.sync),
+        child: Icon(Symbols.refresh),
         tooltip: "同步",
         onPressed: () async {
           if (mounted) {

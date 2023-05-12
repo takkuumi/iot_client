@@ -29,11 +29,11 @@ Widget createIcon(
   return GestureDetector(
     onTap: onTap,
     child: Container(
-      padding: EdgeInsets.all(15),
+      padding: EdgeInsets.all(10),
       decoration: decoration,
       child: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Image.asset(
@@ -41,7 +41,10 @@ Widget createIcon(
               width: 50,
               height: 50,
             ),
-            Text(name)
+            Text(
+              name,
+              style: TextStyle(fontSize: 12),
+            )
           ],
         ),
       ),

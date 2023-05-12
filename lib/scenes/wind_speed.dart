@@ -30,9 +30,10 @@ class _WindSpeedState extends State<WindSpeed>
   Future<String?> sn = Future.value(null);
   Future<String?> ip = Future.value(null);
 
-  void mountedState(void Function() fn) {
+  @override
+  void setState(VoidCallback fn) {
     if (mounted) {
-      setState(fn);
+      super.setState(fn);
     }
   }
 
@@ -50,13 +51,13 @@ class _WindSpeedState extends State<WindSpeed>
         if (addr != null) {
           getHoldings(2196, 9).then((value) {
             Uint8List v = Uint16List.fromList(value).buffer.asUint8List();
-            mountedState(() {
+            setState(() {
               sn = Future.value(String.fromCharCodes(v));
             });
           });
 
           getHoldings(2247, 4).then((value) {
-            mountedState(() {
+            setState(() {
               ip = Future.value(value.join('.'));
             });
           });
@@ -85,7 +86,7 @@ class _WindSpeedState extends State<WindSpeed>
       }
     }
 
-    mountedState(() {
+    setState(() {
       windSpeed1 = "${recoder[0] / 10} m/s";
       windSpeed2 = "${recoder[1]}";
       windSpeed3 = "${recoder[2] / 10} m/s";

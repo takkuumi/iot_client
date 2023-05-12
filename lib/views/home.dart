@@ -181,11 +181,11 @@ class _HomeState extends State<Home> {
                   primary: false,
                   shrinkWrap: true,
                   physics: NeverScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(26),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 4,
-                    mainAxisSpacing: 10,
-                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 15,
+                    crossAxisSpacing: 15,
                   ),
                   itemCount: 12,
                   itemBuilder: (BuildContext context, int position) {

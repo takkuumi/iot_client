@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:iot_client/ffi.dart';
 import 'package:iot_client/futs/ble.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Map<int, String> _rules = Map.from({
@@ -449,7 +450,7 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
               Positioned(
                 right: 0,
                 child: IconButton(
-                  icon: Icon(Icons.close, color: Colors.white),
+                  icon: Icon(Symbols.close, color: Colors.white),
                   onPressed: widget.onRemoved,
                 ),
               )
@@ -533,7 +534,19 @@ class _LogicControlSettingState extends State<LogicControlSetting> {
           title: const Text('逻辑控制配置'),
           centerTitle: true,
           actions: [
-            TextButton(
+            IconButton(
+              tooltip: '导入',
+              icon: Icon(Symbols.arrow_upward),
+              onPressed: () {},
+            ),
+            IconButton(
+              tooltip: '导出',
+              icon: Icon(Symbols.arrow_downward),
+              onPressed: () {},
+            ),
+            IconButton(
+              tooltip: '保存',
+              icon: Icon(Symbols.save),
               onPressed: () async {
                 final SharedPreferences prefs =
                     await SharedPreferences.getInstance();
@@ -557,7 +570,6 @@ class _LogicControlSettingState extends State<LogicControlSetting> {
                   element.currentState?.getLogicRule().toLogicControl(index);
                 });
               },
-              child: Text("保存"),
             )
           ],
         ),
@@ -578,7 +590,7 @@ class _LogicControlSettingState extends State<LogicControlSetting> {
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: addLogicRule,
-          child: const Icon(Icons.add),
+          child: const Icon(Symbols.add),
         ),
       ),
     );

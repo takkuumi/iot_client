@@ -5,6 +5,7 @@ import 'package:iot_client/views/about.dart';
 import 'package:iot_client/views/bluetooth.dart';
 import 'package:iot_client/views/recoder.dart';
 import 'package:iot_client/views/setting.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'constants.dart';
@@ -14,7 +15,6 @@ const int homeTab = 0;
 const int bluetoothTab = 1;
 const int settingTab = 2;
 const int historyTab = 3;
-
 const int aboutTab = 4;
 
 class MyApp extends StatefulWidget {
@@ -88,25 +88,25 @@ class _MyAppState extends State<MyApp> {
               });
             },
             animationDuration: const Duration(seconds: 1),
-            destinations: [
+            destinations: const <NavigationDestination>[
               NavigationDestination(
-                icon: Icon(Icons.home),
+                icon: Icon(Symbols.home),
                 label: '首页',
               ),
               NavigationDestination(
-                icon: Icon(Icons.bluetooth_searching),
+                icon: Icon(Symbols.bluetooth),
                 label: '蓝牙',
               ),
               NavigationDestination(
-                icon: Icon(Icons.settings),
+                icon: Icon(Symbols.settings),
                 label: '设置',
               ),
               NavigationDestination(
-                icon: Icon(Icons.history),
+                icon: Icon(Symbols.history),
                 label: '历史记录',
               ),
               NavigationDestination(
-                icon: Icon(Icons.account_circle),
+                icon: Icon(Symbols.account_circle),
                 label: '关于我们',
               ),
             ],
@@ -117,6 +117,3 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
-
-void log(Object? msg) =>
-    debugPrint('[$MyApp - ${DateTime.now().toIso8601String()}] $msg');

@@ -30,9 +30,10 @@ class _LightInsideState extends State<LightInside>
   Future<String?> sn = Future.value(null);
   Future<String?> ip = Future.value(null);
 
-  void mountedState(void Function() fn) {
+  @override
+  void setState(VoidCallback fn) {
     if (mounted) {
-      setState(fn);
+      super.setState(fn);
     }
   }
 
@@ -50,13 +51,13 @@ class _LightInsideState extends State<LightInside>
         if (addr != null) {
           getHoldings(2196, 9).then((value) {
             Uint8List v = Uint16List.fromList(value).buffer.asUint8List();
-            mountedState(() {
+            setState(() {
               sn = Future.value(String.fromCharCodes(v));
             });
           });
 
           getHoldings(2247, 4).then((value) {
-            mountedState(() {
+            setState(() {
               ip = Future.value(value.join('.'));
             });
           });
@@ -82,7 +83,7 @@ class _LightInsideState extends State<LightInside>
         recoder[i] = data[i];
       }
     }
-    mountedState(() {
+    setState(() {
       windSpeed1 = "${recoder[0]} lux";
       windSpeed2 = "${recoder[1]} lux";
       windSpeed3 = "${recoder[2]}";

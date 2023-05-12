@@ -3,7 +3,8 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 
 import 'package:iot_client/ffi.dart';
 import 'package:flutter/material.dart';
-import 'package:iot_client/device.dart';
+import 'package:iot_client/model/device.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
@@ -25,16 +26,17 @@ class _BluetoothState extends State<Bluetooth> {
 
   String stateMsg = '';
 
-  void mountedState(void Function() fn) {
+  @override
+  void setState(VoidCallback fn) {
     if (mounted) {
-      setState(fn);
+      super.setState(fn);
     }
   }
 
   Future<void> scanBleDevice() async {
     isScaning = true;
     await EasyLoading.show(status: '扫描中...');
-    mountedState(() {
+    setState(() {
       stateMsg = '正在扫描';
     });
     try {
@@ -47,7 +49,7 @@ class _BluetoothState extends State<Bluetooth> {
       if (scanRes.data != null) {
         responseText += String.fromCharCodes(scanRes.data!);
       } else {
-        mountedState(() {
+        setState(() {
           stateMsg = '扫描失败，等待下一次重试！';
         });
         EasyLoading.dismiss();
@@ -60,7 +62,7 @@ class _BluetoothState extends State<Bluetooth> {
       //   responseText += String.fromCharCodes(chinfoRes.data!);
       //   debugPrint(responseText);
       // } else {
-      //   mountedState(() {
+      //   setState(() {
       //     stateMsg = '查询设备信息失败，请手动点击扫描按扭重试！';
       //   });
       // }
@@ -73,7 +75,7 @@ class _BluetoothState extends State<Bluetooth> {
       }
       debugPrint("操作 蓝牙 扫描完成");
     } catch (_) {
-      mountedState(() {
+      setState(() {
         stateMsg = '扫描失败，请手动点击扫描按扭重试！';
       });
     }
@@ -94,7 +96,7 @@ class _BluetoothState extends State<Bluetooth> {
 
   void scanComplete() {
     isScaning = false;
-    mountedState(() {
+    setState(() {
       stateMsg = '';
     });
   }
@@ -152,7 +154,7 @@ class _BluetoothState extends State<Bluetooth> {
 
         // 设置连接状态
         devices.where((d) => d.mac == device.mac).first.connected = true;
-        mountedState(() {});
+        setState(() {});
 
         //设置新连接的地址
         await prefs.setInt("addressType", device.addressType);
@@ -249,21 +251,27 @@ class _BluetoothState extends State<Bluetooth> {
                         final Device device = devices[index];
 
                         return Container(
-                          padding: EdgeInsets.all(10),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
                           decoration: decoration,
                           child: ListTile(
-                            leading: Icon(Icons.bluetooth,
-                                color: device.connected
-                                    ? Colors.blueAccent
-                                    : Colors.grey),
-                            title: Text('${device.name}'),
+                            leading: device.connected
+                                ? Icon(Symbols.bluetooth_connected,
+                                    color: Colors.blueAccent)
+                                : Icon(Symbols.bluetooth, color: Colors.grey),
+                            title: Text(
+                              '${device.name}',
+                              style: TextStyle(fontSize: 16),
+                            ),
                             subtitle: Text('MAC: ${device.mac}'),
                             trailing: Text('RSSI:${device.rssi}'),
                             dense: true,
                             onTap: () {
                               // 清理定时器
                               cleanTimer();
-                              connectDevice(device).whenComplete(setTimer);
+                              connectDevice(device);
                             },
                           ),
                         );
@@ -285,7 +293,7 @@ class _BluetoothState extends State<Bluetooth> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.radar),
+        child: Icon(Symbols.bluetooth_searching),
         tooltip: "扫描",
         onPressed: () {
           if (isScaning) {
@@ -293,7 +301,7 @@ class _BluetoothState extends State<Bluetooth> {
           }
           // 清理定时器
           cleanTimer();
-          scanBleDevice().whenComplete(setTimer);
+          scanBleDevice();
         },
       ),
     );

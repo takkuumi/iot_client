@@ -75,6 +75,10 @@ pub fn ble_chinfo() -> SerialResponse {
   at_command::chinfo()
 }
 
+pub fn ble_uartcfg() -> SerialResponse {
+  at_command::uartcfg()
+}
+
 pub fn hal_generate_get_holdings(unit_id: u8, reg: u16, count: u16) -> String {
   hex::encode_upper(LogicControl::generate_get_holdings(unit_id, reg, count))
 }

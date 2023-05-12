@@ -93,6 +93,10 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kBleChinfoConstMeta;
 
+  Future<SerialResponse> bleUartcfg({dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kBleUartcfgConstMeta;
+
   Future<String> halGenerateGetHoldings(
       {required int unitId,
       required int reg,

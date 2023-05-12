@@ -102,6 +102,11 @@ pub extern "C" fn wire_ble_chinfo(port_: i64) {
 }
 
 #[no_mangle]
+pub extern "C" fn wire_ble_uartcfg(port_: i64) {
+  wire_ble_uartcfg_impl(port_)
+}
+
+#[no_mangle]
 pub extern "C" fn wire_hal_generate_get_holdings(port_: i64, unit_id: u8, reg: u16, count: u16) {
   wire_hal_generate_get_holdings_impl(port_, unit_id, reg, count)
 }

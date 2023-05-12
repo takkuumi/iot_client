@@ -268,6 +268,16 @@ fn wire_ble_chinfo_impl(port_: MessagePort) {
     move || move |task_callback| Ok(ble_chinfo()),
   )
 }
+fn wire_ble_uartcfg_impl(port_: MessagePort) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "ble_uartcfg",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || move |task_callback| Ok(ble_uartcfg()),
+  )
+}
 fn wire_hal_generate_get_holdings_impl(
   port_: MessagePort,
   unit_id: impl Wire2Api<u8> + UnwindSafe,

@@ -44,43 +44,47 @@ class _LaneIndicatorState extends State<LaneIndicator>
     }
   }
 
-  @override
-  bool get wantKeepAlive => true;
-
-  void tabListener() {
-    if (tabController.index == 0) {
-      _prefs.then((SharedPreferences prefs) {
-        return prefs.getString('mesh');
-      }).then((String? addr) async {
-        timer?.cancel();
-        timer = null;
-
-        await initLaneState();
-
-        setTimer();
-      });
+  Future<void> initMainState() async {
+    debugPrint("initMainState");
+    try {
+      await initLaneState();
+      setTimer();
+    } catch (err) {
+      showSnackBar(err.toString(), key);
     }
-    if (tabController.index == 1) {
-      _prefs.then((SharedPreferences prefs) {
-        return prefs.getString('mesh');
-      }).then((String? addr) async {
-        timer?.cancel();
-        timer = null;
-        if (addr != null) {
-          await getHoldings(2196, 9).then((value) {
-            Uint8List v = Uint16List.fromList(value).buffer.asUint8List();
-            setState(() {
-              sn = Future.value(String.fromCharCodes(v));
-            });
-          });
+  }
 
-          await getHoldings(2247, 4).then((value) {
-            setState(() {
-              ip = Future.value(value.join('.'));
-            });
-          });
-        }
+  Future<void> initDeviceState() async {
+    try {
+      await getHoldings(2196, 9).then((value) {
+        Uint8List v = Uint16List.fromList(value).buffer.asUint8List();
+        setState(() {
+          sn = Future.value(String.fromCharCodes(v));
+        });
       });
+
+      await getHoldings(2247, 4).then((value) {
+        setState(() {
+          ip = Future.value(value.join('.'));
+        });
+      });
+    } catch (err) {
+      showSnackBar(err.toString(), key);
+    }
+  }
+
+  Future<void> tabListener() async {
+    if (tabController.indexIsChanging) {
+      debugPrint("tabListener========================:${tabController.index}");
+      if (timer != null) {
+        timer!.cancel();
+        timer = null;
+      }
+      if (tabController.index == 0) {
+        await initMainState();
+      } else if (tabController.index == 1) {
+        await initDeviceState();
+      }
     }
   }
 
@@ -93,7 +97,8 @@ class _LaneIndicatorState extends State<LaneIndicator>
   @override
   void initState() {
     super.initState();
-    tabController = TabController(length: 2, vsync: this);
+    tabController = TabController(length: 2, initialIndex: 0, vsync: this);
+    tabController.addListener(tabListener);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       try {
         List<int> settings = await readSettings();
@@ -123,12 +128,9 @@ class _LaneIndicatorState extends State<LaneIndicator>
           }
         }
         setState(() {});
+        await initMainState();
       } catch (err) {
         showSnackBar(err.toString());
-      }
-      if (mounted) {
-        tabController.addListener(tabListener);
-        tabController.animateTo(0);
       }
     });
   }

@@ -349,6 +349,22 @@ class NativeImpl implements Native {
         argNames: [],
       );
 
+  Future<SerialResponse> bleUartcfg({dynamic hint}) {
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner.wire_ble_uartcfg(port_),
+      parseSuccessData: _wire2api_serial_response,
+      constMeta: kBleUartcfgConstMeta,
+      argValues: [],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kBleUartcfgConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "ble_uartcfg",
+        argNames: [],
+      );
+
   Future<String> halGenerateGetHoldings(
       {required int unitId,
       required int reg,
@@ -1114,6 +1130,20 @@ class NativeWire implements FlutterRustBridgeWireBase {
           'wire_ble_chinfo');
   late final _wire_ble_chinfo =
       _wire_ble_chinfoPtr.asFunction<void Function(int)>();
+
+  void wire_ble_uartcfg(
+    int port_,
+  ) {
+    return _wire_ble_uartcfg(
+      port_,
+    );
+  }
+
+  late final _wire_ble_uartcfgPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>(
+          'wire_ble_uartcfg');
+  late final _wire_ble_uartcfg =
+      _wire_ble_uartcfgPtr.asFunction<void Function(int)>();
 
   void wire_hal_generate_get_holdings(
     int port_,

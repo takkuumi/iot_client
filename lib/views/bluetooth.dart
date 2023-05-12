@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'dart:typed_data';
 
 import 'package:iot_client/ffi.dart';
 import 'package:flutter/material.dart';
@@ -35,7 +35,6 @@ class _BluetoothState extends State<Bluetooth> {
 
   Future<void> scanBleDevice() async {
     isScaning = true;
-    await EasyLoading.show(status: '扫描中...');
     setState(() {
       stateMsg = '正在扫描';
     });
@@ -52,20 +51,12 @@ class _BluetoothState extends State<Bluetooth> {
         setState(() {
           stateMsg = '扫描失败，等待下一次重试！';
         });
-        EasyLoading.dismiss();
         return;
       }
+      debugPrint("操作 蓝牙 扫描完成");
 
-      // SerialResponse chinfoRes = await api.bleChinfo();
-
-      // if (chinfoRes.data != null) {
-      //   responseText += String.fromCharCodes(chinfoRes.data!);
-      //   debugPrint(responseText);
-      // } else {
-      //   setState(() {
-      //     stateMsg = '查询设备信息失败，请手动点击扫描按扭重试！';
-      //   });
-      // }
+      final SharedPreferences prefs = await _prefs;
+      prefs.setString("bles", responseText);
 
       List<Device> items = parseDevices(responseText);
       for (Device element in items) {
@@ -73,23 +64,51 @@ class _BluetoothState extends State<Bluetooth> {
 
         devices.add(element);
       }
-      debugPrint("操作 蓝牙 扫描完成");
+
+      await tagConnectedDevice(callback: () {
+        setState(() {
+          stateMsg = '查询设备信息失败，请手动点击扫描按扭重试！';
+        });
+      });
     } catch (_) {
       setState(() {
         stateMsg = '扫描失败，请手动点击扫描按扭重试！';
       });
     }
-    EasyLoading.dismiss();
   }
 
   Future<bool> connect(int index, String mac, int type) async {
     debugPrint("连接蓝牙至 $mac$type");
     SerialResponse res = await api.bleLecconn(addr: mac, addType: type);
     if (res.data != null) {
-      debugPrint("连接结果 ${String.fromCharCodes(res.data!)}");
+      debugPrint("连接结果 ${String.fromCharCodes(res.data!)} end");
     }
     bool res1 = await checkConnection(index, mac);
     return res1;
+  }
+
+  Future<void> tagConnectedDevice({VoidCallback? callback}) async {
+    SerialResponse resp = await api.bleChinfo();
+
+    Uint8List? data = resp.data;
+    if (data == null) {
+      if (callback != null) {
+        callback();
+      }
+      return;
+    }
+    final SharedPreferences prefs = await _prefs;
+    String respText = String.fromCharCodes(data);
+    debugPrint("tagConnectedDevice: $respText");
+    for (Device device in devices) {
+      bool res = checkConnectionSync(respText, device.no, device.mac);
+      device.connected = res;
+      if (res) {
+        prefs.setInt("no", device.no);
+        prefs.setString("mac", device.mac);
+      }
+    }
+    setState(() {});
   }
 
   Timer? timer;
@@ -122,10 +141,24 @@ class _BluetoothState extends State<Bluetooth> {
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      scanBleDevice().then((value) {
-        setTimer();
-      }).whenComplete(scanComplete);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      debugPrint("初始化...");
+      final SharedPreferences prefs = await _prefs;
+      String? responseText = prefs.getString("bles");
+
+      if (responseText != null) {
+        List<Device> items = parseDevices(responseText);
+        for (Device element in items) {
+          devices.removeWhere((e) => e.mac == element.mac);
+
+          devices.add(element);
+        }
+      }
+
+      await tagConnectedDevice();
+      debugPrint("初始化完成");
+      await scanBleDevice().whenComplete(scanComplete);
+      setTimer();
     });
   }
 
@@ -168,6 +201,7 @@ class _BluetoothState extends State<Bluetooth> {
         if (current != null) {
           await api.bleLedisc(index: current);
         }
+        await tagConnectedDevice();
         showSnackBar("已断开连接");
       }
     }
@@ -251,6 +285,7 @@ class _BluetoothState extends State<Bluetooth> {
                         final Device device = devices[index];
 
                         return Container(
+                          margin: EdgeInsets.only(bottom: 15),
                           padding: EdgeInsets.symmetric(
                             horizontal: 10,
                             vertical: 6,

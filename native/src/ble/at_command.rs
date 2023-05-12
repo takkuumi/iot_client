@@ -30,6 +30,8 @@ mod ble_at {
   pub const AT_LECCONN: &str = "AT+LECCONN"; // 向指定地址发起连接
 
   pub const AT_LEDISC: &str = "AT+LEDISC"; // 断开指定连接
+
+  pub const AT_UARTCFG: &str = "AT+UARTCFG"; // 读/写串口配置
 }
 
 fn try_until(data: &[u8], retry: u8) -> SerialResponse {
@@ -60,26 +62,31 @@ pub fn scan(typee: u8) -> SerialResponse {
 
 pub fn lecconn(addr: &str, add_type: u8) -> SerialResponse {
   let data = format!("{}={}{}", ble_at::AT_LECCONN, addr, add_type);
-  send_serialport_until(data.as_bytes(), 20, b"OK\r\n")
+  send_serialport_until(data.as_bytes(), 50, b"OK\r\n")
 }
 
 pub fn lecconn_addr(addr: &str) -> SerialResponse {
   let data = format!("{}={}", ble_at::AT_LECCONN, addr);
-  send_serialport_until(data.as_bytes(), 20, b"OK\r\n")
+  send_serialport_until(data.as_bytes(), 50, b"OK\r\n")
 }
 
 pub fn ledisc(index: u8) -> SerialResponse {
   let data = format!("{}={}", ble_at::AT_LEDISC, index);
-  send_serialport_until(data.as_bytes(), 5, b"OK\r\n")
+  send_serialport_until(data.as_bytes(), 50, b"OK\r\n")
 }
 
 pub fn lesend(index: u8, data: &str) -> SerialResponse {
   let data = format!("{}={},{},{}", ble_at::AT_LESEND, index, data.len(), data);
-  lesend_serialport(data.as_bytes(), 20)
+  lesend_serialport(data.as_bytes(), 50)
+}
+
+// AT_UARTCFG
+pub fn uartcfg() -> SerialResponse {
+  send_serialport_until(ble_at::AT_UARTCFG.as_bytes(), 50, b"OK\r\n")
 }
 
 pub fn chinfo() -> SerialResponse {
-  send_serialport_until(ble_at::AT_CHINFO.as_bytes(), 20, b"OK\r\n")
+  send_serialport_until(ble_at::AT_CHINFO.as_bytes(), 50, b"OK\r\n")
 }
 
 pub fn get_ndid() -> SerialResponse {

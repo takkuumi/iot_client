@@ -1,6 +1,8 @@
 use regex::bytes::Regex;
 use serialport::{ClearBuffer, DataBits, FlowControl, StopBits};
 
+use once_cell::sync::Lazy;
+use std::sync::Mutex;
 // serialport::new("/dev/tty.usbserial-1430", 115200)
 // serialport::new("/dev/tty.usbserial-1410", 115200)
 // ttySWK0
@@ -50,17 +52,29 @@ impl SerialResponse {
   }
 }
 
+static CELL: Lazy<Mutex<Box<dyn serialport::SerialPort>>> = Lazy::new(|| {
+  let port = serialport::new("/dev/ttySWK0", 115_200)
+    .data_bits(DataBits::Eight)
+    .stop_bits(StopBits::One)
+    .flow_control(FlowControl::Software)
+    .timeout(core::time::Duration::from_millis(500))
+    .open()
+    .unwrap();
+
+  Mutex::new(port)
+});
+
 // tty.usbserial-1410
 // ttySWK0
 
-fn open_tty_swk0(millis: u64) -> Result<Box<dyn serialport::SerialPort>, serialport::Error> {
-  serialport::new("/dev/ttySWK0", 115_200)
-    .data_bits(DataBits::Eight)
-    .stop_bits(StopBits::One)
-    .flow_control(FlowControl::None)
-    .timeout(core::time::Duration::from_millis(millis))
-    .open()
-}
+// fn open_tty_swk0(millis: u64) -> Result<Box<dyn serialport::SerialPort>, serialport::Error> {
+//   serialport::new("/dev/ttySWK0", 115_200)
+//     .data_bits(DataBits::Eight)
+//     .stop_bits(StopBits::One)
+//     .flow_control(FlowControl::None)
+//     .timeout(core::time::Duration::from_millis(millis))
+//     .open()
+// }
 
 fn read_serialport(port: &mut Box<dyn serialport::SerialPort>) -> SerialResponse {
   let mut response = SerialResponse::default();
@@ -104,7 +118,7 @@ fn read_serialport(port: &mut Box<dyn serialport::SerialPort>) -> SerialResponse
 pub fn send_serialport(data: &[u8]) -> SerialResponse {
   let mut response = SerialResponse::default();
 
-  let tty_device = open_tty_swk0(500);
+  let tty_device = CELL.lock();
   if tty_device.is_err() {
     response.state = ResponseState::FailedOpenDevice;
     return response;
@@ -185,7 +199,7 @@ fn read_serialport_until(
 
   let mut retry: u16 = 0;
   loop {
-    if (buffer.len() > 2) && buffer.ends_with(needle) {
+    if (buffer.len() > 2) && (buffer.ends_with(needle) || buffer.ends_with(b"null")) {
       response.set_ok(&buffer);
       break;
     }
@@ -193,6 +207,10 @@ fn read_serialport_until(
     if retry >= max_try {
       response.set_err(ResponseState::MaxRetry);
       break;
+    }
+
+    if retry != 0 {
+      std::thread::sleep(core::time::Duration::from_millis(15));
     }
     let mut resp_buf = [0_u8; 6];
     if let Ok(size) = port.read(&mut resp_buf) {
@@ -222,7 +240,9 @@ fn wrap_send_data(data: &[u8]) -> Vec<u8> {
 pub fn send_serialport_until(data: &[u8], max_try: u16, needle: &[u8]) -> SerialResponse {
   let mut response = SerialResponse::default();
 
-  let tty_device = open_tty_swk0(500);
+  let tty_device = CELL.lock();
+
+  // let tty_device = open_tty_swk0(500);
   if tty_device.is_err() {
     response.state = ResponseState::FailedOpenDevice;
     return response;
@@ -284,7 +304,7 @@ fn read_lesend_data(port: &mut Box<dyn serialport::SerialPort>, max_try: u16) ->
 pub fn lesend_serialport(data: &[u8], max_try: u16) -> SerialResponse {
   let mut response = SerialResponse::default();
 
-  let tty_device = open_tty_swk0(500);
+  let tty_device = CELL.lock();
   if tty_device.is_err() {
     response.state = ResponseState::FailedOpenDevice;
     return response;

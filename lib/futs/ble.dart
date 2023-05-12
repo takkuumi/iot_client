@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart';
+import 'dart:typed_data';
+
 import 'package:iot_client/ffi.dart';
 
 Future<void> disconectAll() async {
@@ -15,14 +16,29 @@ Future<void> disconectAll() async {
 }
 
 Future<bool> checkConnection(int index, String mac) async {
-  SerialResponse res2 = await api.bleChinfo();
-  if (res2.data == null) {
+  SerialResponse resp = await api.bleChinfo();
+  Uint8List? data = resp.data;
+  if (data == null) {
     return false;
   }
-  String chinfos = String.fromCharCodes(res2.data!);
-  debugPrint("chinfo: $chinfos");
+  String chinfos = String.fromCharCodes(data);
   if (chinfos.contains(mac)) {
     bool res = chinfos
+        .split(RegExp(r"\r\n"))
+        .where((s) => s.startsWith("+CHINFO=") && s.contains(mac))
+        .any((element) {
+      RegExp m = RegExp("\\+CHINFO=$index,3,(1|0),$mac");
+      return m.hasMatch(element);
+    });
+
+    return res;
+  }
+  return false;
+}
+
+bool checkConnectionSync(String responseText, int index, String mac) {
+  if (responseText.contains(mac)) {
+    bool res = responseText
         .split(RegExp(r"\r\n"))
         .where((s) => s.startsWith("+CHINFO=") && s.contains(mac))
         .any((element) {

@@ -289,6 +289,8 @@ void wire_ble_lesend(int64_t port_, uint8_t index, struct wire_uint_8_list *data
 
 void wire_ble_chinfo(int64_t port_);
 
+void wire_ble_uartcfg(int64_t port_);
+
 void wire_hal_generate_get_holdings(int64_t port_, uint8_t unit_id, uint16_t reg, uint16_t count);
 
 void wire_hal_generate_get_coils(int64_t port_, uint8_t unit_id, uint16_t reg, uint16_t count);
@@ -350,6 +352,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_ble_ledisc);
     dummy_var ^= ((int64_t) (void*) wire_ble_lesend);
     dummy_var ^= ((int64_t) (void*) wire_ble_chinfo);
+    dummy_var ^= ((int64_t) (void*) wire_ble_uartcfg);
     dummy_var ^= ((int64_t) (void*) wire_hal_generate_get_holdings);
     dummy_var ^= ((int64_t) (void*) wire_hal_generate_get_coils);
     dummy_var ^= ((int64_t) (void*) wire_hal_generate_set_coils);

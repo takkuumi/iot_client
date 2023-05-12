@@ -537,20 +537,19 @@ class _LogicControlSettingState extends State<LogicControlSetting> {
           actions: [
             IconButton(
               tooltip: '导入',
-              icon: Icon(Symbols.arrow_upward),
+              icon: const Icon(Symbols.arrow_upward),
               onPressed: () {},
             ),
             IconButton(
               tooltip: '导出',
-              icon: Icon(Symbols.arrow_downward),
+              icon: const Icon(Symbols.arrow_downward),
               onPressed: () {},
             ),
             IconButton(
               tooltip: '保存',
-              icon: Icon(Symbols.save),
+              icon: const Icon(Symbols.save),
               onPressed: () async {
-                final SharedPreferences prefs =
-                    await SharedPreferences.getInstance();
+                final SharedPreferences prefs = await _prefs;
                 int? index = prefs.getInt("no");
                 if (index == null) {
                   throw Exception("未设置连接");

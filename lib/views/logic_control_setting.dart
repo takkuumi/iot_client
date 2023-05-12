@@ -515,6 +515,7 @@ class _LogicControlSettingState extends State<LogicControlSetting> {
   @override
   void initState() {
     super.initState();
+
     if (rules.isEmpty) {
       addLogicRule();
     }

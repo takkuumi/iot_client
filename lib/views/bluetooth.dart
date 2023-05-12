@@ -192,7 +192,7 @@ class _BluetoothState extends State<Bluetooth> {
               onPressed: () => Navigator.of(context).pop(null),
             ),
             TextButton(
-              child: Text("断开连接"),
+              child: Text("断开"),
               onPressed: () {
                 Navigator.of(context).pop(false);
               },

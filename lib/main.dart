@@ -24,5 +24,5 @@ Future<void> main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  runApp(MyApp(theme: theme));
+  runApp(App(theme: theme));
 }

@@ -152,6 +152,16 @@ fn wire_ble_tpmode_impl(port_: MessagePort) {
     move || move |task_callback| Ok(ble_tpmode()),
   )
 }
+fn wire_ble_reboot_impl(port_: MessagePort) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "ble_reboot",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || move |task_callback| Ok(ble_reboot()),
+  )
+}
 fn wire_ble_chinfo_impl(port_: MessagePort) {
   FLUTTER_RUST_BRIDGE_HANDLER.wrap(
     WrapInfo {

@@ -50,7 +50,8 @@ class AppMainView extends StatefulHookConsumerWidget {
   AppMainViewState createState() => AppMainViewState();
 }
 
-class AppMainViewState extends ConsumerState<AppMainView> {
+class AppMainViewState extends ConsumerState<AppMainView>
+    with WidgetsBindingObserver {
   int _bottomNavigationBarIndex = homeTab;
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
@@ -84,19 +85,31 @@ class AppMainViewState extends ConsumerState<AppMainView> {
   @override
   void initState() {
     super.initState();
-
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await api.bleTpmode();
+      await api.bleReboot();
       startTimer();
     });
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     stopTimer();
 
     ///关闭
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    print('----------------------------state = $state');
+    if (state == AppLifecycleState.resumed) {
+      startTimer();
+    }
+    if (state == AppLifecycleState.paused) {
+      stopTimer();
+    }
   }
 
   @override

@@ -94,3 +94,7 @@ pub fn tpmode() {
   try_send_serialport_until(data.as_bytes(), 3, 3, DataType::OK);
   try_send_serialport_until(ble_at::AT_TPMODE.as_bytes(), 3, 3, DataType::OK);
 }
+
+pub fn reboot() {
+  try_send_serialport_until(ble_at::AT_TPMODE.as_bytes(), 1, 3, DataType::OK);
+}

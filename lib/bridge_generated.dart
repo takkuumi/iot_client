@@ -170,6 +170,22 @@ class NativeImpl implements Native {
         argNames: [],
       );
 
+  Future<void> bleReboot({dynamic hint}) {
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner.wire_ble_reboot(port_),
+      parseSuccessData: _wire2api_unit,
+      constMeta: kBleRebootConstMeta,
+      argValues: [],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kBleRebootConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "ble_reboot",
+        argNames: [],
+      );
+
   Future<SerialResponse> bleChinfo({dynamic hint}) {
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_ble_chinfo(port_),
@@ -912,6 +928,20 @@ class NativeWire implements FlutterRustBridgeWireBase {
           'wire_ble_tpmode');
   late final _wire_ble_tpmode =
       _wire_ble_tpmodePtr.asFunction<void Function(int)>();
+
+  void wire_ble_reboot(
+    int port_,
+  ) {
+    return _wire_ble_reboot(
+      port_,
+    );
+  }
+
+  late final _wire_ble_rebootPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>(
+          'wire_ble_reboot');
+  late final _wire_ble_reboot =
+      _wire_ble_rebootPtr.asFunction<void Function(int)>();
 
   void wire_ble_chinfo(
     int port_,

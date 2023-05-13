@@ -173,3 +173,20 @@ impl LogicControl {
     request
   }
 }
+
+#[cfg(test)]
+mod test {
+  use std::eprintln;
+
+  use crate::ble::at_command;
+
+  use super::LogicControl;
+
+  #[test]
+  fn it_works() {
+    let rtu_req = LogicControl::generate_get_holdings(1, 2176, 58);
+    let hs = hex::encode_upper(rtu_req);
+    let data = format!("AT+LESEND={},{},{}\\r\\n", 0, hs.len(), hs);
+    eprintln!("{}", data);
+  }
+}

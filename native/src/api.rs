@@ -54,6 +54,10 @@ pub fn ble_tpmode() {
   at_command::tpmode();
 }
 
+pub fn ble_reboot() {
+  at_command::reboot();
+}
+
 pub fn ble_chinfo() -> SerialResponse {
   at_command::chinfo()
 }

@@ -48,6 +48,10 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kBleTpmodeConstMeta;
 
+  Future<void> bleReboot({dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kBleRebootConstMeta;
+
   Future<SerialResponse> bleChinfo({dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kBleChinfoConstMeta;

@@ -23,50 +23,6 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kBleResponseParseBoolConstMeta;
 
-  Future<SerialResponse> bleGetNdid({dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kBleGetNdidConstMeta;
-
-  Future<SerialResponse> bleAtNdrpt(
-      {required String id,
-      required String data,
-      required int retry,
-      dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kBleAtNdrptConstMeta;
-
-  Future<SerialResponse> bleAtNdrptData(
-      {required String id,
-      required String data,
-      required int retry,
-      dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kBleAtNdrptDataConstMeta;
-
-  Future<SerialResponse> bleAtNdrptTest({dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kBleAtNdrptTestConstMeta;
-
-  Future<SerialResponse> bleSetNdid({required String id, dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kBleSetNdidConstMeta;
-
-  Future<SerialResponse> bleSetMode({required int mode, dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kBleSetModeConstMeta;
-
-  Future<SerialResponse> bleNdreset({dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kBleNdresetConstMeta;
-
-  Future<SerialResponse> bleRestore({dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kBleRestoreConstMeta;
-
-  Future<SerialResponse> bleReboot({dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kBleRebootConstMeta;
-
   Future<SerialResponse> bleScan({required int typee, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kBleScanConstMeta;

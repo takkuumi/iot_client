@@ -253,30 +253,6 @@ void wire_ble_response_parse_u16(int64_t port_, struct wire_uint_8_list *data);
 
 void wire_ble_response_parse_bool(int64_t port_, struct wire_uint_8_list *data);
 
-void wire_ble_get_ndid(int64_t port_);
-
-void wire_ble_at_ndrpt(int64_t port_,
-                       struct wire_uint_8_list *id,
-                       struct wire_uint_8_list *data,
-                       uint8_t retry);
-
-void wire_ble_at_ndrpt_data(int64_t port_,
-                            struct wire_uint_8_list *id,
-                            struct wire_uint_8_list *data,
-                            uint8_t retry);
-
-void wire_ble_at_ndrpt_test(int64_t port_);
-
-void wire_ble_set_ndid(int64_t port_, struct wire_uint_8_list *id);
-
-void wire_ble_set_mode(int64_t port_, uint8_t mode);
-
-void wire_ble_ndreset(int64_t port_);
-
-void wire_ble_restore(int64_t port_);
-
-void wire_ble_reboot(int64_t port_);
-
 void wire_ble_scan(int64_t port_, uint8_t typee);
 
 void wire_ble_lecconn(int64_t port_, struct wire_uint_8_list *addr, uint8_t add_type);
@@ -337,15 +313,6 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_ble_validate_response);
     dummy_var ^= ((int64_t) (void*) wire_ble_response_parse_u16);
     dummy_var ^= ((int64_t) (void*) wire_ble_response_parse_bool);
-    dummy_var ^= ((int64_t) (void*) wire_ble_get_ndid);
-    dummy_var ^= ((int64_t) (void*) wire_ble_at_ndrpt);
-    dummy_var ^= ((int64_t) (void*) wire_ble_at_ndrpt_data);
-    dummy_var ^= ((int64_t) (void*) wire_ble_at_ndrpt_test);
-    dummy_var ^= ((int64_t) (void*) wire_ble_set_ndid);
-    dummy_var ^= ((int64_t) (void*) wire_ble_set_mode);
-    dummy_var ^= ((int64_t) (void*) wire_ble_ndreset);
-    dummy_var ^= ((int64_t) (void*) wire_ble_restore);
-    dummy_var ^= ((int64_t) (void*) wire_ble_reboot);
     dummy_var ^= ((int64_t) (void*) wire_ble_scan);
     dummy_var ^= ((int64_t) (void*) wire_ble_lecconn);
     dummy_var ^= ((int64_t) (void*) wire_ble_lecconn_addr);

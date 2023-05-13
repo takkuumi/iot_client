@@ -16,40 +16,17 @@ pub fn ble_response_parse_bool(data: Vec<u8>) -> Option<Vec<u8>> {
   BytesParse::new(&data).parse_bool()
 }
 
-pub fn ble_get_ndid() -> SerialResponse {
-  at_command::get_ndid()
-}
+// pub fn ble_at_ndrpt(id: String, data: String, retry: u8) -> SerialResponse {
+//   at_command::at_ndrpt(&id, data.as_bytes(), retry)
+// }
 
-pub fn ble_at_ndrpt(id: String, data: String, retry: u8) -> SerialResponse {
-  at_command::at_ndrpt(&id, data.as_bytes(), retry)
-}
+// pub fn ble_at_ndrpt_data(id: String, data: String, retry: u8) -> SerialResponse {
+//   at_command::at_ndrpt_data(&id, data.as_bytes(), retry)
+// }
 
-pub fn ble_at_ndrpt_data(id: String, data: String, retry: u8) -> SerialResponse {
-  at_command::at_ndrpt_data(&id, data.as_bytes(), retry)
-}
-
-pub fn ble_at_ndrpt_test() -> SerialResponse {
-  at_command::at_ndrpt_test()
-}
-
-pub fn ble_set_ndid(id: String) -> SerialResponse {
-  at_command::set_ndid(&id)
-}
-
-pub fn ble_set_mode(mode: u8) -> SerialResponse {
-  at_command::set_mode(mode)
-}
-
-pub fn ble_ndreset() -> SerialResponse {
-  at_command::ndreset()
-}
-
-pub fn ble_restore() -> SerialResponse {
-  at_command::restore()
-}
-pub fn ble_reboot() -> SerialResponse {
-  at_command::reboot()
-}
+// pub fn ble_at_ndrpt_test() -> SerialResponse {
+//   at_command::at_ndrpt_test()
+// }
 
 // 搜索附近的设备
 pub fn ble_scan(typee: u8) -> SerialResponse {

@@ -17,61 +17,6 @@ pub extern "C" fn wire_ble_response_parse_bool(port_: i64, data: *mut wire_uint_
 }
 
 #[no_mangle]
-pub extern "C" fn wire_ble_get_ndid(port_: i64) {
-  wire_ble_get_ndid_impl(port_)
-}
-
-#[no_mangle]
-pub extern "C" fn wire_ble_at_ndrpt(
-  port_: i64,
-  id: *mut wire_uint_8_list,
-  data: *mut wire_uint_8_list,
-  retry: u8,
-) {
-  wire_ble_at_ndrpt_impl(port_, id, data, retry)
-}
-
-#[no_mangle]
-pub extern "C" fn wire_ble_at_ndrpt_data(
-  port_: i64,
-  id: *mut wire_uint_8_list,
-  data: *mut wire_uint_8_list,
-  retry: u8,
-) {
-  wire_ble_at_ndrpt_data_impl(port_, id, data, retry)
-}
-
-#[no_mangle]
-pub extern "C" fn wire_ble_at_ndrpt_test(port_: i64) {
-  wire_ble_at_ndrpt_test_impl(port_)
-}
-
-#[no_mangle]
-pub extern "C" fn wire_ble_set_ndid(port_: i64, id: *mut wire_uint_8_list) {
-  wire_ble_set_ndid_impl(port_, id)
-}
-
-#[no_mangle]
-pub extern "C" fn wire_ble_set_mode(port_: i64, mode: u8) {
-  wire_ble_set_mode_impl(port_, mode)
-}
-
-#[no_mangle]
-pub extern "C" fn wire_ble_ndreset(port_: i64) {
-  wire_ble_ndreset_impl(port_)
-}
-
-#[no_mangle]
-pub extern "C" fn wire_ble_restore(port_: i64) {
-  wire_ble_restore_impl(port_)
-}
-
-#[no_mangle]
-pub extern "C" fn wire_ble_reboot(port_: i64) {
-  wire_ble_reboot_impl(port_)
-}
-
-#[no_mangle]
 pub extern "C" fn wire_ble_scan(port_: i64, typee: u8) {
   wire_ble_scan_impl(port_, typee)
 }

@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:flutter/material.dart';
 import 'package:iot_client/ffi.dart';
 
 Future<void> disconectAll() async {
@@ -15,19 +16,20 @@ Future<void> disconectAll() async {
   await api.bleLedisc(index: 9);
 }
 
-Future<bool> checkConnection(int index, String mac) async {
+Future<bool> checkConnection(String mac) async {
   SerialResponse resp = await api.bleChinfo();
   Uint8List? data = resp.data;
   if (data == null) {
     return false;
   }
   String chinfos = String.fromCharCodes(data);
+  debugPrint(">>>>>>>>>>>>>>>>>$chinfos<<<<<<<<<<<<<<<<<<<<<");
   if (chinfos.contains(mac)) {
     bool res = chinfos
         .split(RegExp(r"\r\n"))
         .where((s) => s.startsWith("+CHINFO=") && s.contains(mac))
         .any((element) {
-      RegExp m = RegExp("\\+CHINFO=$index,3,(1|0),$mac");
+      RegExp m = RegExp("\\+CHINFO=\\d,3,(1|0),$mac");
       return m.hasMatch(element);
     });
 
@@ -36,13 +38,13 @@ Future<bool> checkConnection(int index, String mac) async {
   return false;
 }
 
-bool checkConnectionSync(String responseText, int index, String mac) {
+bool checkConnectionSync(String responseText, String mac) {
   if (responseText.contains(mac)) {
     bool res = responseText
         .split(RegExp(r"\r\n"))
         .where((s) => s.startsWith("+CHINFO=") && s.contains(mac))
         .any((element) {
-      RegExp m = RegExp("\\+CHINFO=$index,3,(1|0),$mac");
+      RegExp m = RegExp("\\+CHINFO=\\d,3,(1|0),$mac");
       return m.hasMatch(element);
     });
 

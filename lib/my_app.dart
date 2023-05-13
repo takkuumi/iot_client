@@ -1,6 +1,10 @@
+import 'dart:async';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:iot_client/ffi.dart';
 import 'package:iot_client/futs/ble.dart';
 import 'package:iot_client/provider/app_provider.dart';
 import 'package:iot_client/views/about.dart';
@@ -58,6 +62,12 @@ class AppMainViewState extends ConsumerState<AppMainView> {
         debugPrint("断开所有蓝牙连接");
       });
     });
+  }
+
+  @override
+  void dispose() {
+    ///关闭
+    super.dispose();
   }
 
   @override

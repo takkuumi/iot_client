@@ -43,23 +43,22 @@ class _BluetoothState extends State<Bluetooth> {
     try {
       debugPrint("操作 蓝牙 扫描蓝牙");
 
-      String responseText = '';
+      SerialResponse resp = await api.bleScan(typee: 1);
 
-      SerialResponse scanRes = await api.bleScan(typee: 1);
+      Uint8List? data = resp.data;
 
-      if (scanRes.data != null) {
-        responseText += String.fromCharCodes(scanRes.data!);
-      } else {
+      if (data == null) {
         setState(() {
-          stateMsg = '扫描失败，等待下一次重试！';
+          stateMsg = '未发现设备！';
         });
-        // EasyLoading.dismiss();
         return;
       }
+
+      String responseText = String.fromCharCodes(data);
       debugPrint("操作 蓝牙 扫描完成");
 
       final SharedPreferences prefs = await _prefs;
-      prefs.setString("bles", responseText);
+      prefs.setString("bluetooths", responseText);
 
       List<Device> items = parseDevices(responseText);
       for (Device element in items) {
@@ -87,7 +86,7 @@ class _BluetoothState extends State<Bluetooth> {
     if (res.data != null) {
       debugPrint("连接结果 ${String.fromCharCodes(res.data!)} end");
     }
-    bool res1 = await checkConnection(index, mac);
+    bool res1 = await checkConnection(mac);
     return res1;
   }
 
@@ -103,9 +102,8 @@ class _BluetoothState extends State<Bluetooth> {
     }
     final SharedPreferences prefs = await _prefs;
     String respText = String.fromCharCodes(data);
-    debugPrint("tagConnectedDevice: $respText");
     for (Device device in devices) {
-      bool res = checkConnectionSync(respText, device.no, device.mac);
+      bool res = checkConnectionSync(respText, device.mac);
       device.connected = res;
       if (res) {
         prefs.setInt("no", device.no);
@@ -130,7 +128,7 @@ class _BluetoothState extends State<Bluetooth> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       debugPrint("初始化...");
       final SharedPreferences prefs = await _prefs;
-      String? responseText = prefs.getString("bles");
+      String? responseText = prefs.getString("bluetooths");
 
       int? no = prefs.getInt("no");
 

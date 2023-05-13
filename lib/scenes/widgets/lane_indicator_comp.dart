@@ -234,7 +234,7 @@ class LaneIndicatorUIState extends State<LaneIndicatorUI> {
   }
 
   LaneIndicatorState nextState(LaneIndicatorState state) {
-    return state2 == LaneIndicatorState.green
+    return state == LaneIndicatorState.green
         ? LaneIndicatorState.red
         : LaneIndicatorState.green;
   }
@@ -368,12 +368,26 @@ class LaneIndicatorUIState extends State<LaneIndicatorUI> {
               }
             } else if ([2, 4, 6, 8].contains(sence)) {
               LaneIndicatorState ns = nextState(state1);
-              if (ns == LaneIndicatorState.green) {
-                await setCoil(widget.port?.getP0 ?? 512, true);
-                await setCoil(widget.port?.getP1 ?? 512, false);
+              if (sence == 8) {
+                if (ns == LaneIndicatorState.green) {
+                  await setCoil(widget.port?.getP0 ?? 512, true);
+                  await setCoil(widget.port?.getP1 ?? 512, false);
+                  await setCoil(widget.port?.getP3 ?? 512, false);
+                  await setCoil(widget.port?.getP4 ?? 512, true);
+                } else {
+                  await setCoil(widget.port?.getP0 ?? 512, false);
+                  await setCoil(widget.port?.getP1 ?? 512, true);
+                  await setCoil(widget.port?.getP3 ?? 512, true);
+                  await setCoil(widget.port?.getP4 ?? 512, false);
+                }
               } else {
-                await setCoil(widget.port?.getP0 ?? 512, false);
-                await setCoil(widget.port?.getP1 ?? 512, true);
+                if (ns == LaneIndicatorState.green) {
+                  await setCoil(widget.port?.getP0 ?? 512, true);
+                  await setCoil(widget.port?.getP1 ?? 512, false);
+                } else {
+                  await setCoil(widget.port?.getP0 ?? 512, false);
+                  await setCoil(widget.port?.getP1 ?? 512, true);
+                }
               }
             } else if ([3, 5, 7, 9].contains(sence)) {
               LaneIndicatorState ns = nextState3(state1);
@@ -410,7 +424,7 @@ class LaneIndicatorUIState extends State<LaneIndicatorUI> {
               return;
             }
             if (sence == 1) {
-              LaneIndicatorState ns = nextState(state1);
+              LaneIndicatorState ns = nextState(state2);
               if (ns == LaneIndicatorState.green) {
                 await setCoil(widget.port?.getP2 ?? 512, true);
                 await setCoil(widget.port?.getP3 ?? 512, false);
@@ -419,16 +433,31 @@ class LaneIndicatorUIState extends State<LaneIndicatorUI> {
                 await setCoil(widget.port?.getP3 ?? 512, true);
               }
             } else if ([2, 4, 6, 8].contains(sence)) {
-              LaneIndicatorState ns = nextState(state1);
-              if (ns == LaneIndicatorState.green) {
-                await setCoil(widget.port?.getP3 ?? 512, true);
-                await setCoil(widget.port?.getP4 ?? 512, false);
+              LaneIndicatorState ns = nextState(state2);
+
+              if (sence == 8) {
+                if (ns == LaneIndicatorState.green) {
+                  await setCoil(widget.port?.getP0 ?? 512, false);
+                  await setCoil(widget.port?.getP1 ?? 512, true);
+                  await setCoil(widget.port?.getP3 ?? 512, true);
+                  await setCoil(widget.port?.getP4 ?? 512, false);
+                } else {
+                  await setCoil(widget.port?.getP0 ?? 512, true);
+                  await setCoil(widget.port?.getP1 ?? 512, false);
+                  await setCoil(widget.port?.getP3 ?? 512, false);
+                  await setCoil(widget.port?.getP4 ?? 512, true);
+                }
               } else {
-                await setCoil(widget.port?.getP3 ?? 512, false);
-                await setCoil(widget.port?.getP4 ?? 512, true);
+                if (ns == LaneIndicatorState.green) {
+                  await setCoil(widget.port?.getP3 ?? 512, true);
+                  await setCoil(widget.port?.getP4 ?? 512, false);
+                } else {
+                  await setCoil(widget.port?.getP3 ?? 512, false);
+                  await setCoil(widget.port?.getP4 ?? 512, true);
+                }
               }
             } else if ([3, 5, 7, 9].contains(sence)) {
-              LaneIndicatorState ns = nextState3(state1);
+              LaneIndicatorState ns = nextState3(state2);
               if (ns == LaneIndicatorState.green) {
                 await setCoil(widget.port?.getP5 ?? 512, true);
                 await setCoil(widget.port?.getP6 ?? 512, false);
@@ -444,7 +473,9 @@ class LaneIndicatorUIState extends State<LaneIndicatorUI> {
               }
             }
 
-            await updateState();
+            try {
+              await updateState();
+            } catch (_e) {}
           },
           child: Container(
             width: 100,

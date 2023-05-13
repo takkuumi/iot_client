@@ -1,13 +1,14 @@
 use regex::bytes::Regex;
-use serialport::{ClearBuffer, DataBits, FlowControl, StopBits};
+use serialport::{DataBits, FlowControl, StopBits, TTYPort};
 
 use once_cell::sync::Lazy;
-use std::sync::Mutex;
+use std::{
+  io::{Read, Write},
+  sync::Mutex,
+};
 // serialport::new("/dev/tty.usbserial-1430", 115200)
 // serialport::new("/dev/tty.usbserial-1410", 115200)
 // ttySWK0
-
-const BITS_END: &[u8; 2] = b"\r\n";
 
 #[derive(Debug, PartialEq)]
 pub enum ResponseState {
@@ -52,166 +53,82 @@ impl SerialResponse {
   }
 }
 
-static CELL: Lazy<Mutex<Box<dyn serialport::SerialPort>>> = Lazy::new(|| {
+static CELL: Lazy<Mutex<TTYPort>> = Lazy::new(|| {
   let port = serialport::new("/dev/ttySWK0", 115_200)
     .data_bits(DataBits::Eight)
     .stop_bits(StopBits::One)
-    .flow_control(FlowControl::Software)
-    .timeout(core::time::Duration::from_millis(500))
-    .open()
+    .flow_control(FlowControl::None)
+    .timeout(core::time::Duration::from_millis(100))
+    .open_native()
     .unwrap();
 
   Mutex::new(port)
 });
 
+#[derive(Debug, Clone, Copy)]
+pub enum DataType {
+  OK,
+  Scan,
+  Date,
+}
+
+impl DataType {
+  fn check_ok(buffer: &[u8]) -> bool {
+    buffer.ends_with(b"OK\r\n")
+  }
+
+  fn check_scan(buffer: &[u8]) -> bool {
+    buffer.ends_with(b"}\r\n")
+  }
+
+  fn check_data(buffer: &[u8]) -> bool {
+    let resp_text = String::from_utf8_lossy(buffer);
+    if resp_text.contains("+DATA") {
+      let re: Regex = Regex::new(r"\+DATA=(?P<a>\d+),(?P<length>\d+),(?P<data>\S+)").unwrap();
+      if let Some(caps) = re.captures(buffer) {
+        let length = caps.name("length");
+        let data = caps.name("data");
+
+        if let (Some(length), Some(data)) = (length, data) {
+          let length = String::from_utf8_lossy(length.as_bytes())
+            .parse::<usize>()
+            .unwrap();
+          if data.len() == length {
+            return true;
+          }
+        }
+      }
+    }
+    false
+  }
+}
+
 // tty.usbserial-1410
 // ttySWK0
 
-// fn open_tty_swk0(millis: u64) -> Result<Box<dyn serialport::SerialPort>, serialport::Error> {
-//   serialport::new("/dev/ttySWK0", 115_200)
-//     .data_bits(DataBits::Eight)
-//     .stop_bits(StopBits::One)
-//     .flow_control(FlowControl::None)
-//     .timeout(core::time::Duration::from_millis(millis))
-//     .open()
-// }
-
-fn read_serialport(port: &mut Box<dyn serialport::SerialPort>) -> SerialResponse {
-  let mut response = SerialResponse::default();
-  let mut retry: u8 = 0;
-  let mut buffer = Vec::<u8>::with_capacity(80);
-  loop {
-    if (buffer.len() > 2) && buffer.ends_with(BITS_END) {
-      response.set_ok(&buffer);
-      break;
-    }
-
-    let mut resp_buf = [0_u8; 10];
-    let res = port.read(&mut resp_buf);
-    match res {
-      Err(ref e) => {
-        eprintln!("{:?}", e);
-        if retry > 5 {
-          response.state = ResponseState::ReadResponseError;
-          break;
-        }
-        retry += 1;
-        std::thread::sleep(core::time::Duration::from_millis(u64::from(retry) * 30));
-        continue;
-      }
-      Ok(size) => {
-        if size == 0 {
-          continue;
-        }
-
-        eprintln!("{}", String::from_utf8_lossy(&resp_buf));
-        retry = 0;
-        buffer.extend_from_slice(&resp_buf[..size]);
-      }
-    }
-  }
-
-  response
-}
-
-#[must_use]
-pub fn send_serialport(data: &[u8]) -> SerialResponse {
-  let mut response = SerialResponse::default();
-
-  let tty_device = CELL.lock();
-  if tty_device.is_err() {
-    response.state = ResponseState::FailedOpenDevice;
-    return response;
-  }
-  let mut port = tty_device.unwrap();
-  let _ = port.clear(ClearBuffer::Input);
-  let _ = port.clear_break();
-  let mut retry: u8 = 0;
-  'outer: loop {
-    if retry > 3 {
-      response.state = ResponseState::MaxSendRetry;
-      return response;
-    }
-
-    if retry != 0 {
-      eprintln!("retry:{retry}");
-      let _ = port.clear(ClearBuffer::Input);
-      std::thread::sleep(core::time::Duration::from_millis(u64::from(retry) * 100));
-    }
-
-    let chunks = data.chunks_exact(10);
-    let rem = chunks.remainder();
-    for chunk in chunks {
-      eprintln!("chunk:{:?}", chunk);
-      eprintln!("chunk data {}", String::from_utf8_lossy(chunk));
-      let w_res = port.write(chunk);
-      // let _ = port.flush();
-      if w_res.is_err() {
-        retry += 1;
-        continue 'outer;
-      }
-    }
-
-    let mut end: Vec<u8> = Vec::new();
-    if !rem.is_empty() {
-      end.extend_from_slice(rem);
-    }
-    end.extend_from_slice(BITS_END);
-
-    eprintln!("remainder:{:?}", &end);
-    eprintln!("remainder data {}", String::from_utf8_lossy(&end));
-
-    let w_res = port.write(&end);
-    let _ = port.flush();
-
-    if w_res.is_err() {
-      retry += 1;
-      continue 'outer;
-    }
-
-    let mut buf = [0_u8; 15];
-    let bt_res = port.read(&mut buf);
-
-    if bt_res.is_err() {
-      retry += 1;
-      continue 'outer;
-    }
-    if buf.starts_with(b"\r\nE") {
-      retry += 1;
-      let err_msg = String::from_utf8_lossy(&buf);
-      eprintln!("蓝牙发送失败({retry}),错误码:{err_msg}");
-      continue 'outer;
-    }
-    // buffer.extend_from_slice(&buf[..size]);
-    break 'outer;
-  }
-
-  read_serialport(&mut port)
-}
-
-fn read_serialport_until(
-  port: &mut Box<dyn serialport::SerialPort>,
-  max_try: u16,
-  needle: &[u8],
-) -> SerialResponse {
+fn read_serialport_until(port: &mut TTYPort, read_try: u8, flag: DataType) -> SerialResponse {
   let mut response = SerialResponse::default();
   let mut buffer = Vec::<u8>::with_capacity(80);
 
-  let mut retry: u16 = 0;
+  let mut retry: u8 = 0;
   loop {
-    if (buffer.len() > 2) && (buffer.ends_with(needle) || buffer.ends_with(b"null")) {
-      response.set_ok(&buffer);
-      break;
+    if buffer.len() > 2 {
+      let result = match flag {
+        DataType::OK => DataType::check_ok(&buffer),
+        DataType::Scan => DataType::check_scan(&buffer),
+        DataType::Date => DataType::check_data(&buffer),
+      };
+      if result {
+        response.set_ok(&buffer);
+        break;
+      }
     }
 
-    if retry >= max_try {
+    if retry >= read_try {
       response.set_err(ResponseState::MaxRetry);
       break;
     }
 
-    if retry != 0 {
-      std::thread::sleep(core::time::Duration::from_millis(15));
-    }
     let mut resp_buf = [0_u8; 6];
     if let Ok(size) = port.read(&mut resp_buf) {
       if size > 0 {
@@ -237,10 +154,10 @@ fn wrap_send_data(data: &[u8]) -> Vec<u8> {
 }
 
 #[must_use]
-pub fn send_serialport_until(data: &[u8], max_try: u16, needle: &[u8]) -> SerialResponse {
+pub fn send_serialport_until(data: &[u8], read_try: u8, flag: DataType) -> SerialResponse {
   let mut response = SerialResponse::default();
 
-  let tty_device = CELL.lock();
+  let tty_device = CELL.try_lock();
 
   // let tty_device = open_tty_swk0(500);
   if tty_device.is_err() {
@@ -252,67 +169,5 @@ pub fn send_serialport_until(data: &[u8], max_try: u16, needle: &[u8]) -> Serial
   let data = wrap_send_data(data);
   let _ = port.write(&data);
 
-  read_serialport_until(&mut port, max_try, needle)
-}
-
-fn read_lesend_data(port: &mut Box<dyn serialport::SerialPort>, max_try: u16) -> SerialResponse {
-  let mut response = SerialResponse::default();
-  let mut buffer = Vec::<u8>::with_capacity(80);
-
-  let mut retry: u16 = 0;
-  loop {
-    if buffer.len() > 10 {
-      let resp_text = String::from_utf8_lossy(&buffer);
-      if resp_text.contains("+DATA") {
-        let re: Regex = Regex::new(r"\+DATA=(?P<a>\d+),(?P<length>\d+),(?P<data>\S+)").unwrap();
-        if let Some(caps) = re.captures(&buffer) {
-          let length = caps.name("length");
-          let data = caps.name("data");
-
-          if let (Some(length), Some(data)) = (length, data) {
-            let length = String::from_utf8_lossy(length.as_bytes())
-              .parse::<usize>()
-              .unwrap();
-            if data.len() == length {
-              response.set_ok(&buffer);
-              break;
-            }
-          }
-        }
-      }
-    }
-
-    if retry >= max_try {
-      response.set_err(ResponseState::MaxRetry);
-      break;
-    }
-    let mut resp_buf = [0_u8; 6];
-    if let Ok(size) = port.read(&mut resp_buf) {
-      if size > 0 {
-        eprintln!("{}", String::from_utf8_lossy(&resp_buf));
-        buffer.extend_from_slice(&resp_buf[..size]);
-      }
-    } else {
-      retry += 1;
-    }
-  }
-
-  response
-}
-
-#[must_use]
-pub fn lesend_serialport(data: &[u8], max_try: u16) -> SerialResponse {
-  let mut response = SerialResponse::default();
-
-  let tty_device = CELL.lock();
-  if tty_device.is_err() {
-    response.state = ResponseState::FailedOpenDevice;
-    return response;
-  }
-  let mut port = tty_device.unwrap();
-
-  let data = wrap_send_data(data);
-  let _ = port.write(&data);
-
-  read_lesend_data(&mut port, max_try)
+  read_serialport_until(&mut port, read_try, flag)
 }

@@ -195,7 +195,7 @@ class _LaneIndicatorState extends State<LaneIndicator>
         ),
         body: TabBarView(
           controller: tabController,
-          physics: BouncingScrollPhysics(),
+          physics: NeverScrollableScrollPhysics(),
           dragStartBehavior: DragStartBehavior.down,
           children: [
             SingleChildScrollView(
@@ -372,10 +372,14 @@ class _LaneIndicatorState extends State<LaneIndicator>
           child: const Icon(Symbols.refresh),
           onPressed: () async {
             EasyLoading.show(status: '刷新数据中...');
-            if (tabController.index == 0) {
-              await initMainState();
-            } else if (tabController.index == 1) {
-              await initDeviceState();
+            try {
+              if (tabController.index == 0) {
+                await initMainState();
+              } else if (tabController.index == 1) {
+                await initDeviceState();
+              }
+            } catch (err) {
+              debugPrint(err.toString());
             }
             EasyLoading.dismiss();
           },

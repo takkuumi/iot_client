@@ -5,22 +5,6 @@ import 'package:iot_client/ffi.dart';
 import 'package:iot_client/futs/ble.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// Future<int?> getHolding(int index, int reg) async {
-//   String data = await api.halGenerateGetHoldings(unitId: 1, reg: reg, count: 1);
-//   debugPrint('getHolding: $data');
-//   SerialResponse sr = await api.bleLesend(index: index, data: data);
-//   Uint8List? rdata = sr.data;
-//   if (rdata == null) {
-//     return null;
-//   }
-//   String text = String.fromCharCodes(rdata);
-//   debugPrint(text);
-//   bool state = await api.bleValidateResponse(data: rdata);
-//   if (state) {
-//     return await api.bleResponseParseU16(data: rdata, unitId: 1);
-//   }
-// }
-
 Future<List<int>> getHoldings(int reg, int count) async {
   List<int> res = List<int>.empty(growable: true);
 
@@ -35,7 +19,7 @@ Future<List<int>> getHoldings(int reg, int count) async {
   if (mac == null) {
     throw Exception("未设置连接");
   }
-  bool connectState = await checkConnection(index, mac);
+  bool connectState = await checkConnection(mac);
   if (!connectState) {
     throw Exception("设备未连接或已断开连接，请重新连接设备");
   }
@@ -70,7 +54,7 @@ Future<List<bool>?> getCoils(int reg, int count) async {
   if (mac == null) {
     throw Exception("未设置连接");
   }
-  bool connectState = await checkConnection(index, mac);
+  bool connectState = await checkConnection(mac);
   if (!connectState) {
     throw Exception("设备未连接或已断开连接，请重新连接设备");
   }
@@ -107,7 +91,7 @@ Future<bool?> getCoil(int reg) async {
   if (mac == null) {
     throw Exception("未设置连接");
   }
-  bool connectState = await checkConnection(index, mac);
+  bool connectState = await checkConnection(mac);
   if (!connectState) {
     throw Exception("设备未连接或已断开连接，请重新连接设备");
   }
@@ -142,7 +126,7 @@ Future<bool> setCoils(int reg, List<bool> values) async {
   if (mac == null) {
     throw Exception("未设置连接");
   }
-  bool connectState = await checkConnection(index, mac);
+  bool connectState = await checkConnection(mac);
   if (!connectState) {
     throw Exception("设备未连接或已断开连接，请重新连接设备");
   }
@@ -171,15 +155,6 @@ Future<bool> setCoil(int reg, bool value) async {
     throw Exception("未设置连接");
   }
 
-  // String? mac = prefs.getString("mac");
-  // if (mac == null) {
-  //   throw Exception("未设置连接");
-  // }
-  // bool connectState = await checkConnection(index, mac);
-  // if (!connectState) {
-  //   throw Exception("设备未连接或已断开连接，请重新连接设备");
-  // }
-
   String data =
       await api.halGenerateSetCoil(unitId: 1, reg: reg, value: value ? 1 : 0);
 
@@ -207,7 +182,7 @@ Future<bool> setHoldings(String data) async {
   if (mac == null) {
     throw Exception("未设置连接");
   }
-  bool connectState = await checkConnection(index, mac);
+  bool connectState = await checkConnection(mac);
   if (!connectState) {
     throw Exception("设备未连接或已断开连接，请重新连接设备");
   }
@@ -234,7 +209,7 @@ Future<List<int>> readDevice() async {
   if (mac == null) {
     throw Exception("未设置连接");
   }
-  bool connectState = await checkConnection(index, mac);
+  bool connectState = await checkConnection(mac);
   if (!connectState) {
     throw Exception("设备未连接或已断开连接，请重新连接设备");
   }
@@ -259,7 +234,7 @@ Future<List<int>> readSettings() async {
   if (mac == null) {
     throw Exception("未设置连接");
   }
-  bool connectState = await checkConnection(index, mac);
+  bool connectState = await checkConnection(mac);
   if (!connectState) {
     throw Exception("设备未连接或已断开连接，请重新连接设备");
   }
@@ -271,4 +246,37 @@ Future<List<int>> readSettings() async {
   prefs.setString(mac, data.join(","));
 
   return data;
+}
+
+Future<void> readLogicControlSetting() async {
+  List<int> settings = await readSettings();
+
+  debugPrint("length: ${settings.length} settings: ${settings.join(',')}");
+
+  Uint8List v = await api.convertU16SToU8S(data: Uint16List.fromList(settings));
+  debugPrint("length: ${v.length} settings: ${v.join(',')}");
+
+  List<int> indexs = [];
+  for (int i = 0; i < v.length; i += 12) {
+    int index = v[i];
+    int sence = v[i + 1];
+
+    if (indexs.any((element) => element == index)) {
+      continue;
+    }
+
+    indexs.add(index);
+
+    Uint8List sub = v.sublist(i, i + 12);
+    debugPrint("sub: ${sub.join(',')}");
+    if ([1, 2, 4, 6, 8, 3, 5, 6, 7, 9].contains(sence)) {
+      // if (index == 0) {
+      //   port1 = Port.fromList(sub);
+      // } else if (index == 1) {
+      //   port2 = Port.fromList(sub);
+      // } else if (index == 2) {
+      //   port3 = Port.fromList(sub);
+      // }
+    }
+  }
 }

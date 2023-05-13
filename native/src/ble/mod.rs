@@ -1,13 +1,10 @@
 pub mod at_command;
 mod crc16;
 
-use super::serial::{lesend_serialport, send_serialport, send_serialport_until, SerialResponse};
-use crc16::crc_16;
+use super::serial::{send_serialport_until, DataType, SerialResponse};
 use regex::bytes::Regex;
 use rmodbus::{client::ModbusRequest, ModbusProto};
 use std::ops::Deref;
-
-const BITS_END: &[u8; 2] = b"\r\n";
 
 #[derive(Debug, PartialEq)]
 pub struct BytesParse<'s>(pub &'s [u8]);

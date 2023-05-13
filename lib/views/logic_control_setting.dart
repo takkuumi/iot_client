@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:iot_client/constants.dart';
 import 'package:iot_client/ffi.dart';
 import 'package:iot_client/futs/ble.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -554,21 +555,14 @@ class _LogicControlSettingState extends State<LogicControlSetting> {
                 if (index == null) {
                   throw Exception("未设置连接");
                 }
-
-                String? mac = prefs.getString("mac");
-                if (mac == null) {
-                  throw Exception("未设置连接");
-                }
-                bool connectState = await checkConnection(index, mac);
-                if (!connectState) {
-                  throw Exception("设备未连接或已断开连接，请重新连接设备");
-                }
                 // 保存逻辑配置
-                keys
+                final elements = keys
                     .where((source) => source.currentState != null)
-                    .forEach((element) async {
+                    .toList();
+                for (var element in elements) {
                   element.currentState?.getLogicRule().toLogicControl(index);
-                });
+                }
+                showSnackBar("保存成功", key);
               },
             )
           ],

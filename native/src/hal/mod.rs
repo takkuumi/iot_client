@@ -1,9 +1,9 @@
-mod device;
-mod eui48;
-mod indexed;
-mod memory;
+pub mod device;
+pub mod eui48;
+pub mod indexed;
+pub mod memory;
 pub mod serial;
-mod utils;
+pub mod utils;
 
 use bitflags::bitflags;
 use rmodbus::{client::ModbusRequest, ModbusProto};

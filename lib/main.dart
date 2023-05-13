@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'my_app.dart';
 import 'package:json_theme/json_theme.dart';
 import 'dart:convert'; // For jsonDecode
@@ -24,5 +25,5 @@ Future<void> main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  runApp(App(theme: theme));
+  runApp(ProviderScope(child: App(theme: theme)));
 }

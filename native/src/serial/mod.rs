@@ -70,18 +70,32 @@ pub enum DataType {
   OK,
   Scan,
   Date,
+  GATTStat,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum ReadStat {
+  Waiting,
+  Ok,
+  Err,
 }
 
 impl DataType {
-  fn check_ok(buffer: &[u8]) -> bool {
-    buffer.ends_with(b"OK\r\n")
+  pub fn check_ok(buffer: &[u8]) -> ReadStat {
+    if buffer.ends_with(b"OK\r\n") {
+      return ReadStat::Ok;
+    }
+    ReadStat::Err
   }
 
-  fn check_scan(buffer: &[u8]) -> bool {
-    buffer.ends_with(b"}\r\n")
+  pub fn check_scan(buffer: &[u8]) -> ReadStat {
+    if buffer.ends_with(b"}\r\n") {
+      return ReadStat::Ok;
+    }
+    ReadStat::Err
   }
 
-  fn check_data(buffer: &[u8]) -> bool {
+  pub fn check_data(buffer: &[u8]) -> ReadStat {
     let resp_text = String::from_utf8_lossy(buffer);
     if resp_text.contains("+DATA") {
       let re: Regex = Regex::new(r"\+DATA=(?P<a>\d+),(?P<length>\d+),(?P<data>\S+)").unwrap();
@@ -94,12 +108,34 @@ impl DataType {
             .parse::<usize>()
             .unwrap();
           if data.len() == length {
-            return true;
+            return ReadStat::Ok;
           }
         }
       }
     }
-    false
+    ReadStat::Err
+  }
+
+  pub fn check_gatt_stat(buffer: &[u8]) -> ReadStat {
+    let resp_text = String::from_utf8_lossy(buffer);
+    if resp_text.contains("+GATTSTAT") {
+      let re: Regex = Regex::new(r"\+GATTSTAT=(\d+),(?P<stat>\d+)").unwrap();
+      let caps = re.captures_iter(buffer);
+      let stat = caps
+        .last()
+        .and_then(|s| s.name("stat"))
+        .map(|m| String::from_utf8_lossy(m.as_bytes()));
+
+      if let Some(stat) = stat {
+        let stat = stat.parse::<u8>().unwrap();
+        if stat == 3 {
+          return ReadStat::Ok;
+        } else if stat == 2 {
+          return ReadStat::Waiting;
+        }
+      }
+    }
+    ReadStat::Err
   }
 }
 
@@ -117,8 +153,9 @@ fn read_serialport_until(port: &mut TTYPort, read_try: u8, flag: DataType) -> Se
         DataType::OK => DataType::check_ok(&buffer),
         DataType::Scan => DataType::check_scan(&buffer),
         DataType::Date => DataType::check_data(&buffer),
+        DataType::GATTStat => DataType::check_gatt_stat(&buffer),
       };
-      if result {
+      if result == ReadStat::Ok {
         response.set_ok(&buffer);
         break;
       }
@@ -170,4 +207,26 @@ pub fn send_serialport_until(data: &[u8], read_try: u8, flag: DataType) -> Seria
   let _ = port.write(&data);
 
   read_serialport_until(&mut port, read_try, flag)
+}
+
+#[cfg(test)]
+mod test {
+  use std::eprintln;
+
+  use super::DataType;
+
+  #[test]
+  fn it_works() {
+    let buffer = r#"
+    OK
+
+    +GATTSTAT=0,2
+
+
+    +GATTSTAT=0,3
+    "#;
+
+    let res = DataType::check_gatt_stat(buffer.as_bytes());
+    eprintln!("{:?}", res);
+  }
 }

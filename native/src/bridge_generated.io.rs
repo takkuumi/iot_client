@@ -27,11 +27,6 @@ pub extern "C" fn wire_ble_lecconn(port_: i64, addr: *mut wire_uint_8_list, add_
 }
 
 #[no_mangle]
-pub extern "C" fn wire_ble_lecconn_addr(port_: i64, addr: *mut wire_uint_8_list) {
-  wire_ble_lecconn_addr_impl(port_, addr)
-}
-
-#[no_mangle]
 pub extern "C" fn wire_ble_ledisc(port_: i64, index: u8) {
   wire_ble_ledisc_impl(port_, index)
 }
@@ -123,6 +118,11 @@ pub extern "C" fn wire_hal_generate_set_lc_holdings(
 #[no_mangle]
 pub extern "C" fn wire_convert_u16s_to_u8s(port_: i64, data: *mut wire_uint_16_list) {
   wire_convert_u16s_to_u8s_impl(port_, data)
+}
+
+#[no_mangle]
+pub extern "C" fn wire_hal_read_device_settings(port_: i64, index: u8) {
+  wire_hal_read_device_settings_impl(port_, index)
 }
 
 // Section: allocate functions

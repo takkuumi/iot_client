@@ -257,8 +257,6 @@ void wire_ble_scan(int64_t port_, uint8_t typee);
 
 void wire_ble_lecconn(int64_t port_, struct wire_uint_8_list *addr, uint8_t add_type);
 
-void wire_ble_lecconn_addr(int64_t port_, struct wire_uint_8_list *addr);
-
 void wire_ble_ledisc(int64_t port_, uint8_t index);
 
 void wire_ble_lesend(int64_t port_, uint8_t index, struct wire_uint_8_list *data);
@@ -300,6 +298,8 @@ void wire_hal_generate_set_lc_holdings(int64_t port_,
 
 void wire_convert_u16s_to_u8s(int64_t port_, struct wire_uint_16_list *data);
 
+void wire_hal_read_device_settings(int64_t port_, uint8_t index);
+
 struct wire_LogicControl *new_box_autoadd_logic_control_0(void);
 
 struct wire_uint_16_list *new_uint_16_list_0(int32_t len);
@@ -315,7 +315,6 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_ble_response_parse_bool);
     dummy_var ^= ((int64_t) (void*) wire_ble_scan);
     dummy_var ^= ((int64_t) (void*) wire_ble_lecconn);
-    dummy_var ^= ((int64_t) (void*) wire_ble_lecconn_addr);
     dummy_var ^= ((int64_t) (void*) wire_ble_ledisc);
     dummy_var ^= ((int64_t) (void*) wire_ble_lesend);
     dummy_var ^= ((int64_t) (void*) wire_ble_chinfo);
@@ -331,6 +330,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_hal_new_logic_control);
     dummy_var ^= ((int64_t) (void*) wire_hal_generate_set_lc_holdings);
     dummy_var ^= ((int64_t) (void*) wire_convert_u16s_to_u8s);
+    dummy_var ^= ((int64_t) (void*) wire_hal_read_device_settings);
     dummy_var ^= ((int64_t) (void*) new_box_autoadd_logic_control_0);
     dummy_var ^= ((int64_t) (void*) new_uint_16_list_0);
     dummy_var ^= ((int64_t) (void*) new_uint_8_list_0);

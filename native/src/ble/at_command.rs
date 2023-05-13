@@ -1,3 +1,5 @@
+use crate::serial::ReadStat;
+
 use super::{send_serialport_until, DataType, SerialResponse};
 
 #[allow(clippy::module_inception)]
@@ -43,19 +45,26 @@ pub fn scan(typee: u8) -> SerialResponse {
   try_send_serialport_until(data.as_bytes(), 1, 100, DataType::Scan)
 }
 
-pub fn lecconn(addr: &str, add_type: u8) -> SerialResponse {
+pub fn lecconn(addr: &str, add_type: u8) -> bool {
   let data = format!("{}={}{}", ble_at::AT_LECCONN, addr, add_type);
-  try_send_serialport_until(data.as_bytes(), 3, 3, DataType::OK)
+  let resp = try_send_serialport_until(data.as_bytes(), 3, 20, DataType::GATTStat);
+  if let Some(buffer) = resp.data {
+    let res = DataType::check_gatt_stat(&buffer);
+    return res == ReadStat::Ok;
+  }
+
+  false
 }
 
-pub fn lecconn_addr(addr: &str) -> SerialResponse {
-  let data = format!("{}={}", ble_at::AT_LECCONN, addr);
-  try_send_serialport_until(data.as_bytes(), 3, 3, DataType::OK)
-}
-
-pub fn ledisc(index: u8) -> SerialResponse {
+pub fn ledisc(index: u8) -> bool {
   let data = format!("{}={}", ble_at::AT_LEDISC, index);
-  try_send_serialport_until(data.as_bytes(), 5, 3, DataType::OK)
+  let resp = try_send_serialport_until(data.as_bytes(), 5, 20, DataType::GATTStat);
+  if let Some(buffer) = resp.data {
+    let res = DataType::check_gatt_stat(&buffer);
+    return res == ReadStat::Err;
+  }
+
+  false
 }
 
 pub fn lesend(index: u8, data: &str) -> SerialResponse {

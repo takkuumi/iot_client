@@ -1,24 +1,26 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:iot_client/ffi.dart';
 import 'package:flutter/material.dart';
+import 'package:iot_client/model/chinfo.dart';
 import 'package:iot_client/model/device.dart';
+import 'package:iot_client/provider/app_provider.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
 import '../futs/ble.dart';
 
-class Bluetooth extends StatefulWidget {
+class Bluetooth extends StatefulHookConsumerWidget {
   const Bluetooth({Key? key}) : super(key: key);
 
   @override
-  State<Bluetooth> createState() => _BluetoothState();
+  BluetoothState createState() => BluetoothState();
 }
 
-class _BluetoothState extends State<Bluetooth> {
+class BluetoothState extends ConsumerState<Bluetooth> {
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
   List<Device> devices = [];
@@ -66,51 +68,12 @@ class _BluetoothState extends State<Bluetooth> {
 
         devices.add(element);
       }
-
-      await tagConnectedDevice(callback: () {
-        setState(() {
-          stateMsg = '查询设备信息失败，请手动点击扫描按扭重试！';
-        });
-      });
     } catch (_) {
       setState(() {
         stateMsg = '扫描失败，请手动点击扫描按扭重试！';
       });
     }
     // EasyLoading.dismiss();
-  }
-
-  Future<bool> connect(int index, String mac, int type) async {
-    debugPrint("连接蓝牙至 $mac$type");
-    SerialResponse res = await api.bleLecconn(addr: mac, addType: type);
-    if (res.data != null) {
-      debugPrint("连接结果 ${String.fromCharCodes(res.data!)} end");
-    }
-    bool res1 = await checkConnection(mac);
-    return res1;
-  }
-
-  Future<void> tagConnectedDevice({VoidCallback? callback}) async {
-    SerialResponse resp = await api.bleChinfo();
-
-    Uint8List? data = resp.data;
-    if (data == null) {
-      if (callback != null) {
-        callback();
-      }
-      return;
-    }
-    final SharedPreferences prefs = await _prefs;
-    String respText = String.fromCharCodes(data);
-    for (Device device in devices) {
-      bool res = checkConnectionSync(respText, device.mac);
-      device.connected = res;
-      if (res) {
-        prefs.setInt("no", device.no);
-        prefs.setString("mac", device.mac);
-      }
-    }
-    setState(() {});
   }
 
   void scanComplete() {
@@ -126,8 +89,22 @@ class _BluetoothState extends State<Bluetooth> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      debugPrint("初始化...");
       final SharedPreferences prefs = await _prefs;
+
+      ref.watch(appConnectedProvider.notifier).addListener((chinfos) {
+        for (Device device in devices) {
+          bool res = chinfos.any(
+              (element) => element.mac == device.mac && element.state == 3);
+          device.connected = res;
+          if (res) {
+            prefs.setInt("no", device.no);
+            prefs.setString("mac", device.mac);
+          }
+        }
+        setState(() {});
+      });
+
+      debugPrint("初始化...");
       String? responseText = prefs.getString("bluetooths");
 
       int? no = prefs.getInt("no");
@@ -143,53 +120,62 @@ class _BluetoothState extends State<Bluetooth> {
           devices.add(element);
         }
       }
-      setState(() {});
-      await tagConnectedDevice();
-      debugPrint("初始化完成");
+      refreshAlreadyState(prefs);
       await scanBleDevice().whenComplete(scanComplete);
+
+      await refreshStat();
     });
+  }
+
+  void refreshAlreadyState(SharedPreferences prefs) {
+    final chinfos = ref.read(appConnectedProvider);
+    for (Device device in devices) {
+      bool res = chinfos
+          .any((element) => element.mac == device.mac && element.state == 3);
+      device.connected = res;
+      if (res) {
+        prefs.setInt("no", device.no);
+        prefs.setString("mac", device.mac);
+      }
+    }
+    setState(() {});
+  }
+
+  Future<void> refreshStat() async {
+    SerialResponse response = await api.bleChinfo();
+    Uint8List? data = response.data;
+    if (data == null) return;
+    String responseText = String.fromCharCodes(data);
+
+    List<Chinfo> chinfos = parseChinfos(responseText);
+
+    ref.read(appConnectedProvider.notifier).changeDevice(chinfos);
   }
 
   Future<void> connectDevice(Device device) async {
     bool? result = await showSettingDialog();
     if (result != null) {
+      final prefs = await _prefs;
       if (result) {
-        await api.bleLedisc(index: device.no);
-        // 查找已存在的地址断开连接
-        final prefs = await _prefs;
-        int? current = prefs.getInt("no");
-        if (current != null) {
-          await api.bleLedisc(index: current);
-        }
-
-        final conn = await connect(device.no, device.mac, device.addressType);
+        final conn =
+            await api.bleLecconn(addr: device.mac, addType: device.addressType);
 
         if (!conn) {
-          showSnackBar("连接失败,请重试");
-          debugPrint("连接失败");
-          return;
+          return debugPrint("连接失败");
         }
 
         showSnackBar("连接成功");
-        debugPrint("连接成功");
 
         // 设置连接状态
         devices.where((d) => d.mac == device.mac).first.connected = true;
         setState(() {});
-
         //设置新连接的地址
         await prefs.setInt("addressType", device.addressType);
         await prefs.setString("mac", device.mac);
         await prefs.setInt("no", device.no);
       } else {
         await api.bleLedisc(index: device.no);
-        // 查找已存在的地址断开连接
-        final prefs = await _prefs;
-        int? current = prefs.getInt("no");
-        if (current != null) {
-          await api.bleLedisc(index: current);
-        }
-        await tagConnectedDevice();
+        await refreshStat();
         showSnackBar("已断开连接");
       }
     }
@@ -198,6 +184,7 @@ class _BluetoothState extends State<Bluetooth> {
   @override
   void dispose() {
     // EasyLoading.dismiss();
+
     super.dispose();
   }
 

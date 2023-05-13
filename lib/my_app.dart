@@ -6,6 +6,8 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:iot_client/ffi.dart';
 import 'package:iot_client/futs/ble.dart';
+import 'package:iot_client/model/chinfo.dart';
+import 'package:iot_client/model/device.dart';
 import 'package:iot_client/provider/app_provider.dart';
 import 'package:iot_client/views/about.dart';
 import 'package:iot_client/views/bluetooth.dart';
@@ -52,20 +54,46 @@ class AppMainViewState extends ConsumerState<AppMainView> {
   int _bottomNavigationBarIndex = homeTab;
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
+  Timer? _timer;
+  bool _isTaskScheduling = false;
+
+  void startTimer() {
+    if (_timer?.isActive ?? false) {
+      _timer?.cancel();
+    }
+    _timer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+      // 如果当前正在调度，则跳过，等待下一次调度
+      if (_isTaskScheduling) return;
+      SerialResponse response = await api.bleChinfo().whenComplete(() {
+        _isTaskScheduling = false;
+      });
+      Uint8List? data = response.data;
+      if (data == null) return;
+      String responseText = String.fromCharCodes(data);
+
+      List<Chinfo> chinfos = parseChinfos(responseText);
+
+      ref.read(appConnectedProvider.notifier).changeDevice(chinfos);
+    });
+  }
+
+  void stopTimer() {
+    _timer?.cancel();
+  }
+
   @override
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      EasyLoading.instance..backgroundColor = Colors.redAccent;
-      disconectAll().whenComplete(() {
-        debugPrint("断开所有蓝牙连接");
-      });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      startTimer();
     });
   }
 
   @override
   void dispose() {
+    stopTimer();
+
     ///关闭
     super.dispose();
   }

@@ -1,3 +1,8 @@
+use crate::{
+  hal::device::{DeviceDisplay, DeviceSetting},
+  serial::DataType,
+};
+
 use super::{
   ble::{at_command, BytesParse},
   hal::LogicControl,
@@ -33,14 +38,11 @@ pub fn ble_scan(typee: u8) -> SerialResponse {
   at_command::scan(typee)
 }
 
-pub fn ble_lecconn(addr: String, add_type: u8) -> SerialResponse {
+pub fn ble_lecconn(addr: String, add_type: u8) -> bool {
   at_command::lecconn(addr.as_str(), add_type)
 }
-pub fn ble_lecconn_addr(addr: String) -> SerialResponse {
-  at_command::lecconn_addr(addr.as_str())
-}
 
-pub fn ble_ledisc(index: u8) -> SerialResponse {
+pub fn ble_ledisc(index: u8) -> bool {
   at_command::ledisc(index)
 }
 
@@ -121,4 +123,68 @@ pub fn convert_u16s_to_u8s(data: Vec<u16>) -> Vec<u8> {
     result.push(value as u8);
   }
   result
+}
+
+// Future<List<int>> readDevice() async {
+//   final SharedPreferences prefs = await SharedPreferences.getInstance();
+//   int? index = prefs.getInt("no");
+//   if (index == null) {
+//     throw Exception("未设置连接");
+//   }
+
+//   String? mac = prefs.getString("mac");
+//   if (mac == null) {
+//     throw Exception("未设置连接");
+//   }
+//   List<int> data1 = await getHoldings(2196, 40);
+//   List<int> data2 = await getHoldings(2236, 40);
+
+//   List<int> data = data1 + data2;
+
+//   prefs.setString(mac, data.join(","));
+
+//   return data;
+// }
+
+// String data =
+// await api.halGenerateGetHoldings(unitId: 1, reg: reg, count: count);
+// debugPrint('getHolding: $data');
+// SerialResponse sr = await api.bleLesend(index: index, data: data);
+// Uint8List? rdata = sr.data;
+// if (rdata == null) {
+// return res;
+// }
+
+pub fn hal_read_device_settings(index: u8) -> Option<DeviceDisplay> {
+  let rtu_req = LogicControl::generate_get_holdings(1, 2196, 40);
+  let resp1 = at_command::lesend(index, &hex_encode(rtu_req));
+  if resp1.is_err() {
+    return None;
+  }
+  let rtu_req = LogicControl::generate_get_holdings(1, 2236, 40);
+  let resp2 = at_command::lesend(index, &hex_encode(rtu_req));
+
+  if resp2.is_err() {
+    return None;
+  }
+
+  let v1 = resp1
+    .data
+    .and_then(|data| BytesParse::new(&data).parse_u16());
+  let v2 = resp2
+    .data
+    .and_then(|data| BytesParse::new(&data).parse_u16());
+
+  if v1.is_none() || v2.is_none() {
+    return None;
+  }
+
+  let mut data = Vec::new();
+  data.extend(v1.unwrap());
+  data.extend(v2.unwrap());
+
+  if let Ok(ds) = DeviceSetting::try_from(data) {
+    return DeviceDisplay::try_from(ds).ok();
+  }
+  None
 }

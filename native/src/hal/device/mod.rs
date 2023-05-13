@@ -1,5 +1,5 @@
-mod device_display;
-mod device_setting;
+pub mod device_display;
+pub mod device_setting;
 
 use super::{
   indexed::Indexed,

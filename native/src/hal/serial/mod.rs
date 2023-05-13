@@ -1,15 +1,16 @@
 #![deny(clippy::pedantic)]
-mod baud_rate;
-mod data_bit;
-mod ext_bit;
-mod parity;
-mod port_type;
-mod protocol;
-mod stop_bit;
-mod undefine;
+pub mod baud_rate;
+pub mod data_bit;
+pub mod ext_bit;
+pub mod parity;
+pub mod port_type;
+pub mod protocol;
+pub mod stop_bit;
+pub mod undefine;
 
 use baud_rate::BaudRate;
 use data_bit::DataBit;
+use flutter_rust_bridge::frb;
 use parity::Parity;
 use port_type::PortType;
 use serde::{Deserialize, Serialize};
@@ -22,6 +23,7 @@ pub trait SettingDefault {
   fn net() -> Self;
 }
 
+#[frb(dart_metadata = ("freezed"))]
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
 pub struct Setting {
   pub configuration: Configuration,
@@ -130,6 +132,7 @@ impl TryInto<Vec<u16>> for Setting {
 // 5(0101)：4800bit/s 6(0110):9600bit/s | | 14 |     |           |        |
 // 7(0111)：19200bit/s   8(1000)::115200bit/s"            |
 
+#[frb(dart_metadata = ("freezed"))]
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
 pub struct Configuration {
   pub data_bit: DataBit,   // 串口数据长度     0为:8位  1为：9位

@@ -1,5 +1,7 @@
+use flutter_rust_bridge::frb;
 use serde::{Deserialize, Serialize};
 
+#[frb(dart_metadata = ("freezed"))]
 #[repr(u16)]
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
 pub enum Undefine {

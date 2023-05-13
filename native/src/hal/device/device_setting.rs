@@ -1,7 +1,9 @@
 use super::{hal_mmr, utils::Hex, Indexed, Setting, SettingDefault};
+use flutter_rust_bridge::frb;
 use serde::{Deserialize, Serialize};
 use std::hash::Hash;
 
+#[frb(dart_metadata = ("freezed"))]
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
 pub struct DeviceSetting {
   // 本设备SN号18个字符	D20-D28	字符串

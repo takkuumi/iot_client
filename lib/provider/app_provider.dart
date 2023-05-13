@@ -1,4 +1,5 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:iot_client/model/chinfo.dart';
 import 'package:iot_client/model/device.dart';
 
 class AppTitle extends StateNotifier<String> {
@@ -25,11 +26,17 @@ final appPageTitleProvider = StateNotifierProvider<AppPageTitle, String>((ref) {
   return AppPageTitle();
 });
 
-class BleConnectedDevice extends StateNotifier<Device?> {
-  BleConnectedDevice(super.state);
+class BleChinfos extends StateNotifier<List<Chinfo>> {
+  BleChinfos() : super([]);
+
+  void changeDevice(List<Chinfo> chinfos) {
+    if (chinfos.isNotEmpty) {
+      state = chinfos;
+    }
+  }
 }
 
 final appConnectedProvider =
-    StateNotifierProvider<BleConnectedDevice, Device?>((ref) {
-  return BleConnectedDevice(null);
+    StateNotifierProvider<BleChinfos, List<Chinfo>>((ref) {
+  return BleChinfos();
 });

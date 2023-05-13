@@ -1,6 +1,8 @@
+use flutter_rust_bridge::frb;
 use serde::{Deserialize, Serialize};
 
 // 波特率 b7~b4
+#[frb(dart_metadata = ("freezed"))]
 #[repr(u16)]
 #[derive(Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Debug)]
 pub enum BaudRate {

@@ -19,7 +19,20 @@ use std::{ffi::c_void, sync::Arc};
 // Section: imports
 
 use crate::{
-  hal::LogicControl,
+  hal::{
+    device::device_display::DeviceDisplay,
+    serial::{
+      baud_rate::BaudRate,
+      data_bit::DataBit,
+      parity::Parity,
+      port_type::PortType,
+      stop_bit::StopBit,
+      undefine::Undefine,
+      Configuration,
+      Setting,
+    },
+    LogicControl,
+  },
   serial::{ResponseState, SerialResponse},
 };
 
@@ -95,19 +108,6 @@ fn wire_ble_lecconn_impl(
       let api_addr = addr.wire2api();
       let api_add_type = add_type.wire2api();
       move |task_callback| Ok(ble_lecconn(api_addr, api_add_type))
-    },
-  )
-}
-fn wire_ble_lecconn_addr_impl(port_: MessagePort, addr: impl Wire2Api<String> + UnwindSafe) {
-  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
-    WrapInfo {
-      debug_name: "ble_lecconn_addr",
-      port: Some(port_),
-      mode: FfiCallMode::Normal,
-    },
-    move || {
-      let api_addr = addr.wire2api();
-      move |task_callback| Ok(ble_lecconn_addr(api_addr))
     },
   )
 }
@@ -365,6 +365,19 @@ fn wire_convert_u16s_to_u8s_impl(port_: MessagePort, data: impl Wire2Api<Vec<u16
     },
   )
 }
+fn wire_hal_read_device_settings_impl(port_: MessagePort, index: impl Wire2Api<u8> + UnwindSafe) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "hal_read_device_settings",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || {
+      let api_index = index.wire2api();
+      move |task_callback| Ok(hal_read_device_settings(api_index))
+    },
+  )
+}
 // Section: wrapper structs
 
 // Section: static checks
@@ -401,6 +414,79 @@ impl Wire2Api<u8> for u8 {
 
 // Section: impl IntoDart
 
+impl support::IntoDart for BaudRate {
+  fn into_dart(self) -> support::DartAbi {
+    match self {
+      Self::BS300 => 0,
+      Self::BS600 => 1,
+      Self::BS1200 => 2,
+      Self::BS2400 => 3,
+      Self::BS4800 => 4,
+      Self::BS9600 => 5,
+      Self::BS19200 => 6,
+      Self::BS115200 => 7,
+    }
+    .into_dart()
+  }
+}
+impl support::IntoDartExceptPrimitive for BaudRate {}
+
+impl support::IntoDart for Configuration {
+  fn into_dart(self) -> support::DartAbi {
+    vec![
+      self.data_bit.into_dart(),
+      self.parity.into_dart(),
+      self.stop_bit.into_dart(),
+      self.baud_rate.into_dart(),
+      self.undefine.into_dart(),
+      self.port_type.into_dart(),
+    ]
+    .into_dart()
+  }
+}
+impl support::IntoDartExceptPrimitive for Configuration {}
+
+impl support::IntoDart for DataBit {
+  fn into_dart(self) -> support::DartAbi {
+    match self {
+      Self::BitWidth8 => 0,
+      Self::BitWidth9 => 1,
+    }
+    .into_dart()
+  }
+}
+impl support::IntoDartExceptPrimitive for DataBit {}
+impl support::IntoDart for DeviceDisplay {
+  fn into_dart(self) -> support::DartAbi {
+    vec![
+      self.sn.into_dart(),
+      self.location.into_dart(),
+      self.rs485_1.into_dart(),
+      self.rs485_2.into_dart(),
+      self.rs485_3.into_dart(),
+      self.bt.into_dart(),
+      self.net.into_dart(),
+      self.local_port1.into_dart(),
+      self.local_port2.into_dart(),
+      self.local_port3.into_dart(),
+      self.local_port4.into_dart(),
+      self.local_port5.into_dart(),
+      self.local_port6.into_dart(),
+      self.local_port7.into_dart(),
+      self.local_port8.into_dart(),
+      self.local_ip.into_dart(),
+      self.subnet_mask.into_dart(),
+      self.gateway.into_dart(),
+      self.dns.into_dart(),
+      self.mac.into_dart(),
+      self.remote_port.into_dart(),
+      self.remote_ip.into_dart(),
+    ]
+    .into_dart()
+  }
+}
+impl support::IntoDartExceptPrimitive for DeviceDisplay {}
+
 impl support::IntoDart for LogicControl {
   fn into_dart(self) -> support::DartAbi {
     vec![
@@ -413,6 +499,28 @@ impl support::IntoDart for LogicControl {
 }
 impl support::IntoDartExceptPrimitive for LogicControl {}
 
+impl support::IntoDart for Parity {
+  fn into_dart(self) -> support::DartAbi {
+    match self {
+      Self::Nil => 0,
+      Self::Odd => 1,
+      Self::Even => 2,
+    }
+    .into_dart()
+  }
+}
+impl support::IntoDartExceptPrimitive for Parity {}
+impl support::IntoDart for PortType {
+  fn into_dart(self) -> support::DartAbi {
+    match self {
+      Self::Nil => 0,
+      Self::Master => 1,
+      Self::Slave => 2,
+    }
+    .into_dart()
+  }
+}
+impl support::IntoDartExceptPrimitive for PortType {}
 impl support::IntoDart for ResponseState {
   fn into_dart(self) -> support::DartAbi {
     match self {
@@ -435,6 +543,40 @@ impl support::IntoDart for SerialResponse {
 }
 impl support::IntoDartExceptPrimitive for SerialResponse {}
 
+impl support::IntoDart for Setting {
+  fn into_dart(self) -> support::DartAbi {
+    vec![
+      self.configuration.into_dart(),
+      self.slave_addr.into_dart(),
+      self.retry.into_dart(),
+      self.duration.into_dart(),
+      self.loop_interval.into_dart(),
+    ]
+    .into_dart()
+  }
+}
+impl support::IntoDartExceptPrimitive for Setting {}
+
+impl support::IntoDart for StopBit {
+  fn into_dart(self) -> support::DartAbi {
+    match self {
+      Self::Bit1 => 0,
+      Self::Bit2 => 1,
+    }
+    .into_dart()
+  }
+}
+impl support::IntoDartExceptPrimitive for StopBit {}
+
+impl support::IntoDart for Undefine {
+  fn into_dart(self) -> support::DartAbi {
+    match self {
+      Self::Def => 0,
+    }
+    .into_dart()
+  }
+}
+impl support::IntoDartExceptPrimitive for Undefine {}
 // Section: executor
 
 support::lazy_static! {

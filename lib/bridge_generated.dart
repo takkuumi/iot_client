@@ -99,13 +99,13 @@ class NativeImpl implements Native {
         argNames: ["typee"],
       );
 
-  Future<SerialResponse> bleLecconn(
+  Future<bool> bleLecconn(
       {required String addr, required int addType, dynamic hint}) {
     var arg0 = _platform.api2wire_String(addr);
     var arg1 = api2wire_u8(addType);
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_ble_lecconn(port_, arg0, arg1),
-      parseSuccessData: _wire2api_serial_response,
+      parseSuccessData: _wire2api_bool,
       constMeta: kBleLecconnConstMeta,
       argValues: [addr, addType],
       hint: hint,
@@ -118,28 +118,11 @@ class NativeImpl implements Native {
         argNames: ["addr", "addType"],
       );
 
-  Future<SerialResponse> bleLecconnAddr({required String addr, dynamic hint}) {
-    var arg0 = _platform.api2wire_String(addr);
-    return _platform.executeNormal(FlutterRustBridgeTask(
-      callFfi: (port_) => _platform.inner.wire_ble_lecconn_addr(port_, arg0),
-      parseSuccessData: _wire2api_serial_response,
-      constMeta: kBleLecconnAddrConstMeta,
-      argValues: [addr],
-      hint: hint,
-    ));
-  }
-
-  FlutterRustBridgeTaskConstMeta get kBleLecconnAddrConstMeta =>
-      const FlutterRustBridgeTaskConstMeta(
-        debugName: "ble_lecconn_addr",
-        argNames: ["addr"],
-      );
-
-  Future<SerialResponse> bleLedisc({required int index, dynamic hint}) {
+  Future<bool> bleLedisc({required int index, dynamic hint}) {
     var arg0 = api2wire_u8(index);
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_ble_ledisc(port_, arg0),
-      parseSuccessData: _wire2api_serial_response,
+      parseSuccessData: _wire2api_bool,
       constMeta: kBleLediscConstMeta,
       argValues: [index],
       hint: hint,
@@ -442,6 +425,25 @@ class NativeImpl implements Native {
         argNames: ["data"],
       );
 
+  Future<DeviceDisplay?> halReadDeviceSettings(
+      {required int index, dynamic hint}) {
+    var arg0 = api2wire_u8(index);
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) =>
+          _platform.inner.wire_hal_read_device_settings(port_, arg0),
+      parseSuccessData: _wire2api_opt_box_autoadd_device_display,
+      constMeta: kHalReadDeviceSettingsConstMeta,
+      argValues: [index],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kHalReadDeviceSettingsConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "hal_read_device_settings",
+        argNames: ["index"],
+      );
+
   void dispose() {
     _platform.dispose();
   }
@@ -451,8 +453,64 @@ class NativeImpl implements Native {
     return raw as String;
   }
 
+  BaudRate _wire2api_baud_rate(dynamic raw) {
+    return BaudRate.values[raw as int];
+  }
+
   bool _wire2api_bool(dynamic raw) {
     return raw as bool;
+  }
+
+  DeviceDisplay _wire2api_box_autoadd_device_display(dynamic raw) {
+    return _wire2api_device_display(raw);
+  }
+
+  Configuration _wire2api_configuration(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return Configuration(
+      dataBit: _wire2api_data_bit(arr[0]),
+      parity: _wire2api_parity(arr[1]),
+      stopBit: _wire2api_stop_bit(arr[2]),
+      baudRate: _wire2api_baud_rate(arr[3]),
+      undefine: _wire2api_undefine(arr[4]),
+      portType: _wire2api_port_type(arr[5]),
+    );
+  }
+
+  DataBit _wire2api_data_bit(dynamic raw) {
+    return DataBit.values[raw as int];
+  }
+
+  DeviceDisplay _wire2api_device_display(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 22)
+      throw Exception('unexpected arr length: expect 22 but see ${arr.length}');
+    return DeviceDisplay(
+      sn: _wire2api_String(arr[0]),
+      location: _wire2api_String(arr[1]),
+      rs4851: _wire2api_setting(arr[2]),
+      rs4852: _wire2api_setting(arr[3]),
+      rs4853: _wire2api_setting(arr[4]),
+      bt: _wire2api_setting(arr[5]),
+      net: _wire2api_setting(arr[6]),
+      localPort1: _wire2api_u16(arr[7]),
+      localPort2: _wire2api_u16(arr[8]),
+      localPort3: _wire2api_u16(arr[9]),
+      localPort4: _wire2api_u16(arr[10]),
+      localPort5: _wire2api_u16(arr[11]),
+      localPort6: _wire2api_u16(arr[12]),
+      localPort7: _wire2api_u16(arr[13]),
+      localPort8: _wire2api_u16(arr[14]),
+      localIp: _wire2api_String(arr[15]),
+      subnetMask: _wire2api_String(arr[16]),
+      gateway: _wire2api_String(arr[17]),
+      dns: _wire2api_String(arr[18]),
+      mac: _wire2api_String(arr[19]),
+      remotePort: _wire2api_u16(arr[20]),
+      remoteIp: _wire2api_String(arr[21]),
+    );
   }
 
   int _wire2api_i32(dynamic raw) {
@@ -470,12 +528,24 @@ class NativeImpl implements Native {
     );
   }
 
+  DeviceDisplay? _wire2api_opt_box_autoadd_device_display(dynamic raw) {
+    return raw == null ? null : _wire2api_box_autoadd_device_display(raw);
+  }
+
   Uint16List? _wire2api_opt_uint_16_list(dynamic raw) {
     return raw == null ? null : _wire2api_uint_16_list(raw);
   }
 
   Uint8List? _wire2api_opt_uint_8_list(dynamic raw) {
     return raw == null ? null : _wire2api_uint_8_list(raw);
+  }
+
+  Parity _wire2api_parity(dynamic raw) {
+    return Parity.values[raw as int];
+  }
+
+  PortType _wire2api_port_type(dynamic raw) {
+    return PortType.values[raw as int];
   }
 
   ResponseState _wire2api_response_state(dynamic raw) {
@@ -492,6 +562,23 @@ class NativeImpl implements Native {
     );
   }
 
+  Setting _wire2api_setting(dynamic raw) {
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return Setting(
+      configuration: _wire2api_configuration(arr[0]),
+      slaveAddr: _wire2api_u16(arr[1]),
+      retry: _wire2api_u16(arr[2]),
+      duration: _wire2api_u16(arr[3]),
+      loopInterval: _wire2api_u16(arr[4]),
+    );
+  }
+
+  StopBit _wire2api_stop_bit(dynamic raw) {
+    return StopBit.values[raw as int];
+  }
+
   int _wire2api_u16(dynamic raw) {
     return raw as int;
   }
@@ -506,6 +593,10 @@ class NativeImpl implements Native {
 
   Uint8List _wire2api_uint_8_list(dynamic raw) {
     return raw as Uint8List;
+  }
+
+  Undefine _wire2api_undefine(dynamic raw) {
+    return Undefine.values[raw as int];
   }
 }
 
@@ -752,23 +843,6 @@ class NativeWire implements FlutterRustBridgeWireBase {
               ffi.Uint8)>>('wire_ble_lecconn');
   late final _wire_ble_lecconn = _wire_ble_lecconnPtr
       .asFunction<void Function(int, ffi.Pointer<wire_uint_8_list>, int)>();
-
-  void wire_ble_lecconn_addr(
-    int port_,
-    ffi.Pointer<wire_uint_8_list> addr,
-  ) {
-    return _wire_ble_lecconn_addr(
-      port_,
-      addr,
-    );
-  }
-
-  late final _wire_ble_lecconn_addrPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Void Function(ffi.Int64,
-              ffi.Pointer<wire_uint_8_list>)>>('wire_ble_lecconn_addr');
-  late final _wire_ble_lecconn_addr = _wire_ble_lecconn_addrPtr
-      .asFunction<void Function(int, ffi.Pointer<wire_uint_8_list>)>();
 
   void wire_ble_ledisc(
     int port_,
@@ -1056,6 +1130,22 @@ class NativeWire implements FlutterRustBridgeWireBase {
               ffi.Pointer<wire_uint_16_list>)>>('wire_convert_u16s_to_u8s');
   late final _wire_convert_u16s_to_u8s = _wire_convert_u16s_to_u8sPtr
       .asFunction<void Function(int, ffi.Pointer<wire_uint_16_list>)>();
+
+  void wire_hal_read_device_settings(
+    int port_,
+    int index,
+  ) {
+    return _wire_hal_read_device_settings(
+      port_,
+      index,
+    );
+  }
+
+  late final _wire_hal_read_device_settingsPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.Uint8)>>(
+          'wire_hal_read_device_settings');
+  late final _wire_hal_read_device_settings =
+      _wire_hal_read_device_settingsPtr.asFunction<void Function(int, int)>();
 
   ffi.Pointer<wire_LogicControl> new_box_autoadd_logic_control_0() {
     return _new_box_autoadd_logic_control_0();

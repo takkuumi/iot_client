@@ -1,5 +1,6 @@
 use std::{net::AddrParseError, str::FromStr};
 
+use flutter_rust_bridge::frb;
 use serde::{Deserialize, Serialize};
 
 use super::{
@@ -8,6 +9,7 @@ use super::{
   Setting,
 };
 
+#[frb(dart_metadata = ("freezed"))]
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
 pub struct DeviceDisplay {
   // 本设备SN号18个字符	D20-D28	字符串

@@ -65,26 +65,11 @@ class _SettingAppState extends State<SettingApp> {
     }
   }
 
-  void updateUi(List<int> data) {
-    debugPrint("data: ${data.join(',')}");
-
-    if (data.length < 80) {
-      return;
-    }
-
-    String hexmac =
-        List.of([data[67], data[68], data[69], data[70], data[71], data[72]])
-            .map((e) => e.toRadixString(16).toUpperCase().padLeft(2, '0'))
-            .join('-');
-    String ipstr = List.of([data[51], data[52], data[53], data[54]]).join('.');
-    String subnetstr =
-        List.of([data[55], data[56], data[57], data[58]]).join('.');
-    String gatawaystr =
-        List.of([data[59], data[60], data[61], data[62]]).join('.');
-    mac = Future.value(hexmac);
-    ip = Future.value(ipstr);
-    subnetMask = Future.value(subnetstr);
-    gateway = Future.value(gatawaystr);
+  void updateUi(DeviceDisplay deviceDisplay) {
+    mac = Future.value(deviceDisplay.mac);
+    ip = Future.value(deviceDisplay.localIp);
+    subnetMask = Future.value(deviceDisplay.subnetMask);
+    gateway = Future.value(deviceDisplay.gateway);
     setState(() {});
   }
 
@@ -101,14 +86,24 @@ class _SettingAppState extends State<SettingApp> {
       return showSnackBar("未设置连接");
     }
 
-    List<int> data = deviceData.split(',').map((e) => int.parse(e)).toList();
-    updateUi(data);
+    // List<int> data = deviceData.split(',').map((e) => int.parse(e)).toList();
+    // updateUi(data);
   }
 
   Future<void> readHoldings1() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    int? index = prefs.getInt("no");
+    if (index == null) {
+      return showSnackBar("未设置连接");
+    }
     try {
-      List<int> data = await readDevice();
-      updateUi(data);
+      DeviceDisplay? deviceDisplay =
+          await api.halReadDeviceSettings(index: index);
+      if (deviceDisplay == null) {
+        return showSnackBar("读取设备出错");
+      }
+      updateUi(deviceDisplay);
     } catch (err) {
       debugPrint(err.toString());
       showSnackBar(err.toString());
@@ -282,9 +277,9 @@ class _SettingAppState extends State<SettingApp> {
                 title: Text('当前连接地址'),
                 value: FutureBuilder(
                   future: _prefs.then((SharedPreferences prefs) {
-                    return prefs.getString('mesh');
+                    return prefs.getString('mac');
                   }),
-                  initialData: 'NDID=',
+                  initialData: 'MAC=',
                   builder: (context, AsyncSnapshot<String?> snapshot) {
                     if (snapshot.hasData &&
                         snapshot.connectionState == ConnectionState.done) {
@@ -292,7 +287,7 @@ class _SettingAppState extends State<SettingApp> {
                       return Text(id);
                     }
 
-                    return Text('NDID=');
+                    return Text('MAC=');
                   },
                 ),
               ),

@@ -7,6 +7,9 @@ import 'dart:async';
 import 'package:meta/meta.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:uuid/uuid.dart';
+import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
+
+part 'bridge_definitions.freezed.dart';
 
 abstract class Native {
   Future<bool> bleValidateResponse({required Uint8List data, dynamic hint});
@@ -27,16 +30,12 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kBleScanConstMeta;
 
-  Future<SerialResponse> bleLecconn(
+  Future<bool> bleLecconn(
       {required String addr, required int addType, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kBleLecconnConstMeta;
 
-  Future<SerialResponse> bleLecconnAddr({required String addr, dynamic hint});
-
-  FlutterRustBridgeTaskConstMeta get kBleLecconnAddrConstMeta;
-
-  Future<SerialResponse> bleLedisc({required int index, dynamic hint});
+  Future<bool> bleLedisc({required int index, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kBleLediscConstMeta;
 
@@ -125,6 +124,67 @@ abstract class Native {
   Future<Uint8List> convertU16SToU8S({required Uint16List data, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kConvertU16SToU8SConstMeta;
+
+  Future<DeviceDisplay?> halReadDeviceSettings(
+      {required int index, dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kHalReadDeviceSettingsConstMeta;
+}
+
+enum BaudRate {
+  BS300,
+  BS600,
+  BS1200,
+  BS2400,
+  BS4800,
+  BS9600,
+  BS19200,
+  BS115200,
+}
+
+@freezed
+class Configuration with _$Configuration {
+  const factory Configuration({
+    required DataBit dataBit,
+    required Parity parity,
+    required StopBit stopBit,
+    required BaudRate baudRate,
+    required Undefine undefine,
+    required PortType portType,
+  }) = _Configuration;
+}
+
+enum DataBit {
+  BitWidth8,
+  BitWidth9,
+}
+
+@freezed
+class DeviceDisplay with _$DeviceDisplay {
+  const factory DeviceDisplay({
+    required String sn,
+    required String location,
+    required Setting rs4851,
+    required Setting rs4852,
+    required Setting rs4853,
+    required Setting bt,
+    required Setting net,
+    required int localPort1,
+    required int localPort2,
+    required int localPort3,
+    required int localPort4,
+    required int localPort5,
+    required int localPort6,
+    required int localPort7,
+    required int localPort8,
+    required String localIp,
+    required String subnetMask,
+    required String gateway,
+    required String dns,
+    required String mac,
+    required int remotePort,
+    required String remoteIp,
+  }) = _DeviceDisplay;
 }
 
 class LogicControl {
@@ -137,6 +197,18 @@ class LogicControl {
     required this.scene,
     required this.values,
   });
+}
+
+enum Parity {
+  Nil,
+  Odd,
+  Even,
+}
+
+enum PortType {
+  Nil,
+  Master,
+  Slave,
 }
 
 enum ResponseState {
@@ -157,4 +229,24 @@ class SerialResponse {
     required this.state,
     this.data,
   });
+}
+
+@freezed
+class Setting with _$Setting {
+  const factory Setting({
+    required Configuration configuration,
+    required int slaveAddr,
+    required int retry,
+    required int duration,
+    required int loopInterval,
+  }) = _Setting;
+}
+
+enum StopBit {
+  Bit1,
+  Bit2,
+}
+
+enum Undefine {
+  Def,
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:iot_client/ffi.dart';
 import 'package:flutter/material.dart';
@@ -85,26 +86,16 @@ class BluetoothState extends ConsumerState<Bluetooth> {
 
   @override
   void initState() {
-    // EasyLoading.dismiss();
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final SharedPreferences prefs = await _prefs;
 
       ref.watch(appConnectedProvider.notifier).addListener((chinfos) {
-        for (Device device in devices) {
-          bool res = chinfos.any(
-              (element) => element.mac == device.mac && element.state == 3);
-          device.connected = res;
-          if (res) {
-            prefs.setInt("no", device.no);
-            prefs.setString("mac", device.mac);
-          }
-        }
+        refreshAlreadyState(prefs, chinfos);
         setState(() {});
       });
 
-      debugPrint("初始化...");
       String? responseText = prefs.getString("bluetooths");
 
       int? no = prefs.getInt("no");
@@ -120,23 +111,40 @@ class BluetoothState extends ConsumerState<Bluetooth> {
           devices.add(element);
         }
       }
-      refreshAlreadyState(prefs);
-      await scanBleDevice().whenComplete(scanComplete);
+      List<Chinfo> chinfos = ref.read(appConnectedProvider);
+      refreshAlreadyState(prefs, chinfos);
+      if (devices.isNotEmpty) {
+        Future.delayed(const Duration(seconds: 6), () async {
+          await scanBleDevice().whenComplete(scanComplete);
 
-      await refreshStat();
+          await refreshStat();
+        });
+      }
     });
   }
 
-  void refreshAlreadyState(SharedPreferences prefs) {
-    final chinfos = ref.read(appConnectedProvider);
+  void refreshAlreadyState(SharedPreferences prefs, List<Chinfo> chinfos) {
+    int? no2;
     for (Device device in devices) {
-      bool res = chinfos
-          .any((element) => element.mac == device.mac && element.state == 3);
-      device.connected = res;
-      if (res) {
-        prefs.setInt("no", device.no);
-        prefs.setString("mac", device.mac);
+      for (Chinfo chinfo in chinfos) {
+        if (chinfo.mac == device.mac) {
+          device.no = chinfo.no;
+
+          final state = chinfo.state == 3;
+          device.connected = state;
+          if (state) {
+            no2 = device.no;
+            prefs.setInt("no", device.no);
+            prefs.setString("mac", device.mac);
+          }
+        }
       }
+    }
+
+    if (no2 == null) {
+      prefs.remove("no");
+      prefs.remove("mac");
+      prefs.remove("addressType");
     }
     setState(() {});
   }
@@ -148,8 +156,8 @@ class BluetoothState extends ConsumerState<Bluetooth> {
     String responseText = String.fromCharCodes(data);
 
     List<Chinfo> chinfos = parseChinfos(responseText);
-
-    ref.read(appConnectedProvider.notifier).changeDevice(chinfos);
+    final prefs = await _prefs;
+    refreshAlreadyState(prefs, chinfos);
   }
 
   Future<void> connectDevice(Device device) async {
@@ -157,6 +165,10 @@ class BluetoothState extends ConsumerState<Bluetooth> {
     if (result != null) {
       final prefs = await _prefs;
       if (result) {
+        if (device.connected) {
+          return EasyLoading.showError("当前设备已连接");
+        }
+
         final conn =
             await api.bleLecconn(addr: device.mac, addType: device.addressType);
 
@@ -174,6 +186,9 @@ class BluetoothState extends ConsumerState<Bluetooth> {
         await prefs.setString("mac", device.mac);
         await prefs.setInt("no", device.no);
       } else {
+        if (!device.connected) {
+          return EasyLoading.showError("当前设备已断开连接");
+        }
         await api.bleLedisc(index: device.no);
         await refreshStat();
         showSnackBar("已断开连接");
@@ -183,8 +198,8 @@ class BluetoothState extends ConsumerState<Bluetooth> {
 
   @override
   void dispose() {
-    // EasyLoading.dismiss();
-
+    isScaning = false;
+    EasyLoading.dismiss();
     super.dispose();
   }
 
@@ -279,6 +294,10 @@ class BluetoothState extends ConsumerState<Bluetooth> {
                             trailing: Text('RSSI:${device.rssi}'),
                             dense: true,
                             onTap: () {
+                              if (isScaning) {
+                                EasyLoading.showInfo('当前正在扫描设备,请等待扫描完成...');
+                                return;
+                              }
                               // 清理定时器
                               connectDevice(device);
                             },

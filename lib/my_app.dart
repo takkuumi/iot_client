@@ -85,7 +85,8 @@ class AppMainViewState extends ConsumerState<AppMainView> {
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await api.bleTpmode();
       startTimer();
     });
   }

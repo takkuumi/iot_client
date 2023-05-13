@@ -154,6 +154,22 @@ class NativeImpl implements Native {
         argNames: ["index", "data"],
       );
 
+  Future<void> bleTpmode({dynamic hint}) {
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner.wire_ble_tpmode(port_),
+      parseSuccessData: _wire2api_unit,
+      constMeta: kBleTpmodeConstMeta,
+      argValues: [],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kBleTpmodeConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "ble_tpmode",
+        argNames: [],
+      );
+
   Future<SerialResponse> bleChinfo({dynamic hint}) {
     return _platform.executeNormal(FlutterRustBridgeTask(
       callFfi: (port_) => _platform.inner.wire_ble_chinfo(port_),
@@ -598,6 +614,10 @@ class NativeImpl implements Native {
   Undefine _wire2api_undefine(dynamic raw) {
     return Undefine.values[raw as int];
   }
+
+  void _wire2api_unit(dynamic raw) {
+    return;
+  }
 }
 
 // Section: api2wire
@@ -878,6 +898,20 @@ class NativeWire implements FlutterRustBridgeWireBase {
               ffi.Pointer<wire_uint_8_list>)>>('wire_ble_lesend');
   late final _wire_ble_lesend = _wire_ble_lesendPtr
       .asFunction<void Function(int, int, ffi.Pointer<wire_uint_8_list>)>();
+
+  void wire_ble_tpmode(
+    int port_,
+  ) {
+    return _wire_ble_tpmode(
+      port_,
+    );
+  }
+
+  late final _wire_ble_tpmodePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>(
+          'wire_ble_tpmode');
+  late final _wire_ble_tpmode =
+      _wire_ble_tpmodePtr.asFunction<void Function(int)>();
 
   void wire_ble_chinfo(
     int port_,

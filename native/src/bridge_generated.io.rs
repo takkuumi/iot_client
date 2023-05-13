@@ -37,6 +37,11 @@ pub extern "C" fn wire_ble_lesend(port_: i64, index: u8, data: *mut wire_uint_8_
 }
 
 #[no_mangle]
+pub extern "C" fn wire_ble_tpmode(port_: i64) {
+  wire_ble_tpmode_impl(port_)
+}
+
+#[no_mangle]
 pub extern "C" fn wire_ble_chinfo(port_: i64) {
   wire_ble_chinfo_impl(port_)
 }

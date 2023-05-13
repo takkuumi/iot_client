@@ -4,7 +4,9 @@ use super::{send_serialport_until, DataType, SerialResponse};
 
 #[allow(clippy::module_inception)]
 mod ble_at {
-
+  pub const AT_TPMODE: &str = "AT+TPMODE"; // 读/写连接状态下的工作模式
+  pub const AT_LECHCNT: &str = "AT+LECHCNT"; // 读/写BLE的最大连接数量配置
+  pub const AT_REBOOT: &str = "AT+REBOOT"; // 软件复位
   pub const AT_LESEND: &str = "AT+LESEND"; //发送数据给GATT直连设备
 
   pub const AT_SCAN: &str = "AT+SCAN"; // 搜索附近的设备
@@ -47,7 +49,7 @@ pub fn scan(typee: u8) -> SerialResponse {
 
 pub fn lecconn(addr: &str, add_type: u8) -> bool {
   let data = format!("{}={}{}", ble_at::AT_LECCONN, addr, add_type);
-  let resp = try_send_serialport_until(data.as_bytes(), 3, 20, DataType::GATTStat);
+  let resp = try_send_serialport_until(data.as_bytes(), 3, 3, DataType::GATTStat);
   if let Some(buffer) = resp.data {
     let res = DataType::check_gatt_stat(&buffer);
     return res == ReadStat::Ok;
@@ -58,7 +60,7 @@ pub fn lecconn(addr: &str, add_type: u8) -> bool {
 
 pub fn ledisc(index: u8) -> bool {
   let data = format!("{}={}", ble_at::AT_LEDISC, index);
-  let resp = try_send_serialport_until(data.as_bytes(), 5, 20, DataType::GATTStat);
+  let resp = try_send_serialport_until(data.as_bytes(), 3, 3, DataType::GATTStat);
   if let Some(buffer) = resp.data {
     let res = DataType::check_gatt_stat(&buffer);
     return res == ReadStat::Err;
@@ -79,4 +81,16 @@ pub fn uartcfg() -> SerialResponse {
 
 pub fn chinfo() -> SerialResponse {
   try_send_serialport_until(ble_at::AT_CHINFO.as_bytes(), 3, 5, DataType::OK)
+}
+
+// pub const AT_TPMODE: &str = "AT+TPMODE"; // 读/写连接状态下的工作模式
+// pub const AT_LECHCNT: &str = "AT+LECHCNT"; // 读/写BLE的最大连接数量配置
+// pub const AT_REBOOT: &str = "AT+REBOOT"; // 软件复位
+
+pub fn tpmode() {
+  let data = format!("{}={}", ble_at::AT_TPMODE, 0);
+  try_send_serialport_until(data.as_bytes(), 3, 3, DataType::OK);
+  let data = format!("{}={}", ble_at::AT_LECHCNT, 10);
+  try_send_serialport_until(data.as_bytes(), 3, 3, DataType::OK);
+  try_send_serialport_until(ble_at::AT_TPMODE.as_bytes(), 3, 3, DataType::OK);
 }

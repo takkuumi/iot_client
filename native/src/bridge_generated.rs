@@ -142,6 +142,16 @@ fn wire_ble_lesend_impl(
     },
   )
 }
+fn wire_ble_tpmode_impl(port_: MessagePort) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "ble_tpmode",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || move |task_callback| Ok(ble_tpmode()),
+  )
+}
 fn wire_ble_chinfo_impl(port_: MessagePort) {
   FLUTTER_RUST_BRIDGE_HANDLER.wrap(
     WrapInfo {
@@ -577,6 +587,7 @@ impl support::IntoDart for Undefine {
   }
 }
 impl support::IntoDartExceptPrimitive for Undefine {}
+
 // Section: executor
 
 support::lazy_static! {

@@ -261,6 +261,8 @@ void wire_ble_ledisc(int64_t port_, uint8_t index);
 
 void wire_ble_lesend(int64_t port_, uint8_t index, struct wire_uint_8_list *data);
 
+void wire_ble_tpmode(int64_t port_);
+
 void wire_ble_chinfo(int64_t port_);
 
 void wire_ble_uartcfg(int64_t port_);
@@ -317,6 +319,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_ble_lecconn);
     dummy_var ^= ((int64_t) (void*) wire_ble_ledisc);
     dummy_var ^= ((int64_t) (void*) wire_ble_lesend);
+    dummy_var ^= ((int64_t) (void*) wire_ble_tpmode);
     dummy_var ^= ((int64_t) (void*) wire_ble_chinfo);
     dummy_var ^= ((int64_t) (void*) wire_ble_uartcfg);
     dummy_var ^= ((int64_t) (void*) wire_hal_generate_get_holdings);

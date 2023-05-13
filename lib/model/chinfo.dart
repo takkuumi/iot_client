@@ -29,12 +29,13 @@ List<Chinfo> parseChinfos(String text) {
       .map((e) => e.replaceAll(RegExp(r'\+CHINFO='), ''))
       .forEach((element) {
     List<String> items = element.split(',').map((e) => e.trim()).toList();
+    String mac = items[3];
 
-    if (items.length == 4) {
+    if (mac != '0000000000' && items.length == 4) {
       int no = int.parse(items[0]);
       int state = int.parse(items[1]);
       int rule = int.parse(items[2]);
-      String mac = items[3];
+
       chinfos.add(Chinfo(no: no, state: state, rule: rule, mac: mac));
     }
   });

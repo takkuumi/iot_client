@@ -68,6 +68,7 @@ static CELL: Lazy<Mutex<TTYPort>> = Lazy::new(|| {
 #[derive(Debug, Clone, Copy)]
 pub enum DataType {
   OK,
+  OkOrErr,
   Scan,
   Date,
   GATTStat,
@@ -78,6 +79,7 @@ pub enum ReadStat {
   Waiting,
   Ok,
   Err,
+  OkOrErr,
 }
 
 impl DataType {
@@ -91,6 +93,18 @@ impl DataType {
   pub fn check_scan(buffer: &[u8]) -> ReadStat {
     if buffer.ends_with(b"}\r\n") {
       return ReadStat::Ok;
+    }
+    ReadStat::Err
+  }
+
+  pub fn check_ok_or_err(buffer: &[u8]) -> ReadStat {
+    let resp_text = String::from_utf8_lossy(buffer);
+    if resp_text.contains("OK")
+      || resp_text.contains("RR")
+      || resp_text.contains("OR")
+      || resp_text.contains("RO")
+    {
+      return ReadStat::OkOrErr;
     }
     ReadStat::Err
   }
@@ -154,8 +168,9 @@ fn read_serialport_until(port: &mut TTYPort, read_try: u8, flag: DataType) -> Se
         DataType::Scan => DataType::check_scan(&buffer),
         DataType::Date => DataType::check_data(&buffer),
         DataType::GATTStat => DataType::check_gatt_stat(&buffer),
+        DataType::OkOrErr => DataType::check_ok_or_err(&buffer),
       };
-      if result == ReadStat::Ok {
+      if result == ReadStat::Ok || result == ReadStat::OkOrErr {
         response.set_ok(&buffer);
         break;
       }
@@ -166,7 +181,7 @@ fn read_serialport_until(port: &mut TTYPort, read_try: u8, flag: DataType) -> Se
       break;
     }
 
-    let mut resp_buf = [0_u8; 6];
+    let mut resp_buf = [0_u8; 4];
     if let Ok(size) = port.read(&mut resp_buf) {
       if size > 0 {
         eprintln!("{}", String::from_utf8_lossy(&resp_buf));

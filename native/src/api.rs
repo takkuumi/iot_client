@@ -50,6 +50,10 @@ pub fn ble_lesend(index: u8, data: String) -> SerialResponse {
   at_command::lesend(index, data.as_str())
 }
 
+pub fn ble_tpmode() {
+  at_command::tpmode();
+}
+
 pub fn ble_chinfo() -> SerialResponse {
   at_command::chinfo()
 }

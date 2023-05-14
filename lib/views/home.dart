@@ -46,6 +46,66 @@ class _HomeState extends State<Home> {
         assetIcon: "images/icons/lane indicator_icon@2x.png",
       ),
       createIcon(
+        "交通信号灯",
+        onTap: () {
+          Navigation.navigateTo(
+            context: context,
+            screen: TrafficLight(),
+          );
+        },
+        assetIcon: "images/icons/traffic light_icon@2x.png",
+      ),
+      createIcon(
+        "通风风机",
+        onTap: () {
+          Navigation.navigateTo(
+            context: context,
+            screen: Fan(),
+          );
+        },
+        assetIcon: "images/icons/yentilation fan_icon@2x.png",
+      ),
+      createIcon(
+        "卷帘门",
+        onTap: () {
+          Navigation.navigateTo(
+            context: context,
+            screen: Door(),
+          );
+        },
+        assetIcon: "images/icons/door.png",
+      ),
+      createIcon(
+        "照明",
+        onTap: () {
+          Navigation.navigateTo(
+            context: context,
+            screen: Light(),
+          );
+        },
+        assetIcon: "images/icons/light_outside.png",
+      ),
+      createIcon(
+        "水泵液压",
+        onTap: () {
+          Navigation.navigateTo(
+            context: context,
+            screen: WaterPump(),
+          );
+        },
+        assetIcon: "images/icons/water pump hydraulics@2x.png",
+      ),
+      createIcon(
+        "横洞指示",
+        onTap: () {
+          Navigation.navigateTo(
+            context: context,
+            screen: CrossHole(),
+          );
+        },
+        assetIcon: "images/icons/cross hole indication@2x.png",
+      ),
+      createIcon(
         "风速风向",
         onTap: () {
           Navigation.navigateTo(
@@ -84,66 +144,6 @@ class _HomeState extends State<Home> {
           );
         },
         assetIcon: "images/icons/sun.png",
-      ),
-      createIcon(
-        "照明",
-        onTap: () {
-          Navigation.navigateTo(
-            context: context,
-            screen: Light(),
-          );
-        },
-        assetIcon: "images/icons/light_outside.png",
-      ),
-      createIcon(
-        "卷闸门",
-        onTap: () {
-          Navigation.navigateTo(
-            context: context,
-            screen: Door(),
-          );
-        },
-        assetIcon: "images/icons/door.png",
-      ),
-      createIcon(
-        "交通信号灯",
-        onTap: () {
-          Navigation.navigateTo(
-            context: context,
-            screen: TrafficLight(),
-          );
-        },
-        assetIcon: "images/icons/traffic light_icon@2x.png",
-      ),
-      createIcon(
-        "通风风机",
-        onTap: () {
-          Navigation.navigateTo(
-            context: context,
-            screen: Fan(),
-          );
-        },
-        assetIcon: "images/icons/yentilation fan_icon@2x.png",
-      ),
-      createIcon(
-        "横洞指示",
-        onTap: () {
-          Navigation.navigateTo(
-            context: context,
-            screen: CrossHole(),
-          );
-        },
-        assetIcon: "images/icons/cross hole indication@2x.png",
-      ),
-      createIcon(
-        "水泵液压",
-        onTap: () {
-          Navigation.navigateTo(
-            context: context,
-            screen: WaterPump(),
-          );
-        },
-        assetIcon: "images/icons/water pump hydraulics@2x.png",
       ),
       createIcon(
         "更多",

@@ -4,9 +4,11 @@ import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:iot_client/ffi.dart';
 import 'package:flutter/material.dart';
 import 'package:iot_client/futs/hal.dart';
+import 'package:iot_client/provider/app_provider.dart';
 import 'package:iot_client/utils/navigation.dart';
 import 'package:iot_client/views/logic_control_setting.dart';
 import 'package:iot_client/views/rs485_setting.dart';
@@ -16,16 +18,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
 
-class SettingApp extends StatefulWidget {
+class SettingApp extends StatefulHookConsumerWidget {
   const SettingApp({
     Key? key,
   }) : super(key: key);
 
   @override
-  State<SettingApp> createState() => _SettingAppState();
+  SettingAppState createState() => SettingAppState();
 }
 
-class _SettingAppState extends State<SettingApp> {
+class SettingAppState extends ConsumerState<SettingApp> {
   bool useCustomTheme = false;
 
   final platformsMap = <DevicePlatform, String>{
@@ -89,23 +91,6 @@ class _SettingAppState extends State<SettingApp> {
     setState(() {});
   }
 
-  Future<void> readCache() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    String? mac = prefs.getString("mac");
-    if (mac == null) {
-      return showSnackBar("未设置连接");
-    }
-
-    String? deviceData = prefs.getString(mac);
-    if (deviceData == null) {
-      return showSnackBar("未设置连接");
-    }
-
-    // List<int> data = deviceData.split(',').map((e) => int.parse(e)).toList();
-    // updateUi(data);
-  }
-
   Future<void> readHoldings1() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
 
@@ -116,9 +101,11 @@ class _SettingAppState extends State<SettingApp> {
     try {
       DeviceDisplay? deviceDisplay =
           await api.halReadDeviceSettings(index: index);
+
       if (deviceDisplay == null) {
         return showSnackBar("读取设备出错");
       }
+      ref.read(deviceDisplayProvider.notifier).change(deviceDisplay);
       updateUi(deviceDisplay);
     } catch (err) {
       debugPrint(err.toString());
@@ -131,7 +118,10 @@ class _SettingAppState extends State<SettingApp> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (mounted) {
-        readCache();
+        DeviceDisplay? deviceDisplay = ref.read(deviceDisplayProvider);
+        if (deviceDisplay != null) {
+          updateUi(deviceDisplay);
+        }
         await readHoldings1().whenComplete(() {
           debugPrint("读取完成");
         });

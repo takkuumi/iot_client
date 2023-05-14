@@ -22,6 +22,7 @@ final Map<int, String> _rules = Map.from({
   // 12: "风机（2控制点，延时保护；互锁）",
   13: "卷帘门（3控制点，点动信号）",
   // 14: "照明（单控制点）",
+  21: "横洞指示器（双控制点）",
   15: "照明（双控制点）",
   16: "水泵（单控制点）",
   17: "风速风向",
@@ -264,7 +265,7 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
     );
   }
 
-  Widget buildRow2() {
+  Widget buildLaneIndicatorRow2() {
     return Container(
       child: Column(
         children: [
@@ -289,7 +290,7 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
     );
   }
 
-  Widget buildRow() {
+  Widget buildLaneIndicatorRow() {
     return Container(
       child: Column(
         children: [
@@ -312,7 +313,7 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
     );
   }
 
-  Widget buildRow3() {
+  Widget buildLaneIndicatorRow3() {
     return Container(
       child: Column(
         children: [
@@ -465,6 +466,21 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
     );
   }
 
+  Widget buildCrossHoleRow() {
+    return Container(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          buildComQColumnItem("打开控制", 0),
+          buildComQColumnItem("关闭控制", 1),
+          buildComIColumnItem("远程信号", 2),
+          buildComIColumnItem("运行信号", 3),
+          buildComIColumnItem("故障反馈", 4),
+        ],
+      ),
+    );
+  }
+
   Widget buildWindSpeedRow() {
     return Container(
       child: Column(
@@ -501,19 +517,19 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
     int scene = widget.logicRule.scene;
     if (scene == 1) {
       // 1: "单点控车指（4显）",
-      return buildRow();
+      return buildLaneIndicatorRow();
     } else if ([2, 4, 6, 8].contains(scene)) {
       // 2: "组合式车指（单面互锁；4显，反馈为独立点）",
       // 4: "组合式车指（单面互锁；4显，反馈为组合点）",
       // 6: "组合式车指（双面互锁；4显，反馈为独立点）",
       // 8: "组合式车指（双面互锁；4显，反馈为组合点）",
-      return buildRow2();
+      return buildLaneIndicatorRow2();
     } else if ([3, 5, 7, 9].contains(scene)) {
       // 3: "组合式车指（单面互锁；6显，反馈为独立点）",
       // 5: "组合式车指（单面互锁；6显，反馈为组合点）",
       // 7: "组合式车指（双面互锁；6显，反馈为独立点）",
       // 9: "组合式车指（双面互锁；6显，反馈为组合点）",
-      return buildRow3();
+      return buildLaneIndicatorRow3();
     } else if (10 == scene) {
       // 10: "交通信号灯（4显）",
       return buildTrafficRow();
@@ -549,6 +565,8 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
     } else if (20 == scene) {
       // 20: "洞外光照",
       return buildLightOutsideRow();
+    } else if (21 == scene) {
+      return buildCrossHoleRow();
     }
 
     return Container();

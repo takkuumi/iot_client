@@ -5,9 +5,9 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:iot_client/ffi.dart';
 import 'package:iot_client/model/logic.dart';
 import 'package:iot_client/scenes/widgets/lane_indicator_comp.dart';
+import 'package:iot_client/scenes/widgets/shared_service_info.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../constants.dart';
@@ -53,33 +53,12 @@ class _LaneIndicatorState extends State<LaneIndicator>
     }
   }
 
-  Future<void> initDeviceState() async {
-    try {
-      await getHoldings(2196, 9).then((value) {
-        Uint8List v = Uint16List.fromList(value).buffer.asUint8List();
-        setState(() {
-          sn = Future.value(String.fromCharCodes(v));
-        });
-      });
-
-      await getHoldings(2247, 4).then((value) {
-        setState(() {
-          ip = Future.value(value.join('.'));
-        });
-      });
-    } catch (err) {
-      showSnackBar(err.toString(), key);
-    }
-  }
-
   Future<void> tabListener() async {
     EasyLoading.dismiss();
     if (tabController.indexIsChanging) {
       if (tabController.index == 0) {
         await initMainState();
-      } else if (tabController.index == 1) {
-        await initDeviceState();
-      }
+      } else if (tabController.index == 1) {}
     }
   }
 
@@ -96,8 +75,10 @@ class _LaneIndicatorState extends State<LaneIndicator>
       try {
         List<Logic> logics = await readLogicControlSetting();
 
-        for (int i = 0; i < logics.length; i++) {
-          final logic = logics[i];
+        List<Logic> v = logics.where((e) => e.scene < 10).toList();
+
+        for (int i = 0; i < v.length; i++) {
+          final logic = v[i];
           if (i == 0) {
             port1 = Port.fromList(logic.scene, logic.values);
           } else if (i == 1) {
@@ -198,155 +179,7 @@ class _LaneIndicatorState extends State<LaneIndicator>
             ),
             SingleChildScrollView(
               padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
-              child: Container(
-                child: Column(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.symmetric(vertical: 5),
-                      child: Row(
-                        verticalDirection: VerticalDirection.down,
-                        children: [
-                          Text(
-                            "设备SN编号:",
-                            style: TextStyle(
-                                fontSize: 17, fontWeight: FontWeight.w500),
-                          ),
-                          SizedBox.fromSize(
-                            size: Size(5, 0),
-                          ),
-                          FutureBuilder(
-                            future: sn,
-                            initialData: '',
-                            builder:
-                                (context, AsyncSnapshot<String?> snapshot) {
-                              if (snapshot.hasData &&
-                                  snapshot.connectionState ==
-                                      ConnectionState.done) {
-                                String id = snapshot.data ?? '';
-                                return Text(
-                                  id,
-                                  style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w300),
-                                );
-                              }
-
-                              return Text(
-                                "",
-                                style: TextStyle(
-                                    fontSize: 14, fontWeight: FontWeight.w300),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: EdgeInsets.symmetric(vertical: 5),
-                      child: Row(
-                        verticalDirection: VerticalDirection.down,
-                        children: [
-                          Text(
-                            "设备状态:",
-                            style: TextStyle(
-                                fontSize: 17, fontWeight: FontWeight.w500),
-                          ),
-                          SizedBox.fromSize(
-                            size: Size(5, 0),
-                          ),
-                          Text(
-                            "运行中",
-                            style: TextStyle(
-                                fontSize: 14, fontWeight: FontWeight.w300),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: EdgeInsets.symmetric(vertical: 5),
-                      child: Row(
-                        verticalDirection: VerticalDirection.down,
-                        children: [
-                          Text(
-                            "设备版本:",
-                            style: TextStyle(
-                                fontSize: 17, fontWeight: FontWeight.w500),
-                          ),
-                          SizedBox.fromSize(
-                            size: Size(5, 0),
-                          ),
-                          Text(
-                            "v1.0.0",
-                            style: TextStyle(
-                                fontSize: 14, fontWeight: FontWeight.w300),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: EdgeInsets.symmetric(vertical: 5),
-                      child: Row(
-                        verticalDirection: VerticalDirection.down,
-                        children: [
-                          Text(
-                            "设备IP:",
-                            style: TextStyle(
-                                fontSize: 17, fontWeight: FontWeight.w500),
-                          ),
-                          SizedBox.fromSize(
-                            size: Size(5, 0),
-                          ),
-                          FutureBuilder(
-                            future: ip,
-                            initialData: '',
-                            builder:
-                                (context, AsyncSnapshot<String?> snapshot) {
-                              if (snapshot.hasData &&
-                                  snapshot.connectionState ==
-                                      ConnectionState.done) {
-                                String id = snapshot.data ?? '';
-                                return Text(
-                                  id,
-                                  style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w300),
-                                );
-                              }
-
-                              return Text(
-                                "",
-                                style: TextStyle(
-                                    fontSize: 14, fontWeight: FontWeight.w300),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: EdgeInsets.symmetric(vertical: 5),
-                      child: Row(
-                        verticalDirection: VerticalDirection.down,
-                        children: [
-                          Text(
-                            "设备端口:",
-                            style: TextStyle(
-                                fontSize: 17, fontWeight: FontWeight.w500),
-                          ),
-                          SizedBox.fromSize(
-                            size: Size(5, 0),
-                          ),
-                          Text(
-                            "5002",
-                            style: TextStyle(
-                                fontSize: 14, fontWeight: FontWeight.w300),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              child: SharedServiceInfo(),
             )
           ],
         ),
@@ -357,9 +190,7 @@ class _LaneIndicatorState extends State<LaneIndicator>
             try {
               if (tabController.index == 0) {
                 await initMainState();
-              } else if (tabController.index == 1) {
-                await initDeviceState();
-              }
+              } else if (tabController.index == 1) {}
             } catch (err) {
               debugPrint(err.toString());
             }

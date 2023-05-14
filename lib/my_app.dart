@@ -70,6 +70,8 @@ class AppMainViewState extends ConsumerState<AppMainView>
       if (data == null) return;
       String responseText = String.fromCharCodes(data);
 
+      debugPrint("responseText: $responseText");
+
       List<Chinfo> chinfos = parseChinfos(responseText);
 
       ref.read(appConnectedProvider.notifier).changeDevice(chinfos);

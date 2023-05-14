@@ -58,9 +58,9 @@ class BluetoothState extends ConsumerState<Bluetooth> {
       }
 
       String responseText = String.fromCharCodes(data);
-      debugPrint("扫描完成 $responseText");
 
       final SharedPreferences prefs = await _prefs;
+
       prefs.setString("bluetooths", responseText);
 
       List<Device> items = parseDevices(responseText);
@@ -91,7 +91,7 @@ class BluetoothState extends ConsumerState<Bluetooth> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final SharedPreferences prefs = await _prefs;
 
-      ref.watch(appConnectedProvider.notifier).addListener((chinfos) {
+      ref.read(appConnectedProvider.notifier).addListener((chinfos) {
         debugPrint("监听触发");
         refreshAlreadyState(prefs, chinfos);
       });
@@ -191,6 +191,7 @@ class BluetoothState extends ConsumerState<Bluetooth> {
         }
         await api.bleLedisc(index: device.no);
         await refreshStat();
+        ref.read(appConnectedProvider.notifier).changeDevice([]);
         showSnackBar("已断开连接");
       }
     }

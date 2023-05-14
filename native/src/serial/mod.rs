@@ -57,7 +57,7 @@ impl SerialResponse {
 }
 
 static CELL: Lazy<Mutex<TTYPort>> = Lazy::new(|| {
-  let mut port = serialport::new("/dev/ttySWK0", 115_200)
+  let port = serialport::new("/dev/ttySWK0", 115_200)
     .data_bits(DataBits::Eight)
     .stop_bits(StopBits::One)
     .flow_control(FlowControl::None)
@@ -79,6 +79,7 @@ pub enum DataType {
   Scan,
   Date,
   GATTStat,
+  Chinfo,
 }
 
 #[derive(Debug, PartialEq)]
@@ -158,6 +159,29 @@ impl DataType {
     }
     ReadStat::Err
   }
+
+  pub fn check_chinfo(buffer: &[u8]) -> ReadStat {
+    // +CHINFO=4,1,0,000000000000
+    let resp_text = String::from_utf8_lossy(buffer);
+    if resp_text.contains("=9,") {
+      return ReadStat::Ok;
+    }
+    // if resp_text.contains("+CHI") {
+    // let re: Regex = Regex::new(r"\+CHINFO=(\d+),(\d+),(\d+),(?P<mac>\d+)").unwrap();
+    // let caps = re.captures_iter(buffer);
+    // let stat = caps
+    //   .last()
+    //   .and_then(|s| s.name("mac"))
+    //   .map(|m| String::from_utf8_lossy(m.as_bytes()));
+
+    // if let Some(stat) = stat {
+    //   if stat.eq("000000000000") {
+    //     return ReadStat::Ok;
+    //   }
+    // }
+    // }
+    ReadStat::Waiting
+  }
 }
 
 // tty.usbserial-1410
@@ -186,6 +210,13 @@ fn read_serialport_until(port: &mut TTYPort, read_try: u8, flag: DataType) -> Se
 
       if flag == DataType::Scan {
         let result = DataType::check_scan(&buffer);
+        if result == ReadStat::Ok {
+          break;
+        }
+      }
+
+      if flag == DataType::Chinfo {
+        let result = DataType::check_chinfo(&buffer);
         if result == ReadStat::Ok {
           break;
         }

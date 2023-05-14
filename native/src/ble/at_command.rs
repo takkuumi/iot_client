@@ -73,7 +73,7 @@ pub fn ledisc(index: u8) -> bool {
 
 pub fn lesend(index: u8, data: &str) -> SerialResponse {
   let data = format!("{}={},{},{}", ble_at::AT_LESEND, index, data.len(), data);
-  try_send_serialport_until(data.as_bytes(), 152, 5, 3, DataType::Date)
+  try_send_serialport_until(data.as_bytes(), 152, 6, 3, DataType::Date)
 }
 
 // AT_UARTCFG
@@ -88,7 +88,7 @@ pub fn uartcfg() -> SerialResponse {
 }
 
 pub fn chinfo() -> SerialResponse {
-  try_send_serialport_until(ble_at::AT_CHINFO.as_bytes(), 100, 3, 3, DataType::OK)
+  try_send_serialport_until(ble_at::AT_CHINFO.as_bytes(), 152, 2, 5, DataType::Chinfo)
 }
 
 // pub const AT_TPMODE: &str = "AT+TPMODE"; // 读/写连接状态下的工作模式

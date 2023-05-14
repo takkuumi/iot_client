@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:iot_client/constants.dart';
 import 'package:iot_client/futs/hal.dart';
 import 'package:iot_client/model/logic.dart';
@@ -72,20 +73,22 @@ final Map<int, String> _comI = Map.from({
 });
 
 Map<int, String> _kPortOptions = Map.from({
-  0x01: "RS1",
-  0x02: "RS2",
-  0x03: "RS3",
+  -1: "无",
+  1: "RS1",
+  2: "RS2",
+  3: "RS3",
 });
 
 Map<int, String> _kFunctionCodeOptions = Map.from({
-  0x01: "读取线圈",
-  0x02: "读取离散输入",
-  0x03: "读取保持寄存器",
-  0x04: "读取输入寄存器",
-  0x05: "写单线圈",
-  0x06: "写入单个寄存器",
-  0x0F: "写入多个线圈",
-  0x10: "写入多个寄存器",
+  -1: "无",
+  1: "读取线圈",
+  2: "读取离散输入",
+  3: "读取保持寄存器",
+  4: "读取输入寄存器",
+  5: "写单线圈",
+  6: "写入单个寄存器",
+  15: "写入多个线圈",
+  16: "写入多个寄存器",
 });
 
 class Directive {
@@ -117,6 +120,15 @@ class LogicRuleItem extends StatefulWidget {
 }
 
 class _LogicRuleItemState extends State<LogicRuleItem> {
+  final GlobalKey<FormState> _idForm = GlobalKey<FormState>();
+  final GlobalKey<FormState> _masterAddrForm = GlobalKey<FormState>();
+  final GlobalKey<FormState> _countForm = GlobalKey<FormState>();
+  final GlobalKey<FormState> _slaveAddrForm = GlobalKey<FormState>();
+  final TextEditingController _id = TextEditingController();
+  final TextEditingController _masterAddr = TextEditingController();
+  final TextEditingController _count = TextEditingController();
+  final TextEditingController _slaveAddr = TextEditingController();
+
   @override
   void dispose() {
     super.dispose();
@@ -188,6 +200,50 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
             alignment: Alignment.center,
             value: widget.logicRule.values[index],
             items: genDropdownItems(_comQ),
+            onChanged: (value) {
+              setState(() {
+                submitCom(index, value);
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildPortItem(int index) {
+    return Container(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text("端口号", style: labelStyle),
+          DropdownButton<int>(
+            alignment: Alignment.center,
+            value: widget.logicRule.values[index],
+            items: genDropdownItems(_kPortOptions),
+            onChanged: (value) {
+              setState(() {
+                submitCom(index, value);
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildFunctionCodeItem(int index) {
+    return Container(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text("功能码", style: labelStyle),
+          DropdownButton<int>(
+            alignment: Alignment.center,
+            value: widget.logicRule.values[index],
+            items: genDropdownItems(_kFunctionCodeOptions),
             onChanged: (value) {
               setState(() {
                 submitCom(index, value);
@@ -484,7 +540,124 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
   Widget buildWindSpeedRow() {
     return Container(
       child: Column(
-        children: [],
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              buildPortItem(0),
+              buildFunctionCodeItem(1),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Form(
+                key: _idForm,
+                child: Container(
+                  width: 150,
+                  child: TextFormField(
+                    controller: _id,
+                    keyboardType: TextInputType.number,
+                    maxLines: 1,
+                    style: TextStyle(fontSize: 13),
+                    decoration: InputDecoration(
+                      labelText: "从机ID",
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return "从机ID";
+                      if (int.tryParse(value) == null) return "非法数字";
+                      return null;
+                    },
+                    onChanged: (String? value) {
+                      if (value != null) {
+                        submitCom(2, int.parse(value));
+                      }
+                    },
+                  ),
+                ),
+              ),
+              Form(
+                key: _masterAddrForm,
+                child: Container(
+                  width: 150,
+                  child: TextFormField(
+                    controller: _masterAddr,
+                    keyboardType: TextInputType.number,
+                    maxLines: 1,
+                    style: TextStyle(fontSize: 13),
+                    decoration: InputDecoration(
+                      labelText: "主站地址",
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return "从机ID";
+                      if (int.tryParse(value) == null) return "非法数字";
+                      return null;
+                    },
+                    onChanged: (String? value) {
+                      if (value != null) {
+                        submitCom(3, int.parse(value));
+                      }
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Form(
+                key: _countForm,
+                child: Container(
+                  width: 150,
+                  child: TextFormField(
+                    controller: _count,
+                    keyboardType: TextInputType.number,
+                    maxLines: 1,
+                    decoration: InputDecoration(
+                      labelText: "数量",
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return "从机ID";
+                      if (int.tryParse(value) == null) return "非法数字";
+                      return null;
+                    },
+                    onChanged: (String? value) {
+                      if (value != null) {
+                        submitCom(4, int.parse(value));
+                      }
+                    },
+                  ),
+                ),
+              ),
+              Form(
+                key: _slaveAddrForm,
+                child: Container(
+                  width: 150,
+                  child: TextFormField(
+                    controller: _slaveAddr,
+                    keyboardType: TextInputType.number,
+                    maxLines: 1,
+                    decoration: InputDecoration(
+                      labelText: "从机地址",
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return "从机ID";
+                      if (int.tryParse(value) == null) return "非法数字";
+                      return null;
+                    },
+                    onChanged: (String? value) {
+                      if (value != null) {
+                        submitCom(5, int.parse(value));
+                      }
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Container(height: 20)
+        ],
       ),
     );
   }
@@ -529,6 +702,7 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
       // 5: "组合式车指（单面互锁；6显，反馈为组合点）",
       // 7: "组合式车指（双面互锁；6显，反馈为独立点）",
       // 9: "组合式车指（双面互锁；6显，反馈为组合点）",
+
       return buildLaneIndicatorRow3();
     } else if (10 == scene) {
       // 10: "交通信号灯（4显）",

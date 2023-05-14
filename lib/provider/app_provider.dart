@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:iot_client/model/chinfo.dart';
 
@@ -32,7 +34,6 @@ class BleChinfos extends StateNotifier<List<Chinfo>> {
 
   void changeDevice(List<Chinfo> chinfos) {
     if (chinfos.isNotEmpty) {
-      state.clear();
       state = chinfos;
     }
   }

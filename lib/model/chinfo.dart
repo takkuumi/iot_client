@@ -31,7 +31,7 @@ List<Chinfo> parseChinfos(String text) {
     List<String> items = element.split(',').map((e) => e.trim()).toList();
     String mac = items[3];
 
-    if (mac != '0000000000' && items.length == 4) {
+    if (mac != '000000000000' && items.length == 4) {
       int no = int.parse(items[0]);
       int state = int.parse(items[1]);
       int rule = int.parse(items[2]);

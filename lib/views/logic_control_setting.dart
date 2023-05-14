@@ -1,9 +1,8 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:iot_client/constants.dart';
-import 'package:iot_client/ffi.dart';
-import 'package:iot_client/futs/ble.dart';
+import 'package:iot_client/futs/hal.dart';
+import 'package:iot_client/model/logic.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -31,7 +30,7 @@ Map<int, String> _rules = Map.from({
   20: "洞外光照",
 });
 
-Map<int, String> _comout = Map.from({
+Map<int, String> _comQ = Map.from({
   -1: "无",
   0: "Q1(512)",
   1: "Q2(513)",
@@ -51,7 +50,7 @@ Map<int, String> _comout = Map.from({
   15: "Q16(527)",
 });
 
-Map<int, String> _comin = Map.from({
+Map<int, String> _comI = Map.from({
   -1: "无",
   0: "I1(0)",
   1: "I2(1)",
@@ -126,81 +125,42 @@ class Directive {
   });
 }
 
-class LogicRule {
-  int index;
-  int rule;
-  List<int> coms;
-  List<Directive> directives;
-
-  LogicRule({
-    required this.index,
-    required this.coms,
-    this.rule = 0,
-    this.directives = const [],
-  }) {
-    coms.forEach((element) {
-      debugPrint("=>${element.toString()}");
-    });
-  }
-
-  Future<List<LogicControl>> toLogicControl(int no) async {
-    List<LogicControl> logicControls = [];
-
-    LogicControl logicControl = await api.halNewLogicControl(
-      index: index - 1,
-      scene: rule,
-      values: Uint8List.fromList(coms),
-    );
-
-    String rtudata = await api.halGenerateSetLcHoldings(
-        unitId: 1, logicControl: logicControl);
-
-    debugPrint("rtudata: $rtudata");
-    SerialResponse resp = await api.bleLesend(index: no, data: rtudata);
-    if (resp.data != null) {
-      debugPrint("resp.data: ${String.fromCharCodes(resp.data!)}");
-    }
-
-    return logicControls;
-  }
-}
-
 class LogicRuleItem extends StatefulWidget {
   const LogicRuleItem(
       {Key? key, required this.logicRule, required this.onRemoved})
       : super(key: key);
-  final LogicRule logicRule;
+  final Logic logicRule;
   final void Function() onRemoved;
   @override
   State<LogicRuleItem> createState() => _LogicRuleItemState();
 }
 
 class _LogicRuleItemState extends State<LogicRuleItem> {
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
   int getWidgetIndex() {
     return widget.logicRule.index;
   }
 
-  LogicRule getLogicRule() {
+  Logic getLogicRule() {
     return widget.logicRule;
   }
 
   void submitRule(int? value) {
     if (value != null) {
-      widget.logicRule.rule = value;
+      widget.logicRule.scene = value;
       setState(() {});
     }
   }
 
   void submitCom(int itemIndex, int? value) async {
-    debugPrint("submitCom: ${widget.logicRule.coms.join(',')}");
+    debugPrint("submitCom: ${widget.logicRule.values.join(',')}");
     if (value != null) {
-      widget.logicRule.coms[itemIndex] = value;
-      setState(() {});
+      widget.logicRule.values[itemIndex] = value;
     }
-  }
-
-  int getCom(int index) {
-    return widget.logicRule.coms[index];
   }
 
   Widget buildSizedLine(double space) {
@@ -213,7 +173,7 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
     );
   }
 
-  Widget buildCominItem(String label, int index) {
+  Widget buildComQItem(String label, int index) {
     return Container(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -229,10 +189,12 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
           ),
           DropdownButton<int>(
             alignment: Alignment.center,
-            value: getCom(index),
-            items: genDropdownItems(_comout),
+            value: widget.logicRule.values[index],
+            items: genDropdownItems(_comQ),
             onChanged: (value) {
-              submitCom(index, value);
+              setState(() {
+                submitCom(index, value);
+              });
             },
           ),
         ],
@@ -240,7 +202,7 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
     );
   }
 
-  Widget buildCominColumnItem(String label, int index) {
+  Widget buildComQColumnItem(String label, int index) {
     return Container(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -256,10 +218,12 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
           ),
           DropdownButton<int>(
             alignment: Alignment.center,
-            value: getCom(index),
-            items: genDropdownItems(_comout),
+            value: widget.logicRule.values[index],
+            items: genDropdownItems(_comQ),
             onChanged: (value) {
-              submitCom(index, value);
+              setState(() {
+                submitCom(index, value);
+              });
             },
           ),
         ],
@@ -267,7 +231,7 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
     );
   }
 
-  Widget buildComoutItem(String label, int index) {
+  Widget buildComIItem(String label, int index) {
     return Container(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -283,10 +247,12 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
           ),
           DropdownButton<int>(
             alignment: Alignment.center,
-            value: getCom(index),
-            items: genDropdownItems(_comin),
+            value: widget.logicRule.values[index],
+            items: genDropdownItems(_comI),
             onChanged: (value) {
-              submitCom(index, value);
+              setState(() {
+                submitCom(index, value);
+              });
             },
           ),
         ],
@@ -294,7 +260,7 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
     );
   }
 
-  Widget buildComoutColumnItem(String label, int index) {
+  Widget buildComIColumnItem(String label, int index) {
     return Container(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -310,10 +276,12 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
           ),
           DropdownButton<int>(
             alignment: Alignment.center,
-            value: getCom(index),
-            items: genDropdownItems(_comin),
+            value: widget.logicRule.values[index],
+            items: genDropdownItems(_comI),
             onChanged: (value) {
-              submitCom(index, value);
+              setState(() {
+                submitCom(index, value);
+              });
             },
           ),
         ],
@@ -328,17 +296,17 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              buildCominItem("正面绿箭", 0),
-              buildCominItem("正面红叉", 1),
-              buildComoutItem("反馈点", 2),
+              buildComQItem("正面绿箭", 0),
+              buildComQItem("正面红叉", 1),
+              buildComIItem("反馈点", 2),
             ],
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              buildCominItem("背面绿箭", 3),
-              buildCominItem("背面红叉", 4),
-              buildComoutItem("反馈点", 5),
+              buildComQItem("背面绿箭", 3),
+              buildComQItem("背面红叉", 4),
+              buildComIItem("反馈点", 5),
             ],
           ),
         ],
@@ -353,15 +321,15 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              buildCominItem("正面绿箭", 0),
-              buildCominItem("正面红叉", 1),
+              buildComQItem("正面绿箭", 0),
+              buildComQItem("正面红叉", 1),
             ],
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              buildCominItem("背面绿箭", 2),
-              buildCominItem("背面红叉", 3),
+              buildComQItem("背面绿箭", 2),
+              buildComQItem("背面红叉", 3),
             ],
           ),
         ],
@@ -376,21 +344,21 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              buildCominColumnItem("正面绿箭", 0),
-              buildCominColumnItem("正面红叉", 1),
-              buildCominColumnItem("正面右转", 2),
-              buildComoutColumnItem("反馈点", 3),
-              buildComoutColumnItem("反馈点", 4),
+              buildComQColumnItem("正面绿箭", 0),
+              buildComQColumnItem("正面红叉", 1),
+              buildComQColumnItem("正面右转", 2),
+              buildComQColumnItem("反馈点", 3),
+              buildComQColumnItem("反馈点", 4),
             ],
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              buildCominColumnItem("背面绿箭", 5),
-              buildCominColumnItem("背面红叉", 6),
-              buildCominColumnItem("背面右转", 7),
-              buildComoutColumnItem("反馈点", 8),
-              buildComoutColumnItem("反馈点", 9),
+              buildComQColumnItem("背面绿箭", 5),
+              buildComQColumnItem("背面红叉", 6),
+              buildComQColumnItem("背面右转", 7),
+              buildComQColumnItem("反馈点", 8),
+              buildComQColumnItem("反馈点", 9),
             ],
           ),
         ],
@@ -399,8 +367,8 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
   }
 
   Widget buildWidget() {
-    int rule = widget.logicRule.rule;
-    if (rule == 1) {
+    int scene = widget.logicRule.scene;
+    if (scene == 1) {
       return Container(
         child: Column(
           children: [
@@ -408,7 +376,7 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
           ],
         ),
       );
-    } else if ([2, 4, 6, 8].contains(rule)) {
+    } else if ([2, 4, 6, 8].contains(scene)) {
       return Container(
         child: Column(
           children: [
@@ -416,7 +384,7 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
           ],
         ),
       );
-    } else if ([3, 5, 7, 9].contains(rule)) {
+    } else if ([3, 5, 7, 9].contains(scene)) {
       return Container(
         child: Column(
           children: [
@@ -430,7 +398,7 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
 
   @override
   Widget build(BuildContext context) {
-    LogicRule logicRule = widget.logicRule;
+    Logic logicRule = widget.logicRule;
 
     return Container(
       decoration: BoxDecoration(
@@ -445,7 +413,7 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
               Container(
                 height: 40,
                 alignment: Alignment.center,
-                child: Text("逻辑角色寄存器${logicRule.index}"),
+                child: Text("逻辑角色寄存器${logicRule.index + 1}"),
                 color: Colors.blueAccent,
               ),
               Positioned(
@@ -466,7 +434,7 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
                     style: TextStyle(fontWeight: FontWeight.w500)),
                 DropdownButton<int>(
                   alignment: Alignment.bottomLeft,
-                  value: logicRule.rule,
+                  value: logicRule.scene,
                   onChanged: submitRule,
                   items: _ruleItems,
                 ),
@@ -493,33 +461,45 @@ class _LogicControlSettingState extends State<LogicControlSetting> {
 
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
-  List<LogicRule> rules = [];
-  List<GlobalKey<_LogicRuleItemState>> keys = [];
+  List<Logic> rules = [];
+  Map<String, GlobalKey<_LogicRuleItemState>> keys = {};
 
   final List<int> cominit = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1];
   void addLogicRule() {
-    rules.add(LogicRule(
-      index: rules.length + 1,
-      coms: List.from(cominit),
+    int index = rules.length;
+    rules.add(Logic(
+      index: index,
+      scene: 0,
+      values: List.from(cominit),
     ));
-    setState(() {});
   }
 
   void removeRule(int index) {
     rules.removeAt(index);
-    rules.asMap().forEach((index, element) {
-      element.index = index + 1;
-    });
+    final debugLabel = "logic_rule_item_$index";
+    keys.remove(debugLabel);
     setState(() {});
   }
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        List<Logic> logics = await readLogicControlSetting();
 
-    if (rules.isEmpty) {
-      addLogicRule();
-    }
+        if (logics.isEmpty) {
+          addLogicRule();
+        } else {
+          rules.clear();
+          rules = logics;
+        }
+
+        setState(() {});
+      } catch (err) {
+        showSnackBar(err.toString());
+      }
+    });
   }
 
   @override
@@ -550,18 +530,43 @@ class _LogicControlSettingState extends State<LogicControlSetting> {
               tooltip: '保存',
               icon: const Icon(Symbols.save),
               onPressed: () async {
+                if (keys.length > 10) {
+                  return showSnackBar("已达到最大逻辑数量", key);
+                }
                 final SharedPreferences prefs = await _prefs;
                 int? index = prefs.getInt("no");
                 if (index == null) {
                   throw Exception("未设置连接");
                 }
+
+                String? mac = prefs.getString("mac");
+                if (mac == null) {
+                  throw Exception("未设置连接");
+                }
                 // 保存逻辑配置
-                final elements = keys
+                final elements = keys.values
                     .where((source) => source.currentState != null)
                     .toList();
+
+                List<Logic> saved = [];
                 for (var element in elements) {
-                  element.currentState?.getLogicRule().toLogicControl(index);
+                  final logic = element.currentState?.getLogicRule();
+                  if (logic != null) {
+                    bool res = await logic.toLogicControl(index);
+                    if (res) {
+                      saved.add(logic);
+                    }
+                  }
                 }
+
+                if (saved.isEmpty) {
+                  return showSnackBar("未设置逻辑", key);
+                }
+                saved.sort((a, b) => a.index.compareTo(b.index));
+                String data = saved.map((e) => e.toList().join(',')).join(',');
+
+                debugPrint("=+++++++++++++++++++++++++++   $data");
+                await prefs.setString(mac, data);
                 showSnackBar("保存成功", key);
               },
             )
@@ -571,9 +576,12 @@ class _LogicControlSettingState extends State<LogicControlSetting> {
           shrinkWrap: true,
           itemCount: rules.length,
           itemBuilder: (ctxt, index) {
-            final key = GlobalKey<_LogicRuleItemState>(
-                debugLabel: "logic_rule_item$index");
-            keys.add(key);
+            final debugLabel = "logic_rule_item_$index";
+            debugPrint(debugLabel);
+            final key = GlobalKey<_LogicRuleItemState>(debugLabel: debugLabel);
+            keys.remove(debugLabel);
+
+            keys.putIfAbsent(debugLabel, () => key);
 
             return LogicRuleItem(
               key: key,
@@ -583,7 +591,10 @@ class _LogicControlSettingState extends State<LogicControlSetting> {
           },
         ),
         floatingActionButton: FloatingActionButton(
-          onPressed: addLogicRule,
+          onPressed: () {
+            addLogicRule();
+            setState(() {});
+          },
           child: const Icon(Symbols.add),
         ),
       ),

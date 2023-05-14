@@ -111,7 +111,7 @@ class BluetoothState extends ConsumerState<Bluetooth> {
         refreshAlreadyState(prefs, chinfos);
       }
 
-      Future.delayed(const Duration(seconds: 5), () async {
+      Future.delayed(const Duration(milliseconds: 200), () async {
         await scanBleDevice().whenComplete(scanComplete);
 
         await refreshStat();

@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:iot_client/ffi.dart';
 import 'package:iot_client/futs/ble.dart';
+import 'package:iot_client/model/logic.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<List<int>> getHoldings(int reg, int count) async {
@@ -179,54 +180,37 @@ Future<bool> setHoldings(String data) async {
 
 Future<List<int>> readSettings() async {
   final SharedPreferences prefs = await SharedPreferences.getInstance();
-  int? index = prefs.getInt("no");
-  if (index == null) {
-    throw Exception("未设置连接");
-  }
 
   String? mac = prefs.getString("mac");
   if (mac == null) {
     throw Exception("未设置连接");
   }
-  List<int> data1 = await getHoldings(2300, 40);
-  List<int> data2 = await getHoldings(2340, 40);
 
-  List<int> data = data1 + data2;
+  String? data = prefs.getString(mac);
+  if (data != null && data!.isNotEmpty) {
+    debugPrint("readSettings: $data");
+    return data.split(",").map((e) => int.parse(e)).toList();
+  }
 
-  prefs.setString(mac, data.join(","));
+  int? index = prefs.getInt("no");
+  if (index == null) {
+    throw Exception("未设置连接");
+  }
 
-  return data;
+  List<int> data1 = await getHoldings(2300, 50);
+  List<int> data2 = await getHoldings(2350, 50);
+
+  List<int> result = data1 + data2;
+
+  prefs.setString(mac, result.join(","));
+
+  return result;
 }
 
-Future<void> readLogicControlSetting() async {
+Future<List<Logic>> readLogicControlSetting() async {
   List<int> settings = await readSettings();
-
-  debugPrint("length: ${settings.length} settings: ${settings.join(',')}");
-
-  Uint8List v = await api.convertU16SToU8S(data: Uint16List.fromList(settings));
-  debugPrint("length: ${v.length} settings: ${v.join(',')}");
-
-  List<int> indexs = [];
-  for (int i = 0; i < v.length; i += 12) {
-    int index = v[i];
-    int sence = v[i + 1];
-
-    if (indexs.any((element) => element == index)) {
-      continue;
-    }
-
-    indexs.add(index);
-
-    Uint8List sub = v.sublist(i, i + 12);
-    debugPrint("sub: ${sub.join(',')}");
-    if ([1, 2, 4, 6, 8, 3, 5, 6, 7, 9].contains(sence)) {
-      // if (index == 0) {
-      //   port1 = Port.fromList(sub);
-      // } else if (index == 1) {
-      //   port2 = Port.fromList(sub);
-      // } else if (index == 2) {
-      //   port3 = Port.fromList(sub);
-      // }
-    }
-  }
+  Uint8List responseBody = Uint8List.fromList(settings);
+  debugPrint("settings: ${responseBody.join(',')}");
+  List<Logic> logics = Logic.parseLogics(responseBody).toList();
+  return logics;
 }

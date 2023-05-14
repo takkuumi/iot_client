@@ -41,20 +41,19 @@ class Port {
   int get getP8 => p8 + 512;
   int get getP9 => p9 + 512;
 
-  // 长度为 8 的 list
-  static Port fromList(List<int> list) {
+  static Port fromList(int sence, List<int> list) {
     return Port(
-      sence: list[1],
-      p0: list[2],
-      p1: list[3],
-      p2: list[4],
-      p3: list[5],
-      p4: list[6],
-      p5: list[7],
-      p6: list[8],
-      p7: list[9],
-      p8: list[10],
-      p9: list[11],
+      sence: sence,
+      p0: list[0],
+      p1: list[1],
+      p2: list[2],
+      p3: list[3],
+      p4: list[4],
+      p5: list[5],
+      p6: list[6],
+      p7: list[7],
+      p8: list[8],
+      p9: list[9],
     );
   }
 

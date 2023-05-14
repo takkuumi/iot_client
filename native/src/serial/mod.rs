@@ -57,14 +57,13 @@ impl SerialResponse {
 }
 
 static CELL: Lazy<Mutex<TTYPort>> = Lazy::new(|| {
-  let port = serialport::new("/dev/ttySWK0", 115_200)
+  let mut port = serialport::new("/dev/ttySWK0", 115_200)
     .data_bits(DataBits::Eight)
     .stop_bits(StopBits::One)
     .flow_control(FlowControl::None)
     .timeout(core::time::Duration::from_millis(100))
     .open_native()
     .unwrap();
-
   Mutex::new(port)
 });
 
@@ -166,7 +165,7 @@ impl DataType {
 
 fn read_serialport_until(port: &mut TTYPort, read_try: u8, flag: DataType) -> SerialResponse {
   let mut response = SerialResponse::default();
-  let mut buffer = Vec::<u8>::with_capacity(80);
+  let mut buffer = Vec::<u8>::with_capacity(128);
 
   let mut retry: u8 = 0;
   loop {
@@ -245,9 +244,8 @@ pub fn send_serialport_until(
   flag: DataType,
 ) -> SerialResponse {
   let mut response = SerialResponse::default();
-  let tty_device = CELL.try_lock();
+  let tty_device = CELL.lock();
 
-  // let tty_device = open_tty_swk0(500);
   if tty_device.is_err() {
     response.state = ResponseState::FailedOpenDevice;
     return response;

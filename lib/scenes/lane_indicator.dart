@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:iot_client/ffi.dart';
+import 'package:iot_client/model/logic.dart';
 import 'package:iot_client/scenes/widgets/lane_indicator_comp.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -93,38 +94,19 @@ class _LaneIndicatorState extends State<LaneIndicator>
     tabController.addListener(tabListener);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       try {
-        List<int> settings = await readSettings();
+        List<Logic> logics = await readLogicControlSetting();
 
-        debugPrint(
-            "length: ${settings.length} settings: ${settings.join(',')}");
-
-        Uint8List v =
-            await api.convertU16SToU8S(data: Uint16List.fromList(settings));
-        debugPrint("length: ${v.length} settings: ${v.join(',')}");
-
-        List<int> indexs = [];
-        for (int i = 0; i < v.length; i += 12) {
-          int index = v[i];
-          int sence = v[i + 1];
-
-          if (indexs.any((element) => element == index)) {
-            continue;
-          }
-
-          indexs.add(index);
-
-          Uint8List sub = v.sublist(i, i + 12);
-          debugPrint("sub: ${sub.join(',')}");
-          if ([1, 2, 4, 6, 8, 3, 5, 6, 7, 9].contains(sence)) {
-            if (index == 0) {
-              port1 = Port.fromList(sub);
-            } else if (index == 1) {
-              port2 = Port.fromList(sub);
-            } else if (index == 2) {
-              port3 = Port.fromList(sub);
-            }
+        for (int i = 0; i < logics.length; i++) {
+          final logic = logics[i];
+          if (i == 0) {
+            port1 = Port.fromList(logic.scene, logic.values);
+          } else if (i == 1) {
+            port2 = Port.fromList(logic.scene, logic.values);
+          } else if (i == 2) {
+            port3 = Port.fromList(logic.scene, logic.values);
           }
         }
+
         setState(() {});
         await initMainState();
       } catch (err) {

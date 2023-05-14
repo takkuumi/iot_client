@@ -1,54 +1,64 @@
-import 'dart:typed_data';
-
 import 'package:flutter/foundation.dart';
+
+import '../ffi.dart';
 
 class Logic {
   int index;
-  int secen;
+  int scene;
   List<int> values;
 
   Logic({
     required this.index,
-    required this.secen,
+    required this.scene,
     required this.values,
   });
 
   static List<Logic> parseLogics(Uint8List responseBody) {
     List<Logic> logics = [];
-    List<int> indexs = [];
+    int lastIndex = -1;
     for (int i = 0; i < responseBody.length; i += 12) {
       int index = responseBody[i];
       int sence = responseBody[i + 1];
 
-      if (indexs.any((element) => element == index)) {
-        continue;
+      if (index != lastIndex + 1) {
+        break;
       }
 
-      indexs.add(index);
+      lastIndex += 1;
 
-      Uint8List values = responseBody.sublist(i, i + 12);
+      Uint8List values = responseBody.sublist(i + 2, i + 12);
 
-      Logic logic = Logic(index: index, secen: sence, values: values);
+      Logic logic = Logic(index: index, scene: sence, values: values);
 
       logics.add(logic);
     }
-
+    logics.sort((a, b) => a.index.compareTo(b.index));
     return logics;
   }
 
-  factory Logic.fromJson(Map<String, dynamic> json) {
-    return Logic(
-      index: json['index'],
-      secen: json['secen'],
-      values: json['values'].cast<int>(),
-    );
+  List<int> toList() {
+    List<int> res = List<int>.empty(growable: true);
+    res.add(index);
+    res.add(scene);
+    res.addAll(values);
+    return res;
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'index': index,
-      'secen': secen,
-      'values': values,
-    };
+  Future<bool> toLogicControl(int no) async {
+    LogicControl logicControl = await api.halNewLogicControl(
+      index: index,
+      scene: scene,
+      values: Uint8List.fromList(values),
+    );
+
+    String rtudata = await api.halGenerateSetLcHoldings(
+        unitId: 1, logicControl: logicControl);
+
+    SerialResponse resp = await api.bleLesend(index: no, data: rtudata);
+    if (resp.data != null) {
+      return true;
+    }
+
+    return false;
   }
 }

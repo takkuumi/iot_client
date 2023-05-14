@@ -1,6 +1,3 @@
-import 'dart:typed_data';
-
-import 'package:flutter/material.dart';
 import 'package:iot_client/ffi.dart';
 
 Future<void> disconectAll() async {

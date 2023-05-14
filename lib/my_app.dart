@@ -60,7 +60,7 @@ class AppMainViewState extends ConsumerState<AppMainView>
     if (_timer?.isActive ?? false) {
       _timer?.cancel();
     }
-    _timer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+    _timer = Timer.periodic(const Duration(seconds: 15), (timer) async {
       // 如果当前正在调度，则跳过，等待下一次调度
       if (_isTaskScheduling) return;
       SerialResponse response = await api.bleChinfo().whenComplete(() {

@@ -490,7 +490,9 @@ class SettingAppState extends ConsumerState<SettingApp> {
                 title: Text('当前连接地址'),
                 value: FutureBuilder(
                   future: _prefs.then((SharedPreferences prefs) {
-                    return prefs.getString('mac');
+                    String? blename = prefs.getString("blename");
+                    String? mac = prefs.getString('mac');
+                    return (blename ?? '') + '         ' + (mac ?? '');
                   }),
                   initialData: 'MAC=',
                   builder: (context, AsyncSnapshot<String?> snapshot) {

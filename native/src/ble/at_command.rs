@@ -73,7 +73,7 @@ pub fn ledisc(index: u8) -> bool {
 
 pub fn lesend(index: u8, data: &str) -> SerialResponse {
   let data = format!("{}={},{},{}", ble_at::AT_LESEND, index, data.len(), data);
-  try_send_serialport_until(data.as_bytes(), 152, 6, 3, DataType::Date)
+  try_send_serialport_until(data.as_bytes(), 100, 6, 5, DataType::Date)
 }
 
 // AT_UARTCFG

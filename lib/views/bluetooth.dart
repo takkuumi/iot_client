@@ -127,12 +127,12 @@ class BluetoothState extends ConsumerState<Bluetooth> {
           device.no = chinfo.no;
 
           final state = chinfo.state == 3;
-          debugPrint("state]]]]]]]]]]]]]] $state");
           device.connected = state;
           if (state) {
             //  no2 = device.no;
             prefs.setInt("no", device.no);
             prefs.setString("mac", device.mac);
+            prefs.setString("blename", device.name);
             prefs.setInt("addressType", device.addressType);
           }
         }
@@ -184,6 +184,7 @@ class BluetoothState extends ConsumerState<Bluetooth> {
         //设置新连接的地址
         await prefs.setInt("addressType", device.addressType);
         await prefs.setString("mac", device.mac);
+        await prefs.setString("blename", device.name);
         await prefs.setInt("no", device.no);
       } else {
         if (!device.connected) {

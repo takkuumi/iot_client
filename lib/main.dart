@@ -11,6 +11,7 @@ Future<void> cleanCache() async {
   prefs.remove("bluetooths");
   prefs.remove("no");
   prefs.remove("mac");
+  prefs.remove("blename");
   prefs.remove("addressType");
 }
 

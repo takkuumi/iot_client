@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 
 Widget createSig(String label, String sig) {
   return Container(
-      height: 40,
-      alignment: Alignment.center,
-      margin: EdgeInsets.symmetric(horizontal: 10),
-      child: Row(children: [
+      height: 28,
+      alignment: Alignment.centerLeft,
+      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
         Text(
           label,
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
@@ -13,9 +12,10 @@ Widget createSig(String label, String sig) {
         Text(
           sig,
           style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Colors.greenAccent),
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.greenAccent,
+          ),
         ),
       ]));
 }

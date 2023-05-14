@@ -145,7 +145,7 @@ class _TrafficLightState extends State<TrafficLight>
 
   Widget createLane1() {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
         Container(
           height: 190 * 2,
@@ -157,7 +157,7 @@ class _TrafficLightState extends State<TrafficLight>
           ),
         ),
         Container(
-          margin: EdgeInsets.symmetric(vertical: 15),
+          margin: EdgeInsets.symmetric(vertical: 30),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -245,17 +245,9 @@ class _TrafficLightState extends State<TrafficLight>
           dragStartBehavior: DragStartBehavior.down,
           children: [
             Container(
-              alignment: Alignment.center,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 480,
-                    child: createLane1(),
-                  ),
-                ],
-              ),
+              width: 490,
+              margin: EdgeInsets.only(top: 50),
+              child: createLane1(),
             ),
             SingleChildScrollView(
               padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),

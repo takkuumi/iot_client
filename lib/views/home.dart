@@ -63,7 +63,7 @@ class _HomeState extends State<Home> {
             screen: Fan(),
           );
         },
-        assetIcon: "images/icons/yentilation fan_icon@2x.png",
+        assetIcon: "images/icons/fan_icon.png",
       ),
       createIcon(
         "卷帘门",

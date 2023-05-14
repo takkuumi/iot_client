@@ -1,15 +1,11 @@
-import 'dart:typed_data';
-
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:iot_client/futs/hal.dart';
 import 'package:iot_client/model/logic.dart';
+import 'package:iot_client/model/port.dart';
+import 'package:iot_client/scenes/widgets/fan_comp.dart';
 import 'package:iot_client/scenes/widgets/shared_service_info.dart';
-import 'package:iot_client/scenes/widgets/util.dart';
-import 'package:iot_client/views/components/banner.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class Fan extends StatefulWidget {
   const Fan({Key? key}) : super(key: key);
@@ -21,6 +17,11 @@ class Fan extends StatefulWidget {
 class _FanState extends State<Fan> with TickerProviderStateMixin {
   final GlobalKey<ScaffoldMessengerState> key =
       GlobalKey<ScaffoldMessengerState>(debugLabel: 'fan');
+
+  Port? port1;
+  Port? port2;
+  Port? port3;
+
   late TabController tabController;
 
   @override
@@ -64,10 +65,17 @@ class _FanState extends State<Fan> with TickerProviderStateMixin {
       try {
         List<Logic> logics = await readLogicControlSetting();
 
-        List<Logic> v = logics.where((e) => e.scene < 10).toList();
+        List<Logic> v = logics.where((e) => e.scene == 11).toList();
 
         for (int i = 0; i < v.length; i++) {
           final logic = v[i];
+          if (i == 0) {
+            port1 = Port.fromList(logic.scene, logic.values);
+          } else if (i == 1) {
+            port2 = Port.fromList(logic.scene, logic.values);
+          } else if (i == 2) {
+            port3 = Port.fromList(logic.scene, logic.values);
+          }
         }
 
         setState(() {});
@@ -78,85 +86,11 @@ class _FanState extends State<Fan> with TickerProviderStateMixin {
     });
   }
 
-  final BoxShadow boxShadow = BoxShadow(
-    color: Colors.grey.withOpacity(0.5),
-    spreadRadius: 5,
-    blurRadius: 7,
-    offset: const Offset(0, 3),
-  );
-
-  final Color disableColor = Color.fromRGBO(221, 221, 221, 1);
-
-  Widget createLane1() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          width: 150,
-          height: 150,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(
-              width: 2,
-              color: Colors.greenAccent,
-            ),
-            borderRadius: BorderRadius.circular(75),
-            boxShadow: [boxShadow],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                "images/icons/yentilation fan_icon@2x.png",
-                width: 80,
-                height: 80,
-              ),
-            ],
-          ),
-        ),
-        Container(
-          margin: EdgeInsets.symmetric(vertical: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton(
-                child: Text("正转"),
-                onPressed: () {},
-              ),
-              Container(
-                width: 15,
-              ),
-              ElevatedButton(
-                child: Text("反转"),
-                onPressed: () {},
-              ),
-              Container(
-                width: 15,
-              ),
-              ElevatedButton(
-                child: Text("停止"),
-                onPressed: () {},
-              ),
-            ],
-          ),
-        ),
-        Container(
-          margin: EdgeInsets.symmetric(vertical: 15),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              createSig('远程信号:', '无'),
-              createSig('正转信号:', '无'),
-              createSig('反转信号:', '无'),
-              createSig('故障信号:', '无'),
-            ],
-          ),
-        )
-      ],
-    );
+  Widget buildPort(String title, Port? port) {
+    if (port == null) {
+      return Container();
+    }
+    return FanUI(title: title, port: port);
   }
 
   @override
@@ -181,36 +115,34 @@ class _FanState extends State<Fan> with TickerProviderStateMixin {
         ),
         body: TabBarView(
           controller: tabController,
-          physics: BouncingScrollPhysics(),
+          physics: NeverScrollableScrollPhysics(),
           dragStartBehavior: DragStartBehavior.down,
           children: [
             SingleChildScrollView(
-              child: Container(
-                alignment: Alignment.center,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      child: CarouselSlider(
-                        options: CarouselOptions(
-                          aspectRatio: 16 / 10,
-                          enlargeCenterPage: true,
-                          scrollDirection: Axis.horizontal,
-                          autoPlay: true,
-                          height: 260,
-                        ),
-                        items: createImageSliders(),
-                      ),
-                    ),
-                    Container(
-                      width: 510,
-                      padding: EdgeInsets.symmetric(vertical: 60),
-                      child: createLane1(),
-                    ),
-                  ],
+              child: Column(children: [
+                Container(
+                  width: double.infinity,
+                  child: Image.asset(
+                    "images/icons/fan_banner.png",
+                    height: 200,
+                    fit: BoxFit.fitWidth,
+                    gaplessPlayback: true,
+                  ),
                 ),
-              ),
+                Container(
+                  width: 470,
+                  padding: EdgeInsets.only(top: 10),
+                  child: Wrap(
+                    alignment: WrapAlignment.spaceEvenly,
+                    spacing: 10,
+                    children: [
+                      buildPort("风机一", port1),
+                      buildPort("风机二", port2),
+                      buildPort("风机三", port3),
+                    ],
+                  ),
+                )
+              ]),
             ),
             SingleChildScrollView(
               padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),

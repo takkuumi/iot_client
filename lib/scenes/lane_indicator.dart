@@ -2,8 +2,10 @@ import 'dart:async';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:iot_client/model/logic.dart';
 import 'package:iot_client/model/port.dart';
+import 'package:iot_client/provider/app_provider.dart';
 import 'package:iot_client/scenes/widgets/lane_indicator_comp.dart';
 import 'package:iot_client/scenes/widgets/shared_service_info.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -11,16 +13,14 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../constants.dart';
 import '../futs/hal.dart';
 
-class LaneIndicator extends StatefulWidget {
+class LaneIndicator extends StatefulHookConsumerWidget {
   const LaneIndicator({Key? key}) : super(key: key);
 
   @override
-  State<LaneIndicator> createState() => _LaneIndicatorState();
+  LaneIndicatorState createState() => LaneIndicatorState();
 }
 
-enum LaneIndicatorState { green, red }
-
-class _LaneIndicatorState extends State<LaneIndicator>
+class LaneIndicatorState extends ConsumerState<LaneIndicator>
     with TickerProviderStateMixin {
   final GlobalKey<ScaffoldMessengerState> key =
       GlobalKey<ScaffoldMessengerState>(debugLabel: 'lane_indicator');
@@ -33,6 +33,7 @@ class _LaneIndicatorState extends State<LaneIndicator>
       GlobalKey<LaneIndicatorUIState>(debugLabel: "LaneIndicatorUIState3");
 
   late TabController tabController;
+
   @override
   void setState(VoidCallback fn) {
     if (mounted) {
@@ -94,19 +95,19 @@ class _LaneIndicatorState extends State<LaneIndicator>
   Future<void> initLaneState() async {
     List<bool>? states = await getCoils(0, 24);
 
-    if (states == null) {
-      return;
+    if (states != null) {
+      ref.read(appReadCoilsProvider.notifier).change(states);
     }
 
     List<bool>? states2 = await getCoils(512, 24);
 
-    if (states2 == null) {
-      return;
+    if (states2 != null) {
+      ref.read(appReadWriteCoilsProvider.notifier).change(states2);
     }
 
-    key1.currentState?.updateState(coils: states, coils2: states2);
-    key2.currentState?.updateState(coils: states, coils2: states2);
-    key3.currentState?.updateState(coils: states, coils2: states2);
+    // key1.currentState?.updateState(coils: states, coils2: states2);
+    // key2.currentState?.updateState(coils: states, coils2: states2);
+    // key3.currentState?.updateState(coils: states, coils2: states2);
   }
 
   @override
@@ -124,11 +125,11 @@ class _LaneIndicatorState extends State<LaneIndicator>
     offset: const Offset(0, 3),
   );
 
-  Widget buildPort(Key key, String title, Port? port) {
+  Widget buildPort(String title, Port? port) {
     if (port == null) {
       return Container();
     }
-    return LaneIndicatorUI(key: key, title: title, port: port);
+    return LaneIndicatorUI(title: title, port: port);
   }
 
   @override
@@ -165,9 +166,9 @@ class _LaneIndicatorState extends State<LaneIndicator>
                   alignment: WrapAlignment.spaceEvenly,
                   spacing: 10,
                   children: [
-                    buildPort(key1, "车道一", port1),
-                    buildPort(key2, "车道二", port2),
-                    buildPort(key3, "车道三", port3),
+                    buildPort("车道一", port1),
+                    buildPort("车道二", port2),
+                    buildPort("车道三", port3),
                   ],
                 ),
               ),

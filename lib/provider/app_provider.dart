@@ -42,6 +42,36 @@ final appConnectedProvider =
   return BleChinfos();
 });
 
+class ReadCoils extends StateNotifier<List<bool>> {
+  ReadCoils() : super([]);
+
+  void change(List<bool> coils) {
+    if (coils.isNotEmpty) {
+      state = coils;
+    }
+  }
+}
+
+final appReadCoilsProvider =
+    StateNotifierProvider<ReadCoils, List<bool>>((ref) {
+  return ReadCoils();
+});
+
+class ReadWriteCoils extends StateNotifier<List<bool>> {
+  ReadWriteCoils() : super([]);
+
+  void change(List<bool> coils) {
+    if (coils.isNotEmpty) {
+      state = coils;
+    }
+  }
+}
+
+final appReadWriteCoilsProvider =
+    StateNotifierProvider<ReadWriteCoils, List<bool>>((ref) {
+  return ReadWriteCoils();
+});
+
 class DeviceConfigure extends StateNotifier<DeviceDisplay?> {
   DeviceConfigure() : super(null);
 

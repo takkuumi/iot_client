@@ -134,6 +134,8 @@ flutter:
     - images/icons/traffic_light_red.png
     - images/icons/traffic_light_yellow.png
     - images/icons/traffic_light1.png
+    - images/icons/fan_banner.png
+    - images/icons/fan_icon.png
     - images/light_inside/banner.png
     - images/light_inside/img_4@2x.png
     - images/light_inside/img_3@2x.png

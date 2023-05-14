@@ -631,7 +631,7 @@ class _SettingAppState extends State<SettingApp> {
             tiles: <SettingsTile>[
               SettingsTile.navigation(
                 leading: Icon(Symbols.location_city),
-                title: Text('公司名称'),
+                title: Text('应用标题'),
                 onPressed: (c) {
                   settingAppTitle(c);
                 },

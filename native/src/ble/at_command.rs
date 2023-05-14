@@ -46,12 +46,12 @@ fn try_send_serialport_until(
 const READ_RETRY: u8 = 1;
 pub fn scan(typee: u8) -> SerialResponse {
   let data = format!("{}={}", ble_at::AT_SCAN, typee);
-  try_send_serialport_until(data.as_bytes(), 500, 1, READ_RETRY, DataType::Scan)
+  try_send_serialport_until(data.as_bytes(), 500, 1, 1, DataType::Scan)
 }
 
 pub fn lecconn(addr: &str, add_type: u8) -> bool {
   let data = format!("{}={}{}", ble_at::AT_LECCONN, addr, add_type);
-  let resp = try_send_serialport_until(data.as_bytes(), 200, 5, READ_RETRY, DataType::GATTStat);
+  let resp = try_send_serialport_until(data.as_bytes(), 20, 3, 10, DataType::GATTStat);
   if let Some(buffer) = resp.data {
     let res = DataType::check_gatt_stat(&buffer);
     return res == ReadStat::Ok;
@@ -62,7 +62,7 @@ pub fn lecconn(addr: &str, add_type: u8) -> bool {
 
 pub fn ledisc(index: u8) -> bool {
   let data = format!("{}={}", ble_at::AT_LEDISC, index);
-  let resp = try_send_serialport_until(data.as_bytes(), 200, 5, READ_RETRY, DataType::GATTStat);
+  let resp = try_send_serialport_until(data.as_bytes(), 20, 3, 10, DataType::GATTStat);
   if let Some(buffer) = resp.data {
     let res = DataType::check_gatt_stat(&buffer);
     return res == ReadStat::Err;
@@ -73,7 +73,7 @@ pub fn ledisc(index: u8) -> bool {
 
 pub fn lesend(index: u8, data: &str) -> SerialResponse {
   let data = format!("{}={},{},{}", ble_at::AT_LESEND, index, data.len(), data);
-  try_send_serialport_until(data.as_bytes(), 10, 3, 200, DataType::Date)
+  try_send_serialport_until(data.as_bytes(), 200, 5, 2, DataType::Date)
 }
 
 // AT_UARTCFG
@@ -88,13 +88,7 @@ pub fn uartcfg() -> SerialResponse {
 }
 
 pub fn chinfo() -> SerialResponse {
-  try_send_serialport_until(
-    ble_at::AT_CHINFO.as_bytes(),
-    120,
-    2,
-    READ_RETRY,
-    DataType::OK,
-  )
+  try_send_serialport_until(ble_at::AT_CHINFO.as_bytes(), 200, 2, 3, DataType::OK)
 }
 
 // pub const AT_TPMODE: &str = "AT+TPMODE"; // 读/写连接状态下的工作模式

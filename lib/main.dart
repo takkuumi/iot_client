@@ -1,9 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'my_app.dart';
 import 'package:json_theme/json_theme.dart';
 import 'dart:convert'; // For jsonDecode
+
+Future<void> cleanCache() async {
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  prefs.remove("bluetooths");
+  prefs.remove("no");
+  prefs.remove("mac");
+  prefs.remove("addressType");
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,6 +33,8 @@ Future<void> main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-
+  await cleanCache().whenComplete(() {
+    debugPrint("缓存清理完成");
+  });
   runApp(ProviderScope(child: App(theme: theme)));
 }

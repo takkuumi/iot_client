@@ -1,10 +1,12 @@
 use regex::bytes::Regex;
-use serialport::{DataBits, FlowControl, StopBits, TTYPort};
+use serialport::{DataBits, FlowControl, SerialPort, StopBits, TTYPort};
 
 use once_cell::sync::Lazy;
 use std::{
   io::{Read, Write},
+  result,
   sync::Mutex,
+  time::Duration,
 };
 // serialport::new("/dev/tty.usbserial-1430", 115200)
 // serialport::new("/dev/tty.usbserial-1410", 115200)
@@ -19,6 +21,7 @@ pub enum ResponseState {
   MaxRetry,
   MaxSendRetry,
   ReadResponseError,
+  FailedWrite,
 }
 
 impl Default for ResponseState {
@@ -65,7 +68,12 @@ static CELL: Lazy<Mutex<TTYPort>> = Lazy::new(|| {
   Mutex::new(port)
 });
 
-#[derive(Debug, Clone, Copy)]
+fn try_open_native() -> std::result::Result<serialport::TTYPort, serialport::Error> {
+  let port = CELL.try_lock().unwrap();
+  port.try_clone_native()
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum DataType {
   OK,
   OkOrErr,
@@ -163,16 +171,39 @@ fn read_serialport_until(port: &mut TTYPort, read_try: u8, flag: DataType) -> Se
   let mut retry: u8 = 0;
   loop {
     if buffer.len() > 2 {
-      let result = match flag {
-        DataType::OK => DataType::check_ok(&buffer),
-        DataType::Scan => DataType::check_scan(&buffer),
-        DataType::Date => DataType::check_data(&buffer),
-        DataType::GATTStat => DataType::check_gatt_stat(&buffer),
-        DataType::OkOrErr => DataType::check_ok_or_err(&buffer),
-      };
-      if result == ReadStat::Ok || result == ReadStat::OkOrErr {
-        response.set_ok(&buffer);
-        break;
+      if flag == DataType::OK {
+        let result = DataType::check_ok(&buffer);
+        if result == ReadStat::Ok || result == ReadStat::OkOrErr || result == ReadStat::Err {
+          break;
+        }
+      }
+
+      if flag == DataType::OkOrErr {
+        let result = DataType::check_ok_or_err(&buffer);
+        if result == ReadStat::OkOrErr || result == ReadStat::Ok || result == ReadStat::Err {
+          break;
+        }
+      }
+
+      if flag == DataType::Scan {
+        let result = DataType::check_scan(&buffer);
+        if result == ReadStat::Ok {
+          break;
+        }
+      }
+
+      if flag == DataType::Date {
+        let result = DataType::check_data(&buffer);
+        if result == ReadStat::Ok {
+          break;
+        }
+      }
+
+      if flag == DataType::GATTStat {
+        let result = DataType::check_gatt_stat(&buffer);
+        if result == ReadStat::Ok {
+          break;
+        }
       }
     }
 
@@ -181,16 +212,17 @@ fn read_serialport_until(port: &mut TTYPort, read_try: u8, flag: DataType) -> Se
       break;
     }
 
-    let mut resp_buf = [0_u8; 4];
-    if let Ok(size) = port.read(&mut resp_buf) {
+    let mut resp_buf = [0_u8; 128];
+    if let Ok(size) = port.read(resp_buf.as_mut_slice()) {
       if size > 0 {
-        eprintln!("{}", String::from_utf8_lossy(&resp_buf));
         buffer.extend_from_slice(&resp_buf[..size]);
       }
     } else {
       retry += 1;
     }
   }
+
+  response.set_ok(&buffer);
 
   response
 }
@@ -206,9 +238,13 @@ fn wrap_send_data(data: &[u8]) -> Vec<u8> {
 }
 
 #[must_use]
-pub fn send_serialport_until(data: &[u8], read_try: u8, flag: DataType) -> SerialResponse {
+pub fn send_serialport_until(
+  data: &[u8],
+  timeout: u64,
+  read_try: u8,
+  flag: DataType,
+) -> SerialResponse {
   let mut response = SerialResponse::default();
-
   let tty_device = CELL.try_lock();
 
   // let tty_device = open_tty_swk0(500);
@@ -217,9 +253,13 @@ pub fn send_serialport_until(data: &[u8], read_try: u8, flag: DataType) -> Seria
     return response;
   }
   let mut port = tty_device.unwrap();
+  let _ = port.set_timeout(Duration::from_millis(timeout));
 
   let data = wrap_send_data(data);
-  let _ = port.write(&data);
+  if port.write(&data).is_err() {
+    response.state = ResponseState::FailedWrite;
+    return response;
+  }
 
   read_serialport_until(&mut port, read_try, flag)
 }

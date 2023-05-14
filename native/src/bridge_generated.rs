@@ -551,6 +551,7 @@ impl support::IntoDart for ResponseState {
       Self::MaxRetry => 4,
       Self::MaxSendRetry => 5,
       Self::ReadResponseError => 6,
+      Self::FailedWrite => 7,
     }
     .into_dart()
   }

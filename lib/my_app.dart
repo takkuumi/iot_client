@@ -103,7 +103,6 @@ class AppMainViewState extends ConsumerState<AppMainView>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    print('----------------------------state = $state');
     if (state == AppLifecycleState.resumed) {
       startTimer();
     }

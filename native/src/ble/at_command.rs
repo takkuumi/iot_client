@@ -21,6 +21,7 @@ mod ble_at {
 
 fn try_send_serialport_until(
   data: &[u8],
+  timeout: u64,
   max_try: u8,
   read_try: u8,
   flag: DataType,
@@ -32,7 +33,7 @@ fn try_send_serialport_until(
       resp.set_err(crate::serial::ResponseState::MaxRetry);
       return resp;
     }
-    let res = send_serialport_until(data, read_try, flag);
+    let res = send_serialport_until(data, timeout, read_try, flag);
     if res.is_err() {
       std::thread::sleep(core::time::Duration::from_millis(20));
       retry += 1;
@@ -42,14 +43,15 @@ fn try_send_serialport_until(
   }
 }
 
+const READ_RETRY: u8 = 1;
 pub fn scan(typee: u8) -> SerialResponse {
   let data = format!("{}={}", ble_at::AT_SCAN, typee);
-  try_send_serialport_until(data.as_bytes(), 1, 100, DataType::Scan)
+  try_send_serialport_until(data.as_bytes(), 500, 1, READ_RETRY, DataType::Scan)
 }
 
 pub fn lecconn(addr: &str, add_type: u8) -> bool {
   let data = format!("{}={}{}", ble_at::AT_LECCONN, addr, add_type);
-  let resp = try_send_serialport_until(data.as_bytes(), 3, 3, DataType::GATTStat);
+  let resp = try_send_serialport_until(data.as_bytes(), 200, 5, READ_RETRY, DataType::GATTStat);
   if let Some(buffer) = resp.data {
     let res = DataType::check_gatt_stat(&buffer);
     return res == ReadStat::Ok;
@@ -60,7 +62,7 @@ pub fn lecconn(addr: &str, add_type: u8) -> bool {
 
 pub fn ledisc(index: u8) -> bool {
   let data = format!("{}={}", ble_at::AT_LEDISC, index);
-  let resp = try_send_serialport_until(data.as_bytes(), 3, 3, DataType::GATTStat);
+  let resp = try_send_serialport_until(data.as_bytes(), 200, 5, READ_RETRY, DataType::GATTStat);
   if let Some(buffer) = resp.data {
     let res = DataType::check_gatt_stat(&buffer);
     return res == ReadStat::Err;
@@ -71,16 +73,28 @@ pub fn ledisc(index: u8) -> bool {
 
 pub fn lesend(index: u8, data: &str) -> SerialResponse {
   let data = format!("{}={},{},{}", ble_at::AT_LESEND, index, data.len(), data);
-  try_send_serialport_until(data.as_bytes(), 5, 3, DataType::Date)
+  try_send_serialport_until(data.as_bytes(), 10, 3, 200, DataType::Date)
 }
 
 // AT_UARTCFG
 pub fn uartcfg() -> SerialResponse {
-  try_send_serialport_until(ble_at::AT_UARTCFG.as_bytes(), 3, 3, DataType::OK)
+  try_send_serialport_until(
+    ble_at::AT_UARTCFG.as_bytes(),
+    100,
+    3,
+    READ_RETRY,
+    DataType::OK,
+  )
 }
 
 pub fn chinfo() -> SerialResponse {
-  try_send_serialport_until(ble_at::AT_CHINFO.as_bytes(), 3, 5, DataType::OK)
+  try_send_serialport_until(
+    ble_at::AT_CHINFO.as_bytes(),
+    120,
+    2,
+    READ_RETRY,
+    DataType::OK,
+  )
 }
 
 // pub const AT_TPMODE: &str = "AT+TPMODE"; // 读/写连接状态下的工作模式
@@ -89,12 +103,24 @@ pub fn chinfo() -> SerialResponse {
 
 pub fn tpmode() {
   let data = format!("{}={}", ble_at::AT_TPMODE, 0);
-  try_send_serialport_until(data.as_bytes(), 3, 3, DataType::OK);
+  try_send_serialport_until(data.as_bytes(), 100, 3, READ_RETRY, DataType::OK);
   let data = format!("{}={}", ble_at::AT_LECHCNT, 10);
-  try_send_serialport_until(data.as_bytes(), 3, 3, DataType::OK);
-  try_send_serialport_until(ble_at::AT_TPMODE.as_bytes(), 3, 3, DataType::OK);
+  try_send_serialport_until(data.as_bytes(), 100, 3, READ_RETRY, DataType::OK);
+  try_send_serialport_until(
+    ble_at::AT_REBOOT.as_bytes(),
+    100,
+    3,
+    READ_RETRY,
+    DataType::OK,
+  );
 }
 
 pub fn reboot() {
-  try_send_serialport_until(ble_at::AT_TPMODE.as_bytes(), 1, 3, DataType::OK);
+  try_send_serialport_until(
+    ble_at::AT_REBOOT.as_bytes(),
+    100,
+    1,
+    READ_RETRY,
+    DataType::OK,
+  );
 }

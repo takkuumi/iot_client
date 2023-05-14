@@ -227,6 +227,7 @@ enum ResponseState {
   MaxRetry,
   MaxSendRetry,
   ReadResponseError,
+  FailedWrite,
 }
 
 class SerialResponse {

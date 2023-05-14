@@ -12,7 +12,6 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
-import '../futs/ble.dart';
 
 class Bluetooth extends StatefulHookConsumerWidget {
   const Bluetooth({Key? key}) : super(key: key);
@@ -51,6 +50,7 @@ class BluetoothState extends ConsumerState<Bluetooth> {
       Uint8List? data = resp.data;
 
       if (data == null) {
+        debugPrint("未扫描到蓝牙设备");
         setState(() {
           stateMsg = '未发现设备！';
         });
@@ -58,7 +58,7 @@ class BluetoothState extends ConsumerState<Bluetooth> {
       }
 
       String responseText = String.fromCharCodes(data);
-      debugPrint("操作 蓝牙 扫描完成");
+      debugPrint("扫描完成 $responseText");
 
       final SharedPreferences prefs = await _prefs;
       prefs.setString("bluetooths", responseText);
@@ -98,33 +98,29 @@ class BluetoothState extends ConsumerState<Bluetooth> {
 
       String? responseText = prefs.getString("bluetooths");
 
-      int? no = prefs.getInt("no");
-
       if (responseText != null) {
         List<Device> items = parseDevices(responseText);
+        if (items.isNotEmpty) {
+          devices.clear();
+        }
         for (Device element in items) {
-          if (no != null && element.no == no) {
-            element.no = no;
-          }
-          devices.removeWhere((e) => e.mac == element.mac);
-
           devices.add(element);
         }
-      }
-      List<Chinfo> chinfos = ref.read(appConnectedProvider);
-      refreshAlreadyState(prefs, chinfos);
-      if (devices.isNotEmpty) {
-        Future.delayed(const Duration(seconds: 6), () async {
-          await scanBleDevice().whenComplete(scanComplete);
 
-          await refreshStat();
-        });
+        List<Chinfo> chinfos = ref.read(appConnectedProvider);
+        refreshAlreadyState(prefs, chinfos);
       }
+
+      Future.delayed(const Duration(seconds: 5), () async {
+        await scanBleDevice().whenComplete(scanComplete);
+
+        await refreshStat();
+      });
     });
   }
 
   void refreshAlreadyState(SharedPreferences prefs, List<Chinfo> chinfos) {
-    int? no2;
+    // int? no2;
     for (Device device in devices) {
       for (Chinfo chinfo in chinfos) {
         if (chinfo.mac == device.mac) {
@@ -133,19 +129,20 @@ class BluetoothState extends ConsumerState<Bluetooth> {
           final state = chinfo.state == 3;
           device.connected = state;
           if (state) {
-            no2 = device.no;
+            //  no2 = device.no;
             prefs.setInt("no", device.no);
             prefs.setString("mac", device.mac);
+            prefs.setInt("addressType", device.addressType);
           }
         }
       }
     }
 
-    if (no2 == null) {
-      prefs.remove("no");
-      prefs.remove("mac");
-      prefs.remove("addressType");
-    }
+    // if (no2 == null) {
+    //   prefs.remove("no");
+    //   prefs.remove("mac");
+    //   prefs.remove("addressType");
+    // }
     setState(() {});
   }
 

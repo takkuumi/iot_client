@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:iot_client/constants.dart';
 import 'package:iot_client/futs/hal.dart';
 import 'package:iot_client/model/logic.dart';
@@ -73,14 +72,14 @@ final Map<int, String> _comI = Map.from({
 });
 
 Map<int, String> _kPortOptions = Map.from({
-  -1: "无",
+  0: "无",
   1: "RS1",
   2: "RS2",
   3: "RS3",
 });
 
 Map<int, String> _kFunctionCodeOptions = Map.from({
-  -1: "无",
+  0: "无",
   1: "读取线圈",
   2: "读取离散输入",
   3: "读取保持寄存器",
@@ -931,9 +930,23 @@ class _LogicControlSettingState extends State<LogicControlSetting> {
 
             keys.putIfAbsent(debugLabel, () => key);
 
+            final logic = rules[index];
+            //           17: "风速风向",
+            // 18: "COVI检测",
+            // 19: "洞内光强",
+            // 20: "洞外光照",
+
+            List<int> values =
+                logic.values.map((e) => e == 255 ? -1 : e).toList();
+            if ([17, 18, 19, 20].contains(logic.scene)) {
+              values =
+                  logic.values.map((e) => (e == -1 || e == 0) ? 1 : e).toList();
+            }
+            logic.values = values;
+
             return LogicRuleItem(
               key: key,
-              logicRule: rules[index],
+              logicRule: logic,
               onRemoved: () => removeRule(index),
             );
           },

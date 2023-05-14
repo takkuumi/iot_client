@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:iot_client/ffi.dart';
-import 'package:iot_client/futs/ble.dart';
 import 'package:iot_client/model/logic.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -187,7 +186,7 @@ Future<List<int>> readSettings() async {
   }
 
   String? data = prefs.getString(mac);
-  if (data != null && data!.isNotEmpty) {
+  if (data != null && data.isNotEmpty) {
     debugPrint("readSettings: $data");
     return data.split(",").map((e) => int.parse(e)).toList();
   }

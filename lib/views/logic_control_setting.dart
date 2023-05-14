@@ -6,7 +6,7 @@ import 'package:iot_client/model/logic.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-Map<int, String> _rules = Map.from({
+final Map<int, String> _rules = Map.from({
   0: "无（默认）",
   1: "单点控车指（4显）",
   2: "组合式车指（单面互锁；4显，反馈为独立点）",
@@ -19,9 +19,9 @@ Map<int, String> _rules = Map.from({
   9: "组合式车指（双面互锁；6显，反馈为组合点）",
   10: "交通信号灯（4显）",
   11: "风机（3控制点，延时保护；互锁）",
-  12: "风机（2控制点，延时保护；互锁）",
-  13: "卷帘门（4控制点，点动信号）",
-  14: "照明（单控制点）",
+  // 12: "风机（2控制点，延时保护；互锁）",
+  13: "卷帘门（3控制点，点动信号）",
+  // 14: "照明（单控制点）",
   15: "照明（双控制点）",
   16: "水泵（单控制点）",
   17: "风速风向",
@@ -30,7 +30,7 @@ Map<int, String> _rules = Map.from({
   20: "洞外光照",
 });
 
-Map<int, String> _comQ = Map.from({
+final Map<int, String> _comQ = Map.from({
   -1: "无",
   0: "Q1(512)",
   1: "Q2(513)",
@@ -50,7 +50,7 @@ Map<int, String> _comQ = Map.from({
   15: "Q16(527)",
 });
 
-Map<int, String> _comI = Map.from({
+final Map<int, String> _comI = Map.from({
   -1: "无",
   0: "I1(0)",
   1: "I2(1)",
@@ -86,26 +86,6 @@ Map<int, String> _kFunctionCodeOptions = Map.from({
   0x0F: "写入多个线圈",
   0x10: "写入多个寄存器",
 });
-
-List<DropdownMenuItem<int>> _ruleItems = _rules.keys
-    .map((e) => DropdownMenuItem<int>(
-          enabled: e <= 10,
-          value: e,
-          child: Text(_rules[e]!, style: TextStyle(fontSize: 14)),
-        ))
-    .toList();
-
-List<DropdownMenuItem<int>> genDropdownItems(Map<int, String> options) {
-  return options.keys
-      .map((e) => DropdownMenuItem<int>(
-            alignment: Alignment.center,
-            value: e,
-            child: Text(options[e]!, style: TextStyle(fontSize: 10)),
-          ))
-      .toList();
-}
-
-List<List<int>> _com = List.filled(3, List.filled(16, -1));
 
 class Directive {
   int port;
@@ -149,7 +129,7 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
     return widget.logicRule;
   }
 
-  void submitRule(int? value) {
+  void changeScene(int? value) {
     if (value != null) {
       widget.logicRule.scene = value;
       setState(() {});
@@ -163,6 +143,23 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
     }
   }
 
+  final List<DropdownMenuItem<int>> _ruleItems = _rules.keys
+      .map((e) => DropdownMenuItem<int>(
+            value: e,
+            child: Text(_rules[e]!, style: TextStyle(fontSize: 14)),
+          ))
+      .toList();
+
+  List<DropdownMenuItem<int>> genDropdownItems(Map<int, String> options) {
+    return options.keys
+        .map((e) => DropdownMenuItem<int>(
+              alignment: Alignment.center,
+              value: e,
+              child: Text(options[e]!, style: TextStyle(fontSize: 10)),
+            ))
+        .toList();
+  }
+
   Widget buildSizedLine(double space) {
     return Column(
       children: [
@@ -173,20 +170,19 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
     );
   }
 
+  final labelStyle = TextStyle(
+    fontSize: 10,
+    fontWeight: FontWeight.w600,
+    color: Colors.redAccent,
+  );
+
   Widget buildComQItem(String label, int index) {
     return Container(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: Colors.redAccent,
-            ),
-          ),
+          Text(label, style: labelStyle),
           DropdownButton<int>(
             alignment: Alignment.center,
             value: widget.logicRule.values[index],
@@ -208,14 +204,7 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: Colors.redAccent,
-            ),
-          ),
+          Text(label, style: labelStyle),
           DropdownButton<int>(
             alignment: Alignment.center,
             value: widget.logicRule.values[index],
@@ -237,14 +226,7 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: Colors.redAccent,
-            ),
-          ),
+          Text(label, style: labelStyle),
           DropdownButton<int>(
             alignment: Alignment.center,
             value: widget.logicRule.values[index],
@@ -266,14 +248,7 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: Colors.redAccent,
-            ),
-          ),
+          Text(label, style: labelStyle),
           DropdownButton<int>(
             alignment: Alignment.center,
             value: widget.logicRule.values[index],
@@ -347,8 +322,8 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
               buildComQColumnItem("正面绿箭", 0),
               buildComQColumnItem("正面红叉", 1),
               buildComQColumnItem("正面右转", 2),
-              buildComQColumnItem("反馈点", 3),
-              buildComQColumnItem("反馈点", 4),
+              buildComIColumnItem("反馈点", 3),
+              buildComIColumnItem("反馈点", 4),
             ],
           ),
           Row(
@@ -357,8 +332,8 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
               buildComQColumnItem("背面绿箭", 5),
               buildComQColumnItem("背面红叉", 6),
               buildComQColumnItem("背面右转", 7),
-              buildComQColumnItem("反馈点", 8),
-              buildComQColumnItem("反馈点", 9),
+              buildComIColumnItem("反馈点", 8),
+              buildComIColumnItem("反馈点", 9),
             ],
           ),
         ],
@@ -366,33 +341,216 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
     );
   }
 
+  Widget buildTrafficRow() {
+    return Container(
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              buildComQColumnItem("右转向灯", 0),
+              buildComQColumnItem("绿灯", 1),
+              buildComQColumnItem("红灯", 2),
+              buildComQColumnItem("黄灯", 3),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              buildComIColumnItem("右转反馈", 4),
+              buildComIColumnItem("绿灯反馈", 5),
+              buildComIColumnItem("红灯反馈", 6),
+              buildComIColumnItem("黄灯反馈", 7),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildFanRow() {
+    return Container(
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              buildComQColumnItem("正转控制", 0),
+              buildComQColumnItem("反转控制", 1),
+              buildComQColumnItem("停止控制", 2),
+              Container(width: 60),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              buildComIColumnItem("正转反馈", 3),
+              buildComIColumnItem("反转反馈", 4),
+              buildComIColumnItem("停止反馈", 5),
+              buildComIColumnItem("远程信号", 6),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Widget buildFanRow2() {
+  //   return Container(
+  //     child: Column(
+  //       children: [],
+  //     ),
+  //   );
+  // }
+
+  Widget buildDoorRow() {
+    return Container(
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              buildComQColumnItem("开门控制", 0),
+              buildComQColumnItem("关门控制", 1),
+              buildComQColumnItem("停止控制", 2),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              buildComIColumnItem("开到位反馈", 3),
+              buildComIColumnItem("关到位反馈", 4),
+              buildComIColumnItem("故障反馈", 5),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Widget buildLightRow() {
+  //   return Container(
+  //     child: Column(
+  //       children: [],
+  //     ),
+  //   );
+  // }
+
+  Widget buildLightRow2() {
+    return Container(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          buildComQColumnItem("开灯控制", 0),
+          buildComQColumnItem("关灯控制", 1),
+          buildComIColumnItem("远程信号", 2),
+          buildComIColumnItem("运行信号", 3),
+          buildComIColumnItem("故障反馈", 4),
+        ],
+      ),
+    );
+  }
+
+  Widget buildWaterPumpRow() {
+    return Container(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          buildComQColumnItem("启动控制", 0),
+          buildComIColumnItem("远程信号", 1),
+          buildComIColumnItem("运行信号", 2),
+          buildComIColumnItem("故障反馈", 3),
+        ],
+      ),
+    );
+  }
+
+  Widget buildWindSpeedRow() {
+    return Container(
+      child: Column(
+        children: [],
+      ),
+    );
+  }
+
+  Widget buildCOVIRow() {
+    return Container(
+      child: Column(
+        children: [],
+      ),
+    );
+  }
+
+  Widget buildLightInsideRow() {
+    return Container(
+      child: Column(
+        children: [],
+      ),
+    );
+  }
+
+  Widget buildLightOutsideRow() {
+    return Container(
+      child: Column(
+        children: [],
+      ),
+    );
+  }
+
   Widget buildWidget() {
     int scene = widget.logicRule.scene;
     if (scene == 1) {
-      return Container(
-        child: Column(
-          children: [
-            buildRow(),
-          ],
-        ),
-      );
+      // 1: "单点控车指（4显）",
+      return buildRow();
     } else if ([2, 4, 6, 8].contains(scene)) {
-      return Container(
-        child: Column(
-          children: [
-            buildRow2(),
-          ],
-        ),
-      );
+      // 2: "组合式车指（单面互锁；4显，反馈为独立点）",
+      // 4: "组合式车指（单面互锁；4显，反馈为组合点）",
+      // 6: "组合式车指（双面互锁；4显，反馈为独立点）",
+      // 8: "组合式车指（双面互锁；4显，反馈为组合点）",
+      return buildRow2();
     } else if ([3, 5, 7, 9].contains(scene)) {
-      return Container(
-        child: Column(
-          children: [
-            buildRow3(),
-          ],
-        ),
-      );
+      // 3: "组合式车指（单面互锁；6显，反馈为独立点）",
+      // 5: "组合式车指（单面互锁；6显，反馈为组合点）",
+      // 7: "组合式车指（双面互锁；6显，反馈为独立点）",
+      // 9: "组合式车指（双面互锁；6显，反馈为组合点）",
+      return buildRow3();
+    } else if (10 == scene) {
+      // 10: "交通信号灯（4显）",
+      return buildTrafficRow();
+    } else if ([11, 12].contains(scene)) {
+      // 11: "风机（3控制点，延时保护；互锁）",
+      // // 12: "风机（2控制点，延时保护；互锁）",
+      // if (11 == scene) {
+      return buildFanRow();
+      // }
+      // return buildFanRow2();
+    } else if (13 == scene) {
+      // 13: "卷帘门（3控制点，点动信号）",
+      return buildDoorRow();
+    } else if ([14, 15].contains(scene)) {
+      // // 14: "照明（单控制点）",
+      // 15: "照明（双控制点）",
+      // if (14 == scene) {
+      //   return buildLightRow();
+      // }
+      return buildLightRow2();
+    } else if (16 == scene) {
+      // 16: "水泵（单控制点）",
+      return buildWaterPumpRow();
+    } else if (17 == scene) {
+      // 17: "风速风向",
+      return buildWindSpeedRow();
+    } else if (18 == scene) {
+      // 18: "COVI检测",
+      return buildCOVIRow();
+    } else if (19 == scene) {
+      // 19: "洞内光强",
+      return buildLightInsideRow();
+    } else if (20 == scene) {
+      // 20: "洞外光照",
+      return buildLightOutsideRow();
     }
+
     return Container();
   }
 
@@ -435,7 +593,7 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
                 DropdownButton<int>(
                   alignment: Alignment.bottomLeft,
                   value: logicRule.scene,
-                  onChanged: submitRule,
+                  onChanged: changeScene,
                   items: _ruleItems,
                 ),
               ],
@@ -564,8 +722,6 @@ class _LogicControlSettingState extends State<LogicControlSetting> {
                 }
                 saved.sort((a, b) => a.index.compareTo(b.index));
                 String data = saved.map((e) => e.toList().join(',')).join(',');
-
-                debugPrint("=+++++++++++++++++++++++++++   $data");
                 await prefs.setString(mac, data);
                 showSnackBar("保存成功", key);
               },

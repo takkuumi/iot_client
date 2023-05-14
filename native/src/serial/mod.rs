@@ -211,7 +211,7 @@ fn read_serialport_until(port: &mut TTYPort, read_try: u8, flag: DataType) -> Se
       break;
     }
 
-    let mut resp_buf = [0_u8; 128];
+    let mut resp_buf = [0_u8; 12];
     if let Ok(size) = port.read(resp_buf.as_mut_slice()) {
       if size > 0 {
         buffer.extend_from_slice(&resp_buf[..size]);
@@ -244,7 +244,7 @@ pub fn send_serialport_until(
   flag: DataType,
 ) -> SerialResponse {
   let mut response = SerialResponse::default();
-  let tty_device = CELL.lock();
+  let tty_device = CELL.try_lock();
 
   if tty_device.is_err() {
     response.state = ResponseState::FailedOpenDevice;

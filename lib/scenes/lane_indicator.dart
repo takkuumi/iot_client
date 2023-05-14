@@ -1,9 +1,6 @@
 import 'dart:async';
-import 'dart:typed_data';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:iot_client/model/logic.dart';
 import 'package:iot_client/scenes/widgets/lane_indicator_comp.dart';
@@ -26,7 +23,6 @@ class _LaneIndicatorState extends State<LaneIndicator>
     with TickerProviderStateMixin {
   final GlobalKey<ScaffoldMessengerState> key =
       GlobalKey<ScaffoldMessengerState>(debugLabel: 'lane_indicator');
-  late TabController tabController;
 
   final key1 =
       GlobalKey<LaneIndicatorUIState>(debugLabel: "LaneIndicatorUIState1");
@@ -35,9 +31,7 @@ class _LaneIndicatorState extends State<LaneIndicator>
   final key3 =
       GlobalKey<LaneIndicatorUIState>(debugLabel: "LaneIndicatorUIState3");
 
-  Future<String?> sn = Future.value(null);
-  Future<String?> ip = Future.value(null);
-
+  late TabController tabController;
   @override
   void setState(VoidCallback fn) {
     if (mounted) {

@@ -185,15 +185,12 @@ class _LightState extends State<Light> with TickerProviderStateMixin {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Container(
-                      child: CarouselSlider(
-                        options: CarouselOptions(
-                          aspectRatio: 16 / 10,
-                          enlargeCenterPage: true,
-                          scrollDirection: Axis.horizontal,
-                          autoPlay: true,
-                          height: 260,
-                        ),
-                        items: createImageSliders(),
+                      width: double.infinity,
+                      child: Image.asset(
+                        "images/banner/img_3@2x.png",
+                        height: 200,
+                        fit: BoxFit.fitWidth,
+                        gaplessPlayback: true,
                       ),
                     ),
                     Container(

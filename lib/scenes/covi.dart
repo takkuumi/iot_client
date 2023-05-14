@@ -1,15 +1,10 @@
 import 'dart:async';
 
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 import 'package:iot_client/model/device.dart';
 import 'package:iot_client/futs/hal.dart';
 import 'package:iot_client/scenes/widgets/shared_service_info.dart';
-import 'package:iot_client/utils/at_parse.dart';
-import 'package:iot_client/views/components/banner.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
@@ -21,8 +16,7 @@ class CoVi extends StatefulWidget {
   State<CoVi> createState() => _CoViState();
 }
 
-class _CoViState extends State<CoVi>
-    with AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
+class _CoViState extends State<CoVi> with TickerProviderStateMixin {
   List<Device> devices = [];
 
   final GlobalKey<ScaffoldMessengerState> key =
@@ -42,35 +36,6 @@ class _CoViState extends State<CoVi>
     }
   }
 
-  @override
-  bool get wantKeepAlive => true;
-  void tabListener() {
-    if (tabController.index == 0) {
-      startTimer();
-      readDevice(readAt("09CA")).then(respHandler);
-    }
-    if (tabController.index == 1) {
-      _prefs.then((SharedPreferences prefs) {
-        return prefs.getString('mesh');
-      }).then((String? addr) async {
-        if (addr != null) {
-          getHoldings(2196, 9).then((value) {
-            Uint8List v = Uint16List.fromList(value).buffer.asUint8List();
-            setState(() {
-              sn = Future.value(String.fromCharCodes(v));
-            });
-          });
-
-          getHoldings(2247, 4).then((value) {
-            setState(() {
-              ip = Future.value(value.join('.'));
-            });
-          });
-        }
-      });
-    }
-  }
-
   late String windSpeed1 = '--';
   late String windSpeed2 = '--';
   late String windSpeed3 = '--';
@@ -78,9 +43,7 @@ class _CoViState extends State<CoVi>
 
   List<int> recoder = [0, 0, 0, 0];
 
-  void respHandler(String? resp) {
-    List<int> data = parseWindSpreed(resp);
-
+  void respHandler(List<int> data) {
     for (int i = 0; i < data.length; i++) {
       if (data[i] != 0) {
         recoder[i] = data[i];
@@ -97,8 +60,11 @@ class _CoViState extends State<CoVi>
 
   void startTimer() {
     timer = Timer.periodic(timerDuration, (timer) async {
-      String? resp = await readDevice(readAt("09CA"));
-      respHandler(resp);
+      List<int> resp = await getHoldings(2500, 4);
+
+      if (resp.isNotEmpty) {
+        respHandler(resp);
+      }
     });
   }
 
@@ -108,38 +74,9 @@ class _CoViState extends State<CoVi>
     tabController = TabController(length: 2, vsync: this);
     tabController.animateTo(0);
 
-    tabController.addListener(tabListener);
-  }
-
-  String readAt(String addr) {
-    // 010F020000030105
-    return "0103${addr}0004";
-  }
-
-  Future<String?> getLink() async {
-    final SharedPreferences prefs = await _prefs;
-    return prefs.getString('mesh');
-  }
-
-  Future<String?> readDevice(
-    String sdata,
-  ) async {
-    String? meshId = await getLink();
-
-    if (meshId == null || meshId.isEmpty) {
-      return null;
-    }
-
-    try {
-      // SerialResponse response =
-      //     await api.bleAtNdrpt(id: meshId, data: sdata, retry: 5);
-      // Uint8List? data = response.data;
-      // if (data != null) {
-      //   return String.fromCharCodes(data);
-      // }
-    } catch (e) {
-      debugPrint(e.toString());
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      startTimer();
+    });
   }
 
   @override
@@ -158,119 +95,69 @@ class _CoViState extends State<CoVi>
 
   final Color disableColor = Color.fromRGBO(221, 221, 221, 1);
 
+  final decoration = BoxDecoration(
+    color: Colors.white,
+    border: Border.all(
+      width: 2,
+      color: Colors.greenAccent,
+    ),
+    borderRadius: BorderRadius.circular(75),
+    boxShadow: [
+      BoxShadow(
+        color: Colors.grey.withOpacity(0.5),
+        spreadRadius: 5,
+        blurRadius: 7,
+        offset: const Offset(0, 3),
+      )
+    ],
+  );
+
+  Widget createStack(String title, String value, Color color) {
+    return Container(
+      width: 150,
+      height: 150,
+      decoration:
+          decoration.copyWith(border: Border.all(width: 2, color: color)),
+      margin: EdgeInsets.only(bottom: 30),
+      alignment: Alignment.center,
+      child: Container(
+          height: 40,
+          alignment: Alignment.center,
+          margin: EdgeInsets.symmetric(horizontal: 10),
+          child: Column(children: [
+            Text(
+              title,
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            Text(
+              value,
+              style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.greenAccent),
+            ),
+          ])),
+    );
+  }
+
   Widget createLane1() {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        Container(
-          width: 150,
-          height: 150,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(
-              width: 2,
-              color: Colors.greenAccent,
-            ),
-            borderRadius: BorderRadius.circular(75),
-            boxShadow: [boxShadow],
-          ),
-          child: Image.asset(
-            "images/icons/environmental testing_icon@2x.png",
-            width: 120,
-            height: 120,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            createStack("Co浓度值:", windSpeed1, Colors.greenAccent),
+            createStack("VI值:", windSpeed2, Colors.greenAccent),
+          ],
         ),
-        Container(
-          margin: EdgeInsets.symmetric(vertical: 15),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                  height: 40,
-                  alignment: Alignment.center,
-                  margin: EdgeInsets.symmetric(horizontal: 10),
-                  child: Row(children: [
-                    Text(
-                      "Co浓度值:",
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                    Text(
-                      windSpeed1,
-                      style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.greenAccent),
-                    ),
-                  ])),
-              Container(
-                  height: 40,
-                  alignment: Alignment.center,
-                  margin: EdgeInsets.symmetric(horizontal: 10),
-                  child: Row(children: [
-                    Text(
-                      "VI值:",
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                    Text(
-                      windSpeed2,
-                      style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.greenAccent),
-                    ),
-                  ])),
-            ],
-          ),
-        ),
-        Container(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                  height: 40,
-                  alignment: Alignment.center,
-                  margin: EdgeInsets.symmetric(horizontal: 10),
-                  child: Row(children: [
-                    Text(
-                      "Co报警值:",
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                    Text(
-                      windSpeed3,
-                      style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.yellowAccent),
-                    ),
-                  ])),
-              Container(
-                  height: 40,
-                  alignment: Alignment.center,
-                  margin: EdgeInsets.symmetric(horizontal: 10),
-                  child: Row(children: [
-                    Text(
-                      "VI报警值:",
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                    Text(
-                      windSpeed4,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.redAccent,
-                      ),
-                    ),
-                  ])),
-            ],
-          ),
-        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            createStack("Co报警值:", windSpeed3, Colors.redAccent),
+            createStack("VI报警值:", windSpeed4, Colors.redAccent),
+          ],
+        )
       ],
     );
   }
@@ -308,15 +195,12 @@ class _CoViState extends State<CoVi>
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Container(
-                      child: CarouselSlider(
-                        options: CarouselOptions(
-                          aspectRatio: 16 / 10,
-                          enlargeCenterPage: true,
-                          scrollDirection: Axis.horizontal,
-                          autoPlay: true,
-                          height: 260,
-                        ),
-                        items: createImageSliders(),
+                      width: double.infinity,
+                      child: Image.asset(
+                        "images/banner/covi.png",
+                        height: 200,
+                        fit: BoxFit.fitWidth,
+                        gaplessPlayback: true,
                       ),
                     ),
                     Container(

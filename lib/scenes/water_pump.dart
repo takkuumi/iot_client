@@ -1,6 +1,3 @@
-import 'dart:typed_data';
-
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -8,8 +5,6 @@ import 'package:iot_client/futs/hal.dart';
 import 'package:iot_client/model/logic.dart';
 import 'package:iot_client/scenes/widgets/shared_service_info.dart';
 import 'package:iot_client/scenes/widgets/util.dart';
-import 'package:iot_client/views/components/banner.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class WaterPump extends StatefulWidget {
   const WaterPump({Key? key}) : super(key: key);
@@ -185,15 +180,12 @@ class _WaterPumpState extends State<WaterPump> with TickerProviderStateMixin {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Container(
-                      child: CarouselSlider(
-                        options: CarouselOptions(
-                          aspectRatio: 16 / 10,
-                          enlargeCenterPage: true,
-                          scrollDirection: Axis.horizontal,
-                          autoPlay: true,
-                          height: 260,
-                        ),
-                        items: createImageSliders(),
+                      width: double.infinity,
+                      child: Image.asset(
+                        "images/banner/img_3@2x.png",
+                        height: 200,
+                        fit: BoxFit.fitWidth,
+                        gaplessPlayback: true,
                       ),
                     ),
                     Container(

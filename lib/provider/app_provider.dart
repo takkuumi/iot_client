@@ -32,6 +32,7 @@ class BleChinfos extends StateNotifier<List<Chinfo>> {
 
   void changeDevice(List<Chinfo> chinfos) {
     if (chinfos.isNotEmpty) {
+      state.clear();
       state = chinfos;
     }
   }

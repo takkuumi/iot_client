@@ -1,20 +1,22 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:iot_client/futs/hal.dart';
 import 'package:iot_client/model/logic.dart';
 import 'package:iot_client/model/port.dart';
+import 'package:iot_client/provider/app_provider.dart';
 import 'package:iot_client/scenes/widgets/fan_comp.dart';
 import 'package:iot_client/scenes/widgets/shared_service_info.dart';
 
-class Fan extends StatefulWidget {
+class Fan extends StatefulHookConsumerWidget {
   const Fan({Key? key}) : super(key: key);
 
   @override
-  State<Fan> createState() => _FanState();
+  FanState createState() => FanState();
 }
 
-class _FanState extends State<Fan> with TickerProviderStateMixin {
+class FanState extends ConsumerState<Fan> with TickerProviderStateMixin {
   final GlobalKey<ScaffoldMessengerState> key =
       GlobalKey<ScaffoldMessengerState>(debugLabel: 'fan');
 
@@ -51,8 +53,14 @@ class _FanState extends State<Fan> with TickerProviderStateMixin {
   Future<void> initLaneState() async {
     List<bool>? states = await getCoils(0, 24);
 
-    if (states == null) {
-      return;
+    if (states != null) {
+      ref.read(appReadCoilsProvider.notifier).change(states);
+    }
+
+    List<bool>? states2 = await getCoils(512, 24);
+
+    if (states2 != null) {
+      ref.read(appReadWriteCoilsProvider.notifier).change(states2);
     }
   }
 

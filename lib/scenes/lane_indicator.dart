@@ -104,10 +104,6 @@ class LaneIndicatorState extends ConsumerState<LaneIndicator>
     if (states2 != null) {
       ref.read(appReadWriteCoilsProvider.notifier).change(states2);
     }
-
-    // key1.currentState?.updateState(coils: states, coils2: states2);
-    // key2.currentState?.updateState(coils: states, coils2: states2);
-    // key3.currentState?.updateState(coils: states, coils2: states2);
   }
 
   @override

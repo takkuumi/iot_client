@@ -101,12 +101,12 @@ class AppMainViewState extends ConsumerState<AppMainView>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      startTimer();
-    }
-    if (state == AppLifecycleState.paused) {
-      stopTimer();
-    }
+    // if (state == AppLifecycleState.resumed) {
+    //   startTimer();
+    // }
+    // if (state == AppLifecycleState.paused) {
+    //   stopTimer();
+    // }
   }
 
   @override

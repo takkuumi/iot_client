@@ -92,8 +92,8 @@ class BluetoothState extends ConsumerState<Bluetooth> {
       final SharedPreferences prefs = await _prefs;
 
       ref.watch(appConnectedProvider.notifier).addListener((chinfos) {
+        debugPrint("监听触发");
         refreshAlreadyState(prefs, chinfos);
-        setState(() {});
       });
 
       String? responseText = prefs.getString("bluetooths");
@@ -127,6 +127,7 @@ class BluetoothState extends ConsumerState<Bluetooth> {
           device.no = chinfo.no;
 
           final state = chinfo.state == 3;
+          debugPrint("state]]]]]]]]]]]]]] $state");
           device.connected = state;
           if (state) {
             //  no2 = device.no;
@@ -153,8 +154,10 @@ class BluetoothState extends ConsumerState<Bluetooth> {
     String responseText = String.fromCharCodes(data);
 
     List<Chinfo> chinfos = parseChinfos(responseText);
-    final prefs = await _prefs;
-    refreshAlreadyState(prefs, chinfos);
+    // final prefs = await _prefs;
+
+    ref.read(appConnectedProvider.notifier).changeDevice(chinfos);
+    // refreshAlreadyState(prefs, chinfos);
   }
 
   Future<void> connectDevice(Device device) async {

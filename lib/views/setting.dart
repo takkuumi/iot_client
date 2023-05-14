@@ -43,20 +43,36 @@ class _SettingAppState extends State<SettingApp> {
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final GlobalKey<FormState> _ipFormKey = GlobalKey<FormState>();
-  final GlobalKey<FormState> _appTitleFormKey = GlobalKey<FormState>();
-
   final TextEditingController _textEditingController = TextEditingController();
 
-  final TextEditingController _ipEditingController = TextEditingController();
+  final GlobalKey<FormState> _appTitleFormKey = GlobalKey<FormState>();
   final TextEditingController _appTitleEditingController =
       TextEditingController();
+
+  final GlobalKey<FormState> _ipFormKey = GlobalKey<FormState>();
+  final TextEditingController _ipEditingController = TextEditingController();
+
+  final GlobalKey<FormState> _subnetMaskFormKey = GlobalKey<FormState>();
+  final TextEditingController _subnetMaskEditingController =
+      TextEditingController();
+
+  final GlobalKey<FormState> _gatewayFormKey = GlobalKey<FormState>();
+  final TextEditingController _gatewayEditingController =
+      TextEditingController();
+
+  final GlobalKey<FormState> _macFormKey = GlobalKey<FormState>();
+  final TextEditingController _macController = TextEditingController();
 
   late Future<String?> ndid = Future.value(null);
   Future<String?> mac = Future.value(null);
   Future<String?> ip = Future.value(null);
   Future<String?> subnetMask = Future.value(null);
   Future<String?> gateway = Future.value(null);
+
+  bool isMacAddress(String input) {
+    RegExp macPattern = RegExp(r'^([0-9A-Fa-f]{2}[\-]){5}([0-9A-Fa-f]{2})$');
+    return macPattern.hasMatch(input);
+  }
 
   @override
   void setState(VoidCallback fn) {
@@ -136,11 +152,144 @@ class _SettingAppState extends State<SettingApp> {
     exit(0);
   }
 
+  Future<void> settingSubnetMasklDialog(BuildContext context) async {
+    return await showDialog(
+        context: context,
+        builder: (dialogContext) {
+          return StatefulBuilder(builder: (context, mountedState) {
+            return AlertDialog(
+              content: Form(
+                key: _subnetMaskFormKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      keyboardType: TextInputType.url,
+                      maxLength: 15,
+                      maxLines: 1,
+                      controller: _subnetMaskEditingController,
+                      validator: (value) {
+                        return value!.isNotEmpty ? null : "子网掩码";
+                      },
+                      decoration: const InputDecoration(
+                        hintText: "子网掩码(如:255.255.255.0)",
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              title: const Text('修改子网掩码'),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('取消'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    if (_subnetMaskFormKey.currentState?.validate() ?? false) {
+                      String url = _subnetMaskEditingController.text;
+                      debugPrint("URL: $url");
+                      List<int> values = url
+                          .trim()
+                          .split(".")
+                          .map((e) => int.parse(e))
+                          .toList();
+                      String req = await api.halGenerateSetHoldingsBulk(
+                          unitId: 1,
+                          reg: 2176 + 75,
+                          values: Uint16List.fromList(values));
+                      bool res = await setHoldings(req);
+
+                      if (res) {
+                        showSnackBar("修改成功");
+                        _subnetMaskEditingController.text = '';
+                        await readHoldings1();
+                      } else {
+                        showSnackBar("修改失败，请重试");
+                      }
+                      Navigator.of(context).maybePop();
+                    }
+                  },
+                  child: Text('修改'),
+                )
+              ],
+            );
+          });
+        });
+  }
+
+  Future<void> settingGatewaylDialog(BuildContext context) async {
+    return await showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(builder: (context, mountedState) {
+          return AlertDialog(
+            content: Form(
+              key: _gatewayFormKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    keyboardType: TextInputType.url,
+                    maxLength: 15,
+                    maxLines: 1,
+                    controller: _gatewayEditingController,
+                    validator: (value) {
+                      return value!.isNotEmpty ? null : "网关地址";
+                    },
+                    decoration: const InputDecoration(
+                      hintText: "网关地址(如:192.168.1.1)",
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            title: const Text('修改网关地址'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('取消'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  if (_gatewayFormKey.currentState?.validate() ?? false) {
+                    String url = _gatewayEditingController.text;
+                    debugPrint("URL: $url");
+                    List<int> values =
+                        url.trim().split(".").map((e) => int.parse(e)).toList();
+                    String req = await api.halGenerateSetHoldingsBulk(
+                        unitId: 1,
+                        reg: 2176 + 79,
+                        values: Uint16List.fromList(values));
+                    bool res = await setHoldings(req);
+
+                    if (res) {
+                      showSnackBar("修改成功");
+                      _gatewayEditingController.text = "";
+                      await readHoldings1();
+                    } else {
+                      showSnackBar("修改失败，请重试");
+                    }
+                    Navigator.of(context).maybePop();
+                  }
+                },
+                child: Text('修改'),
+              )
+            ],
+          );
+        });
+      },
+    );
+  }
+
   Future<void> settingIplDialog(BuildContext context) async {
     return await showDialog(
         context: context,
         builder: (dialogContext) {
-          bool isChecked = false;
           return StatefulBuilder(builder: (context, mountedState) {
             return AlertDialog(
               content: Form(
@@ -189,6 +338,7 @@ class _SettingAppState extends State<SettingApp> {
 
                       if (res) {
                         showSnackBar("修改成功");
+                        _ipEditingController.text = '';
                         await readHoldings1();
                       } else {
                         showSnackBar("修改失败，请重试");
@@ -202,6 +352,78 @@ class _SettingAppState extends State<SettingApp> {
             );
           });
         });
+  }
+
+  Future<void> settingMaclDialog(BuildContext context) async {
+    return await showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(builder: (context, mountedState) {
+          return AlertDialog(
+            content: Form(
+              key: _macFormKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    keyboardType: TextInputType.text,
+                    maxLength: 17,
+                    maxLines: 1,
+                    controller: _macController,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return "请输入MAC地址";
+                      if (!isMacAddress(value)) return "非法MAC地址";
+                      return null;
+                    },
+                    decoration: const InputDecoration(
+                      hintText: "MAC地址(如:00-10-39-0F-71-45)",
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            title: const Text('修改MAC地址'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('取消'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  if (_macFormKey.currentState?.validate() ?? false) {
+                    String url = _macController.text;
+                    debugPrint("URL: $url");
+                    String value = url.trim().replaceAll(RegExp(r"\-"), '');
+                    Uint16List values = Uint16List.fromList(List.generate(
+                        6,
+                        (index) => int.parse(
+                            value.substring(index * 2, index * 2 + 2),
+                            radix: 16)));
+                    String req = await api.halGenerateSetHoldingsBulk(
+                        unitId: 1,
+                        reg: 2176 + 87,
+                        values: Uint16List.fromList(values));
+                    bool res = await setHoldings(req);
+
+                    if (res) {
+                      showSnackBar("修改成功");
+                      _macController.text = '';
+                      await readHoldings1();
+                    } else {
+                      showSnackBar("修改失败，请重试");
+                    }
+                    Navigator.of(context).maybePop();
+                  }
+                },
+                child: Text('修改'),
+              )
+            ],
+          );
+        });
+      },
+    );
   }
 
   Future<void> settingAppTitle(BuildContext context) async {
@@ -266,6 +488,7 @@ class _SettingAppState extends State<SettingApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: SettingsList(
         platform: selectedPlatform,
         sections: [
@@ -298,9 +521,12 @@ class _SettingAppState extends State<SettingApp> {
             tiles: [
               SettingsTile.navigation(
                 title: Text('MAC地址'),
+                onPressed: (c) {
+                  settingMaclDialog(c);
+                },
                 value: FutureBuilder(
                   future: mac,
-                  initialData: '',
+                  initialData: '00-00-00-00-00-00',
                   builder: (context, AsyncSnapshot<String?> snapshot) {
                     if (snapshot.hasData &&
                         snapshot.connectionState == ConnectionState.done) {
@@ -333,6 +559,9 @@ class _SettingAppState extends State<SettingApp> {
               ),
               SettingsTile.navigation(
                 title: Text('子网掩码'),
+                onPressed: (c) {
+                  settingSubnetMasklDialog(c);
+                },
                 value: FutureBuilder(
                   future: subnetMask,
                   initialData: '',
@@ -349,6 +578,9 @@ class _SettingAppState extends State<SettingApp> {
               ),
               SettingsTile.navigation(
                 title: Text('网关地址'),
+                onPressed: (c) {
+                  settingGatewaylDialog(c);
+                },
                 value: FutureBuilder(
                   future: gateway,
                   initialData: '',
@@ -373,7 +605,7 @@ class _SettingAppState extends State<SettingApp> {
             title: Text('配置'),
             tiles: <SettingsTile>[
               SettingsTile.navigation(
-                leading: Icon(Icons.settings_applications_outlined),
+                leading: Icon(Symbols.rebase_edit),
                 title: Text('逻辑配置服务'),
                 onPressed: (context) {
                   Navigation.navigateTo(
@@ -383,7 +615,7 @@ class _SettingAppState extends State<SettingApp> {
                 },
               ),
               SettingsTile.navigation(
-                leading: Icon(Icons.settings_brightness_outlined),
+                leading: Icon(Symbols.settings_input_component),
                 title: Text('RS485配置'),
                 onPressed: (context) {
                   Navigation.navigateTo(
@@ -398,12 +630,14 @@ class _SettingAppState extends State<SettingApp> {
             title: Text('帐户'),
             tiles: <SettingsTile>[
               SettingsTile.navigation(
+                leading: Icon(Symbols.location_city),
                 title: Text('公司名称'),
                 onPressed: (c) {
                   settingAppTitle(c);
                 },
                 value: FutureBuilder(
-                  future: _prefs.then((value) => value.getString("appTitle")),
+                  future: _prefs
+                      .then((value) => value.getString("appTitle")?.trim()),
                   initialData: '',
                   builder: (context, AsyncSnapshot<String?> snapshot) {
                     if (snapshot.hasData &&
@@ -412,16 +646,16 @@ class _SettingAppState extends State<SettingApp> {
                       return Text(comName);
                     }
 
-                    return Text('');
+                    return Text('未设置');
                   },
                 ),
               ),
               SettingsTile.navigation(
-                leading: Icon(Icons.account_circle),
+                leading: Icon(Symbols.account_circle),
                 title: Text('关于我们'),
               ),
               SettingsTile.navigation(
-                leading: Icon(Icons.logout),
+                leading: Icon(Symbols.exit_to_app),
                 title: Text('退出应用'),
                 onPressed: (context) => closeAppUsingSystemPop(),
               ),
@@ -441,44 +675,6 @@ class _SettingAppState extends State<SettingApp> {
             });
           }
         },
-      ),
-    );
-  }
-}
-
-class PlatformPickerScreen extends StatelessWidget {
-  const PlatformPickerScreen({
-    Key? key,
-    required this.platform,
-    required this.platforms,
-  }) : super(key: key);
-
-  final DevicePlatform platform;
-  final Map<DevicePlatform, String> platforms;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Platforms'),
-      ),
-      body: SettingsList(
-        platform: platform,
-        sections: [
-          SettingsSection(
-            title: Text('Select the platform you want'),
-            tiles: platforms.keys.map((e) {
-              final platform = platforms[e];
-
-              return SettingsTile(
-                title: Text(platform!),
-                onPressed: (_) {
-                  Navigator.of(context).pop(e);
-                },
-              );
-            }).toList(),
-          ),
-        ],
       ),
     );
   }

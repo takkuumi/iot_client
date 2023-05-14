@@ -178,19 +178,20 @@ class _HomeState extends State<Home> {
             Container(
               alignment: Alignment.center,
               child: GridView.builder(
-                  primary: false,
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(26),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 4,
-                    mainAxisSpacing: 15,
-                    crossAxisSpacing: 15,
-                  ),
-                  itemCount: 12,
-                  itemBuilder: (BuildContext context, int position) {
-                    return __createGridViewItems(context, position);
-                  }),
+                primary: false,
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(26),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 4,
+                  mainAxisSpacing: 15,
+                  crossAxisSpacing: 15,
+                ),
+                itemCount: 12,
+                itemBuilder: (BuildContext context, int position) {
+                  return __createGridViewItems(context, position);
+                },
+              ),
             )
           ],
         ),

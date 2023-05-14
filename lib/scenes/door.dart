@@ -3,11 +3,12 @@ import 'dart:typed_data';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:iot_client/futs/hal.dart';
+import 'package:iot_client/model/logic.dart';
 import 'package:iot_client/scenes/widgets/shared_service_info.dart';
 import 'package:iot_client/scenes/widgets/util.dart';
 import 'package:iot_client/views/components/banner.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class Door extends StatefulWidget {
   const Door({Key? key}) : super(key: key);
@@ -16,15 +17,11 @@ class Door extends StatefulWidget {
   State<Door> createState() => _DoorState();
 }
 
-class _DoorState extends State<Door>
-    with AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
+class _DoorState extends State<Door> with TickerProviderStateMixin {
   final GlobalKey<ScaffoldMessengerState> key =
       GlobalKey<ScaffoldMessengerState>(debugLabel: 'door');
 
   late TabController tabController;
-  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-  Future<String?> sn = Future.value(null);
-  Future<String?> ip = Future.value(null);
 
   @override
   void setState(VoidCallback fn) {
@@ -33,44 +30,52 @@ class _DoorState extends State<Door>
     }
   }
 
-  @override
-  bool get wantKeepAlive => true;
-  void tabListener() {
-    if (tabController.index == 0) {}
-    if (tabController.index == 1) {
-      _prefs.then((SharedPreferences prefs) {
-        return prefs.getString('mesh');
-      }).then((String? addr) async {
-        if (addr != null) {
-          getHoldings(2196, 9).then((value) {
-            Uint8List v = Uint16List.fromList(value).buffer.asUint8List();
-            setState(() {
-              sn = Future.value(String.fromCharCodes(v));
-            });
-          });
+  Future<void> initMainState() async {
+    try {
+      await initLaneState();
+    } catch (err) {
+      EasyLoading.showError(err.toString());
+    }
+  }
 
-          getHoldings(2247, 4).then((value) {
-            setState(() {
-              ip = Future.value(value.join('.'));
-            });
-          });
-        }
-      });
+  Future<void> tabListener() async {
+    EasyLoading.dismiss();
+    if (tabController.indexIsChanging) {
+      if (tabController.index == 0) {
+        await initMainState();
+      }
+    }
+  }
+
+  Future<void> initLaneState() async {
+    List<bool>? states = await getCoils(0, 24);
+
+    if (states == null) {
+      return;
     }
   }
 
   @override
   void initState() {
     super.initState();
-    tabController = TabController(length: 2, vsync: this);
-    tabController.animateTo(0);
-
+    tabController = TabController(length: 2, initialIndex: 0, vsync: this);
     tabController.addListener(tabListener);
-  }
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        List<Logic> logics = await readLogicControlSetting();
 
-  @override
-  void dispose() {
-    super.dispose();
+        List<Logic> v = logics.where((e) => e.scene < 10).toList();
+
+        for (int i = 0; i < v.length; i++) {
+          final logic = v[i];
+        }
+
+        setState(() {});
+        await initMainState();
+      } catch (err) {
+        EasyLoading.showError(err.toString());
+      }
+    });
   }
 
   final BoxShadow boxShadow = BoxShadow(

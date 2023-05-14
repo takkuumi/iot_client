@@ -3,6 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:iot_client/model/logic.dart';
+import 'package:iot_client/model/port.dart';
 import 'package:iot_client/scenes/widgets/lane_indicator_comp.dart';
 import 'package:iot_client/scenes/widgets/shared_service_info.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -52,7 +53,7 @@ class _LaneIndicatorState extends State<LaneIndicator>
     if (tabController.indexIsChanging) {
       if (tabController.index == 0) {
         await initMainState();
-      } else if (tabController.index == 1) {}
+      }
     }
   }
 

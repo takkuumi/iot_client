@@ -129,7 +129,11 @@ flutter:
     - images/icons/sun.png
     - images/icons/light_outside.png
     - images/icons/more.png
-    - images/icons/traffic-lights.png
+    - images/icons/traffic_light_green.png
+    - images/icons/traffic_light_off.png
+    - images/icons/traffic_light_red.png
+    - images/icons/traffic_light_yellow.png
+    - images/icons/traffic_light1.png
     - images/light_inside/banner.png
     - images/light_inside/img_4@2x.png
     - images/light_inside/img_3@2x.png

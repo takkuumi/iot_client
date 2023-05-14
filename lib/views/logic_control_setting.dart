@@ -349,7 +349,7 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              buildComQColumnItem("右转向灯", 0),
+              buildComQColumnItem("左箭", 0),
               buildComQColumnItem("绿灯", 1),
               buildComQColumnItem("红灯", 2),
               buildComQColumnItem("黄灯", 3),
@@ -358,7 +358,7 @@ class _LogicRuleItemState extends State<LogicRuleItem> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              buildComIColumnItem("右转反馈", 4),
+              buildComIColumnItem("左箭反馈", 4),
               buildComIColumnItem("绿灯反馈", 5),
               buildComIColumnItem("红灯反馈", 6),
               buildComIColumnItem("黄灯反馈", 7),

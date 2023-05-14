@@ -1,13 +1,13 @@
-import 'dart:typed_data';
-
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:iot_client/futs/hal.dart';
+import 'package:iot_client/model/logic.dart';
+import 'package:iot_client/model/port.dart';
 import 'package:iot_client/scenes/widgets/shared_service_info.dart';
 import 'package:iot_client/scenes/widgets/util.dart';
-import 'package:iot_client/views/components/banner.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+enum TrafficLightStat { green, red, right, yellow, off }
 
 class TrafficLight extends StatefulWidget {
   const TrafficLight({Key? key}) : super(key: key);
@@ -17,14 +17,14 @@ class TrafficLight extends StatefulWidget {
 }
 
 class _TrafficLightState extends State<TrafficLight>
-    with AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
+    with TickerProviderStateMixin {
   final GlobalKey<ScaffoldMessengerState> key =
       GlobalKey<ScaffoldMessengerState>(debugLabel: 'traffic_light');
 
   late TabController tabController;
-  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-  Future<String?> sn = Future.value(null);
-  Future<String?> ip = Future.value(null);
+  TrafficLightStat stat = TrafficLightStat.off;
+
+  Port? port;
 
   @override
   void setState(VoidCallback fn) {
@@ -33,44 +33,78 @@ class _TrafficLightState extends State<TrafficLight>
     }
   }
 
-  @override
-  bool get wantKeepAlive => true;
-  void tabListener() {
-    if (tabController.index == 0) {}
-    if (tabController.index == 1) {
-      _prefs.then((SharedPreferences prefs) {
-        return prefs.getString('mesh');
-      }).then((String? addr) async {
-        if (addr != null) {
-          getHoldings(2196, 9).then((value) {
-            Uint8List v = Uint16List.fromList(value).buffer.asUint8List();
-            setState(() {
-              sn = Future.value(String.fromCharCodes(v));
-            });
-          });
-
-          getHoldings(2247, 4).then((value) {
-            setState(() {
-              ip = Future.value(value.join('.'));
-            });
-          });
-        }
-      });
+  Future<void> initMainState() async {
+    try {
+      await initLaneState();
+    } catch (err) {
+      EasyLoading.showError(err.toString());
     }
+  }
+
+  Future<void> tabListener() async {
+    EasyLoading.dismiss();
+    if (tabController.indexIsChanging) {
+      if (tabController.index == 0) {
+        await initMainState();
+      }
+    }
+  }
+
+  Future<void> initLaneState() async {
+    if (port == null) {
+      return;
+    }
+    List<bool>? states = await getCoils(0, 24);
+
+    if (states == null || states.isEmpty) {
+      return;
+    }
+
+    bool s1 = states[port?.p4 ?? 0];
+    bool s2 = states[port?.p5 ?? 0];
+    bool s3 = states[port?.p6 ?? 0];
+    bool s4 = states[port?.p7 ?? 0];
+
+    if (s1) {
+      stat = TrafficLightStat.right;
+    }
+
+    if (s2) {
+      stat = TrafficLightStat.green;
+    }
+
+    if (s3) {
+      stat = TrafficLightStat.red;
+    }
+
+    if (s4) {
+      stat = TrafficLightStat.yellow;
+    }
+
+    setState(() {});
   }
 
   @override
   void initState() {
     super.initState();
-    tabController = TabController(length: 2, vsync: this);
-    tabController.animateTo(0);
-
+    tabController = TabController(length: 2, initialIndex: 0, vsync: this);
     tabController.addListener(tabListener);
-  }
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        List<Logic> logics = await readLogicControlSetting();
 
-  @override
-  void dispose() {
-    super.dispose();
+        List<Logic> v = logics.where((e) => e.scene == 10).toList();
+        if (v.isNotEmpty) {
+          final Logic logic = v[0];
+          port = Port.fromList(logic.scene, logic.values);
+        }
+
+        setState(() {});
+        await initMainState();
+      } catch (err) {
+        EasyLoading.showError(err.toString());
+      }
+    });
   }
 
   final BoxShadow boxShadow = BoxShadow(
@@ -90,17 +124,36 @@ class _TrafficLightState extends State<TrafficLight>
     ),
   );
 
+  String buildImage(TrafficLightStat? state) {
+    if (state == TrafficLightStat.green) {
+      return "images/icons/traffic_light_green.png";
+    }
+    if (state == TrafficLightStat.red) {
+      return "images/icons/traffic_light_red.png";
+    }
+
+    if (state == TrafficLightStat.right) {
+      return "images/icons/traffic_light1.png";
+    }
+
+    if (state == TrafficLightStat.yellow) {
+      return "images/icons/traffic_light_yellow.png";
+    }
+
+    return "images/icons/traffic_light_off.png";
+  }
+
   Widget createLane1() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Container(
+          height: 190 * 2,
           alignment: Alignment.center,
           child: Image.asset(
-            "images/icons/traffic-lights.png",
-            width: 100,
-            height: 200,
+            buildImage(stat),
             fit: BoxFit.cover,
+            gaplessPlayback: true,
           ),
         ),
         Container(
@@ -109,9 +162,56 @@ class _TrafficLightState extends State<TrafficLight>
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              createSig('左箭信号：', '无'),
               createSig('红灯信号：', '无'),
               createSig('黄灯信号：', '无'),
               createSig('绿灯信号：', '无'),
+            ],
+          ),
+        ),
+        Container(
+          margin: EdgeInsets.symmetric(vertical: 15),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              ElevatedButton(
+                child: Text('左箭控制'),
+                onPressed: () async {
+                  await setCoil(port?.getP0 ?? 512, true);
+                  await setCoil(port?.getP1 ?? 512, false);
+                  await setCoil(port?.getP2 ?? 512, false);
+                  await setCoil(port?.getP3 ?? 512, false);
+                  await initLaneState();
+                },
+              ),
+              ElevatedButton(
+                  child: Text('绿灯控制'),
+                  onPressed: () async {
+                    await setCoil(port?.getP0 ?? 512, false);
+                    await setCoil(port?.getP1 ?? 512, true);
+                    await setCoil(port?.getP2 ?? 512, false);
+                    await setCoil(port?.getP3 ?? 512, false);
+                    await initLaneState();
+                  }),
+              ElevatedButton(
+                  child: Text('红灯控制'),
+                  onPressed: () async {
+                    await setCoil(port?.getP0 ?? 512, false);
+                    await setCoil(port?.getP1 ?? 512, false);
+                    await setCoil(port?.getP2 ?? 512, true);
+                    await setCoil(port?.getP3 ?? 512, false);
+                    await initLaneState();
+                  }),
+              ElevatedButton(
+                  child: Text('黄灯控制'),
+                  onPressed: () async {
+                    await setCoil(port?.getP0 ?? 512, false);
+                    await setCoil(port?.getP1 ?? 512, false);
+                    await setCoil(port?.getP2 ?? 512, false);
+                    await setCoil(port?.getP3 ?? 512, true);
+                    await initLaneState();
+                  }),
             ],
           ),
         )
@@ -141,35 +241,20 @@ class _TrafficLightState extends State<TrafficLight>
         ),
         body: TabBarView(
           controller: tabController,
-          physics: BouncingScrollPhysics(),
+          physics: NeverScrollableScrollPhysics(),
           dragStartBehavior: DragStartBehavior.down,
           children: [
-            SingleChildScrollView(
-              child: Container(
-                alignment: Alignment.center,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      child: CarouselSlider(
-                        options: CarouselOptions(
-                          aspectRatio: 16 / 10,
-                          enlargeCenterPage: true,
-                          scrollDirection: Axis.horizontal,
-                          autoPlay: true,
-                          height: 260,
-                        ),
-                        items: createImageSliders(),
-                      ),
-                    ),
-                    Container(
-                      width: 480,
-                      padding: EdgeInsets.symmetric(vertical: 100),
-                      child: createLane1(),
-                    ),
-                  ],
-                ),
+            Container(
+              alignment: Alignment.center,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 480,
+                    child: createLane1(),
+                  ),
+                ],
               ),
             ),
             SingleChildScrollView(

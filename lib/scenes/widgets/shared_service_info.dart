@@ -14,6 +14,8 @@ class SharedServiceInfo extends StatefulHookConsumerWidget {
 }
 
 class SharedServiceInfoState extends ConsumerState<SharedServiceInfo> {
+  final GlobalKey<ScaffoldMessengerState> key =
+      GlobalKey<ScaffoldMessengerState>(debugLabel: 'light_outside');
   Future<DeviceDisplay?> serviceInfo = Future.value(null);
 
   Future<void> readHoldings1() async {
@@ -21,14 +23,14 @@ class SharedServiceInfoState extends ConsumerState<SharedServiceInfo> {
 
     int? index = prefs.getInt("no");
     if (index == null) {
-      return showSnackBar("未设置连接");
+      return showSnackBar("未设置连接", key);
     }
     try {
       DeviceDisplay? deviceDisplay =
           await api.halReadDeviceSettings(index: index);
 
       if (deviceDisplay == null) {
-        return showSnackBar("读取设备出错");
+        return showSnackBar("读取设备出错", key);
       }
       ref.read(deviceDisplayProvider.notifier).change(deviceDisplay);
     } catch (err) {

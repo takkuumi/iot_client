@@ -82,6 +82,22 @@ class NativeImpl implements Native {
         argNames: ["data"],
       );
 
+  Future<String> blePorts({dynamic hint}) {
+    return _platform.executeNormal(FlutterRustBridgeTask(
+      callFfi: (port_) => _platform.inner.wire_ble_ports(port_),
+      parseSuccessData: _wire2api_String,
+      constMeta: kBlePortsConstMeta,
+      argValues: [],
+      hint: hint,
+    ));
+  }
+
+  FlutterRustBridgeTaskConstMeta get kBlePortsConstMeta =>
+      const FlutterRustBridgeTaskConstMeta(
+        debugName: "ble_ports",
+        argNames: [],
+      );
+
   Future<SerialResponse> bleScan({required int typee, dynamic hint}) {
     var arg0 = api2wire_u8(typee);
     return _platform.executeNormal(FlutterRustBridgeTask(
@@ -545,6 +561,10 @@ class NativeImpl implements Native {
     );
   }
 
+  ErrorKind _wire2api_error_kind(dynamic raw) {
+    return ErrorKind.values[raw as int];
+  }
+
   int _wire2api_i32(dynamic raw) {
     return raw as int;
   }
@@ -581,7 +601,16 @@ class NativeImpl implements Native {
   }
 
   ResponseState _wire2api_response_state(dynamic raw) {
-    return ResponseState.values[raw as int];
+    switch (raw[0]) {
+      case 0:
+        return ResponseState_Ok();
+      case 1:
+        return ResponseState_Error(
+          _wire2api_error_kind(raw[1]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
   }
 
   SerialResponse _wire2api_serial_response(dynamic raw) {
@@ -844,6 +873,20 @@ class NativeWire implements FlutterRustBridgeWireBase {
               ffi.Pointer<wire_uint_8_list>)>>('wire_ble_response_parse_bool');
   late final _wire_ble_response_parse_bool = _wire_ble_response_parse_boolPtr
       .asFunction<void Function(int, ffi.Pointer<wire_uint_8_list>)>();
+
+  void wire_ble_ports(
+    int port_,
+  ) {
+    return _wire_ble_ports(
+      port_,
+    );
+  }
+
+  late final _wire_ble_portsPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64)>>(
+          'wire_ble_ports');
+  late final _wire_ble_ports =
+      _wire_ble_portsPtr.asFunction<void Function(int)>();
 
   void wire_ble_scan(
     int port_,

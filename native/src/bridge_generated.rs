@@ -33,7 +33,7 @@ use crate::{
     },
     LogicControl,
   },
-  serial::{ResponseState, SerialResponse},
+  serial::{ErrorKind, ResponseState, SerialResponse},
 };
 
 // Section: wire functions
@@ -78,6 +78,16 @@ fn wire_ble_response_parse_bool_impl(
       let api_data = data.wire2api();
       move |task_callback| Ok(ble_response_parse_bool(api_data))
     },
+  )
+}
+fn wire_ble_ports_impl(port_: MessagePort) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "ble_ports",
+      port: Some(port_),
+      mode: FfiCallMode::Normal,
+    },
+    move || move |task_callback| Ok(ble_ports()),
   )
 }
 fn wire_ble_scan_impl(port_: MessagePort, typee: impl Wire2Api<u8> + UnwindSafe) {
@@ -507,6 +517,21 @@ impl support::IntoDart for DeviceDisplay {
 }
 impl support::IntoDartExceptPrimitive for DeviceDisplay {}
 
+impl support::IntoDart for ErrorKind {
+  fn into_dart(self) -> support::DartAbi {
+    match self {
+      Self::FailedOpenDevice => 0,
+      Self::Timeout => 1,
+      Self::Unknown => 2,
+      Self::FailedReadData => 3,
+      Self::ReadResponseError => 4,
+      Self::FailedWrite => 5,
+    }
+    .into_dart()
+  }
+}
+impl support::IntoDartExceptPrimitive for ErrorKind {}
+
 impl support::IntoDart for LogicControl {
   fn into_dart(self) -> support::DartAbi {
     vec![
@@ -544,14 +569,8 @@ impl support::IntoDartExceptPrimitive for PortType {}
 impl support::IntoDart for ResponseState {
   fn into_dart(self) -> support::DartAbi {
     match self {
-      Self::Ok => 0,
-      Self::FailedOpenDevice => 1,
-      Self::Timeout => 2,
-      Self::Unknown => 3,
-      Self::MaxRetry => 4,
-      Self::MaxSendRetry => 5,
-      Self::ReadResponseError => 6,
-      Self::FailedWrite => 7,
+      Self::Ok => vec![0.into_dart()],
+      Self::Error(field0) => vec![1.into_dart(), field0.into_dart()],
     }
     .into_dart()
   }

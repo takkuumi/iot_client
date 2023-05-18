@@ -26,6 +26,10 @@ abstract class Native {
 
   FlutterRustBridgeTaskConstMeta get kBleResponseParseBoolConstMeta;
 
+  Future<String> blePorts({dynamic hint});
+
+  FlutterRustBridgeTaskConstMeta get kBlePortsConstMeta;
+
   Future<SerialResponse> bleScan({required int typee, dynamic hint});
 
   FlutterRustBridgeTaskConstMeta get kBleScanConstMeta;
@@ -195,6 +199,15 @@ class DeviceDisplay with _$DeviceDisplay {
   }) = _DeviceDisplay;
 }
 
+enum ErrorKind {
+  FailedOpenDevice,
+  Timeout,
+  Unknown,
+  FailedReadData,
+  ReadResponseError,
+  FailedWrite,
+}
+
 class LogicControl {
   final int index;
   final int scene;
@@ -219,15 +232,12 @@ enum PortType {
   Slave,
 }
 
-enum ResponseState {
-  Ok,
-  FailedOpenDevice,
-  Timeout,
-  Unknown,
-  MaxRetry,
-  MaxSendRetry,
-  ReadResponseError,
-  FailedWrite,
+@freezed
+class ResponseState with _$ResponseState {
+  const factory ResponseState.ok() = ResponseState_Ok;
+  const factory ResponseState.error(
+    ErrorKind field0,
+  ) = ResponseState_Error;
 }
 
 class SerialResponse {

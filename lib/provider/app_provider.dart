@@ -78,6 +78,10 @@ class DeviceConfigure extends StateNotifier<DeviceDisplay?> {
   void change(DeviceDisplay deviceDisplay) {
     state = deviceDisplay;
   }
+
+  void clear() {
+    state = null;
+  }
 }
 
 final deviceDisplayProvider =

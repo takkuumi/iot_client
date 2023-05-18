@@ -17,6 +17,11 @@ pub extern "C" fn wire_ble_response_parse_bool(port_: i64, data: *mut wire_uint_
 }
 
 #[no_mangle]
+pub extern "C" fn wire_ble_ports(port_: i64) {
+  wire_ble_ports_impl(port_)
+}
+
+#[no_mangle]
 pub extern "C" fn wire_ble_scan(port_: i64, typee: u8) {
   wire_ble_scan_impl(port_, typee)
 }

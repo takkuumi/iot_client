@@ -60,19 +60,28 @@ class AppMainViewState extends ConsumerState<AppMainView>
     if (_timer?.isActive ?? false) {
       _timer?.cancel();
     }
-    _timer = Timer.periodic(const Duration(seconds: 15), (timer) async {
+
+    _timer = Timer.periodic(const Duration(seconds: 3), (timer) async {
       // 如果当前正在调度，则跳过，等待下一次调度
       if (_isTaskScheduling) return;
-      SerialResponse response = await api.bleChinfo().whenComplete(() {
-        _isTaskScheduling = false;
-      });
+
+      SerialResponse response = await api.bleChinfo();
+      _isTaskScheduling = false;
       Uint8List? data = response.data;
       if (data == null) return;
       String responseText = String.fromCharCodes(data);
 
-      debugPrint("responseText: $responseText");
-
       List<Chinfo> chinfos = parseChinfos(responseText);
+
+      bool noOne = chinfos.any((e) => e.state == 3);
+      if (!noOne) {
+        final SharedPreferences prefs = await _prefs;
+        prefs.remove("no");
+        prefs.remove("mac");
+        prefs.remove("blename");
+        prefs.remove("addressType");
+        ref.read(deviceDisplayProvider.notifier).clear();
+      }
 
       ref.read(appConnectedProvider.notifier).changeDevice(chinfos);
     });
@@ -86,8 +95,7 @@ class AppMainViewState extends ConsumerState<AppMainView>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await api.bleReboot();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       startTimer();
     });
   }
@@ -99,16 +107,6 @@ class AppMainViewState extends ConsumerState<AppMainView>
 
     ///关闭
     super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    // if (state == AppLifecycleState.resumed) {
-    //   startTimer();
-    // }
-    // if (state == AppLifecycleState.paused) {
-    //   stopTimer();
-    // }
   }
 
   @override

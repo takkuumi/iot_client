@@ -253,6 +253,8 @@ void wire_ble_response_parse_u16(int64_t port_, struct wire_uint_8_list *data);
 
 void wire_ble_response_parse_bool(int64_t port_, struct wire_uint_8_list *data);
 
+void wire_ble_ports(int64_t port_);
+
 void wire_ble_scan(int64_t port_, uint8_t typee);
 
 void wire_ble_lecconn(int64_t port_, struct wire_uint_8_list *addr, uint8_t add_type);
@@ -317,6 +319,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_ble_validate_response);
     dummy_var ^= ((int64_t) (void*) wire_ble_response_parse_u16);
     dummy_var ^= ((int64_t) (void*) wire_ble_response_parse_bool);
+    dummy_var ^= ((int64_t) (void*) wire_ble_ports);
     dummy_var ^= ((int64_t) (void*) wire_ble_scan);
     dummy_var ^= ((int64_t) (void*) wire_ble_lecconn);
     dummy_var ^= ((int64_t) (void*) wire_ble_ledisc);

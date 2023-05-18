@@ -1,7 +1,4 @@
-use crate::{
-  hal::device::{DeviceDisplay, DeviceSetting},
-  serial::DataType,
-};
+use crate::hal::device::{DeviceDisplay, DeviceSetting};
 
 use super::{
   ble::{at_command, BytesParse},
@@ -19,6 +16,18 @@ pub fn ble_response_parse_u16(data: Vec<u8>) -> Option<Vec<u16>> {
 
 pub fn ble_response_parse_bool(data: Vec<u8>) -> Option<Vec<u8>> {
   BytesParse::new(&data).parse_bool()
+}
+
+pub fn ble_ports() -> String {
+  let mut s = String::new();
+  if let Ok(ports) = serialport::available_ports() {
+    for p in ports {
+      let v = format!("{},{:?}", p.port_name, p.port_type);
+      s.push_str(v.as_str());
+      s.push_str("\r\n");
+    }
+  }
+  s
 }
 
 // pub fn ble_at_ndrpt(id: String, data: String, retry: u8) -> SerialResponse {

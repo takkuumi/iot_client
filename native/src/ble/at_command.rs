@@ -19,39 +19,14 @@ mod ble_at {
   pub const AT_UARTCFG: &str = "AT+UARTCFG"; // 读/写串口配置
 }
 
-fn try_send_serialport_until(
-  data: &[u8],
-  timeout: u64,
-  max_try: u8,
-  read_try: u8,
-  flag: DataType,
-) -> SerialResponse {
-  let mut retry: u8 = 0;
-  loop {
-    if retry > max_try {
-      let mut resp = SerialResponse::default();
-      resp.set_err(crate::serial::ResponseState::MaxRetry);
-      return resp;
-    }
-    let res = send_serialport_until(data, timeout, read_try, flag);
-    if res.is_err() {
-      std::thread::sleep(core::time::Duration::from_millis(20));
-      retry += 1;
-      continue;
-    }
-    return res;
-  }
-}
-
-const READ_RETRY: u8 = 1;
 pub fn scan(typee: u8) -> SerialResponse {
   let data = format!("{}={}", ble_at::AT_SCAN, typee);
-  try_send_serialport_until(data.as_bytes(), 200, 1, 3, DataType::Scan)
+  send_serialport_until(data.as_bytes(), 1000, DataType::Scan)
 }
 
 pub fn lecconn(addr: &str, add_type: u8) -> bool {
   let data = format!("{}={}{}", ble_at::AT_LECCONN, addr, add_type);
-  let resp = try_send_serialport_until(data.as_bytes(), 100, 3, 3, DataType::GATTStat);
+  let resp = send_serialport_until(data.as_bytes(), 100, DataType::GATTStat);
   if let Some(buffer) = resp.data {
     let res = DataType::check_gatt_stat(&buffer);
     return res == ReadStat::Ok;
@@ -62,7 +37,7 @@ pub fn lecconn(addr: &str, add_type: u8) -> bool {
 
 pub fn ledisc(index: u8) -> bool {
   let data = format!("{}={}", ble_at::AT_LEDISC, index);
-  let resp = try_send_serialport_until(data.as_bytes(), 100, 3, 3, DataType::GATTStat);
+  let resp = send_serialport_until(data.as_bytes(), 100, DataType::GATTStat);
   if let Some(buffer) = resp.data {
     let res = DataType::check_gatt_stat(&buffer);
     return res == ReadStat::Err;
@@ -73,22 +48,16 @@ pub fn ledisc(index: u8) -> bool {
 
 pub fn lesend(index: u8, data: &str) -> SerialResponse {
   let data = format!("{}={},{},{}", ble_at::AT_LESEND, index, data.len(), data);
-  try_send_serialport_until(data.as_bytes(), 100, 6, 5, DataType::Date)
+  send_serialport_until(data.as_bytes(), 100, DataType::Date)
 }
 
 // AT_UARTCFG
 pub fn uartcfg() -> SerialResponse {
-  try_send_serialport_until(
-    ble_at::AT_UARTCFG.as_bytes(),
-    100,
-    3,
-    READ_RETRY,
-    DataType::OK,
-  )
+  send_serialport_until(ble_at::AT_UARTCFG.as_bytes(), 100, DataType::OkOrErr)
 }
 
 pub fn chinfo() -> SerialResponse {
-  try_send_serialport_until(ble_at::AT_CHINFO.as_bytes(), 152, 2, 5, DataType::Chinfo)
+  send_serialport_until(ble_at::AT_CHINFO.as_bytes(), 152, DataType::Chinfo)
 }
 
 // pub const AT_TPMODE: &str = "AT+TPMODE"; // 读/写连接状态下的工作模式
@@ -97,24 +66,44 @@ pub fn chinfo() -> SerialResponse {
 
 pub fn tpmode() {
   let data = format!("{}={}", ble_at::AT_TPMODE, 0);
-  try_send_serialport_until(data.as_bytes(), 100, 3, READ_RETRY, DataType::OK);
+  let _ = send_serialport_until(data.as_bytes(), 100, DataType::OkOrErr);
   let data = format!("{}={}", ble_at::AT_LECHCNT, 10);
-  try_send_serialport_until(data.as_bytes(), 100, 3, READ_RETRY, DataType::OK);
-  try_send_serialport_until(
-    ble_at::AT_REBOOT.as_bytes(),
-    100,
-    3,
-    READ_RETRY,
-    DataType::OK,
-  );
+  let _ = send_serialport_until(data.as_bytes(), 100, DataType::OkOrErr);
+  let _ = send_serialport_until(ble_at::AT_REBOOT.as_bytes(), 100, DataType::OkOrErr);
 }
 
 pub fn reboot() {
-  try_send_serialport_until(
-    ble_at::AT_REBOOT.as_bytes(),
-    100,
-    1,
-    READ_RETRY,
-    DataType::OK,
-  );
+  let _ = send_serialport_until(ble_at::AT_REBOOT.as_bytes(), 100, DataType::OkOrErr);
+}
+
+#[cfg(test)]
+mod test {
+  use std::eprintln;
+
+  #[test]
+  fn at_works() {
+    loop {
+      let resp = super::scan(1);
+
+      if let Some(data) = resp.data {
+        let resp_text = String::from_utf8(data).unwrap();
+        eprintln!("scan respText: {}", resp_text);
+      }
+
+      let resp = super::lecconn("DC0D30000FC3", 0);
+
+      eprintln!("lecconn: {}", resp);
+
+      let resp = super::chinfo();
+
+      if let Some(data) = resp.data {
+        let resp_text = String::from_utf8(data).unwrap();
+        eprintln!("chinfo respText: {}", resp_text);
+      }
+
+      let resp = super::ledisc(0);
+
+      eprintln!("ledisc: {}", resp);
+    }
+  }
 }

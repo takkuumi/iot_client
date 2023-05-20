@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:iot_client/futs/hal.dart';
 import 'package:iot_client/model/port.dart';
@@ -59,6 +60,7 @@ class LaneIndicatorUIState extends ConsumerState<LaneIndicatorUI> {
     if (isBatchRunning) {
       return;
     }
+    await EasyLoading.show(status: "发送中...");
     beginBatchProcess();
     for (final coil in coils) {
       await setCoil(coil.index, coil.value);
@@ -75,7 +77,10 @@ class LaneIndicatorUIState extends ConsumerState<LaneIndicatorUI> {
       }
     }).catchError((err) {
       debugPrint("Error: $err");
-    }).whenComplete(endBatchProcess);
+    }).whenComplete(() {
+      endBatchProcess();
+    });
+    EasyLoading.dismiss();
   }
 
   @override

@@ -176,9 +176,6 @@ impl LogicControl {
 
 #[cfg(test)]
 mod test {
-  use std::eprintln;
-
-  use crate::ble::at_command;
 
   use super::LogicControl;
 

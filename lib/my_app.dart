@@ -61,9 +61,15 @@ class AppMainViewState extends ConsumerState<AppMainView>
       _timer?.cancel();
     }
 
-    _timer = Timer.periodic(const Duration(seconds: 3), (timer) async {
+    _timer = Timer.periodic(const Duration(seconds: 2), (timer) async {
       // 如果当前正在调度，则跳过，等待下一次调度
       if (_isTaskScheduling) return;
+
+      final lockStat = ref.watch(mutexLockProvider.notifier).state;
+      if (lockStat) {
+        debugPrint("操作锁定状");
+        return;
+      }
 
       SerialResponse response = await api.bleChinfo();
       _isTaskScheduling = false;
@@ -71,10 +77,12 @@ class AppMainViewState extends ConsumerState<AppMainView>
       if (data == null) return;
       String responseText = String.fromCharCodes(data);
 
+      debugPrint("responseText: >>> $responseText <<<");
+
       List<Chinfo> chinfos = parseChinfos(responseText);
 
-      bool noOne = chinfos.any((e) => e.state == 3);
-      if (!noOne) {
+      bool empty = chinfos.any((e) => e.state == 3);
+      if (!empty) {
         final SharedPreferences prefs = await _prefs;
         prefs.remove("no");
         prefs.remove("mac");
@@ -82,7 +90,6 @@ class AppMainViewState extends ConsumerState<AppMainView>
         prefs.remove("addressType");
         ref.read(deviceDisplayProvider.notifier).clear();
       }
-
       ref.read(appConnectedProvider.notifier).changeDevice(chinfos);
     });
   }
@@ -102,8 +109,8 @@ class AppMainViewState extends ConsumerState<AppMainView>
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     stopTimer();
+    WidgetsBinding.instance.removeObserver(this);
 
     ///关闭
     super.dispose();

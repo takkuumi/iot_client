@@ -908,12 +908,15 @@ class _LogicControlSettingState extends State<LogicControlSetting> {
                   }
                 }
 
+                debugPrint("------------------");
+
                 if (saved.isEmpty) {
                   return showSnackBar("未设置逻辑", key);
                 }
                 saved.sort((a, b) => a.index.compareTo(b.index));
                 String data = saved.map((e) => e.toList().join(',')).join(',');
                 await prefs.setString(mac, data);
+                debugPrint("------------------ $mac");
                 showSnackBar("保存成功", key);
               },
             )

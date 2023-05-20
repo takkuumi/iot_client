@@ -526,6 +526,9 @@ impl support::IntoDart for ErrorKind {
       Self::FailedReadData => 3,
       Self::ReadResponseError => 4,
       Self::FailedWrite => 5,
+      Self::DeviceBusy => 6,
+      Self::ClearBufferError => 7,
+      Self::FlushBufferError => 8,
     }
     .into_dart()
   }
@@ -578,7 +581,12 @@ impl support::IntoDart for ResponseState {
 impl support::IntoDartExceptPrimitive for ResponseState {}
 impl support::IntoDart for SerialResponse {
   fn into_dart(self) -> support::DartAbi {
-    vec![self.state.into_dart(), self.data.into_dart()].into_dart()
+    vec![
+      self.state.into_dart(),
+      self.data.into_dart(),
+      self.recoder.into_dart(),
+    ]
+    .into_dart()
   }
 }
 impl support::IntoDartExceptPrimitive for SerialResponse {}

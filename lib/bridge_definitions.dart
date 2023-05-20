@@ -206,6 +206,9 @@ enum ErrorKind {
   FailedReadData,
   ReadResponseError,
   FailedWrite,
+  DeviceBusy,
+  ClearBufferError,
+  FlushBufferError,
 }
 
 class LogicControl {
@@ -243,10 +246,12 @@ class ResponseState with _$ResponseState {
 class SerialResponse {
   final ResponseState state;
   final Uint8List? data;
+  final Uint8List recoder;
 
   const SerialResponse({
     required this.state,
     this.data,
+    required this.recoder,
   });
 }
 

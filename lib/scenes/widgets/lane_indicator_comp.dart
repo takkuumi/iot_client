@@ -6,6 +6,12 @@ import 'package:iot_client/provider/app_provider.dart';
 
 enum LaneIndicatorState { green, red, right }
 
+class Indexed {
+  int index;
+  bool value;
+  Indexed(this.index, this.value);
+}
+
 final Color disableColor = Color.fromRGBO(221, 221, 221, 1);
 final Widget verticalLineOnly = Container(
   height: 60,
@@ -37,6 +43,41 @@ class LaneIndicatorUIState extends ConsumerState<LaneIndicatorUI> {
   LaneIndicatorState state1 = LaneIndicatorState.red;
   LaneIndicatorState state2 = LaneIndicatorState.red;
 
+  bool batchProcess = false;
+
+  bool get isBatchRunning => batchProcess == true;
+
+  void beginBatchProcess() {
+    batchProcess = true;
+  }
+
+  void endBatchProcess() {
+    batchProcess = false;
+  }
+
+  Future<void> batchCommit(List<Indexed> coils) async {
+    if (isBatchRunning) {
+      return;
+    }
+    beginBatchProcess();
+    for (final coil in coils) {
+      await setCoil(coil.index, coil.value);
+    }
+
+    await getCoils(0, 24).then((coils) {
+      if (coils != null) {
+        ref.read(appReadCoilsProvider.notifier).change(coils);
+      }
+      return getCoils(512, 24);
+    }).then((coils) {
+      if (coils != null) {
+        ref.read(appReadWriteCoilsProvider.notifier).change(coils);
+      }
+    }).catchError((err) {
+      debugPrint("Error: $err");
+    }).whenComplete(endBatchProcess);
+  }
+
   @override
   void setState(VoidCallback fn) {
     if (mounted) {
@@ -47,7 +88,8 @@ class LaneIndicatorUIState extends ConsumerState<LaneIndicatorUI> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(mutexLockProvider.notifier).state = true;
       ref.watch(appReadWriteCoilsProvider.notifier).addListener((state) {
         if (mounted) {
           List<bool> coils = ref.read(appReadCoilsProvider);
@@ -61,6 +103,7 @@ class LaneIndicatorUIState extends ConsumerState<LaneIndicatorUI> {
 
   @override
   void dispose() {
+    ref.read(mutexLockProvider.notifier).state = false;
     super.dispose();
   }
 
@@ -70,6 +113,7 @@ class LaneIndicatorUIState extends ConsumerState<LaneIndicatorUI> {
       if (coils != null) {
         ref.read(appReadCoilsProvider.notifier).change(coils);
       }
+      await Future.delayed(Duration(milliseconds: 100));
       List<bool>? coils2 = await getCoils(512, 24);
       if (coils2 != null) {
         ref.read(appReadWriteCoilsProvider.notifier).change(coils2);
@@ -320,15 +364,19 @@ class LaneIndicatorUIState extends ConsumerState<LaneIndicatorUI> {
               LaneIndicatorState ns = nextState(state1);
               if (sence == 8) {
                 if (ns == LaneIndicatorState.green) {
-                  await setCoil(widget.port.getP0, true);
-                  await setCoil(widget.port.getP1, false);
-                  await setCoil(widget.port.getP3, false);
-                  await setCoil(widget.port.getP4, true);
+                  await batchCommit([
+                    Indexed(widget.port.getP0, true),
+                    Indexed(widget.port.getP1, false),
+                    Indexed(widget.port.getP3, false),
+                    Indexed(widget.port.getP4, true)
+                  ]);
                 } else {
-                  await setCoil(widget.port.getP0, false);
-                  await setCoil(widget.port.getP1, true);
-                  await setCoil(widget.port.getP3, true);
-                  await setCoil(widget.port.getP4, false);
+                  await batchCommit([
+                    Indexed(widget.port.getP0, false),
+                    Indexed(widget.port.getP1, true),
+                    Indexed(widget.port.getP3, true),
+                    Indexed(widget.port.getP4, false)
+                  ]);
                 }
               } else {
                 if (ns == LaneIndicatorState.green) {
@@ -355,7 +403,6 @@ class LaneIndicatorUIState extends ConsumerState<LaneIndicatorUI> {
                 await setCoil(widget.port.getP3, true);
               }
             }
-            await refresh();
           },
           child: Container(
             width: 100,
@@ -390,15 +437,19 @@ class LaneIndicatorUIState extends ConsumerState<LaneIndicatorUI> {
 
               if (sence == 8) {
                 if (ns == LaneIndicatorState.green) {
-                  await setCoil(widget.port.getP0, false);
-                  await setCoil(widget.port.getP1, true);
-                  await setCoil(widget.port.getP3, true);
-                  await setCoil(widget.port.getP4, false);
+                  await batchCommit([
+                    Indexed(widget.port.getP0, false),
+                    Indexed(widget.port.getP1, true),
+                    Indexed(widget.port.getP3, true),
+                    Indexed(widget.port.getP4, false)
+                  ]);
                 } else {
-                  await setCoil(widget.port.getP0, true);
-                  await setCoil(widget.port.getP1, false);
-                  await setCoil(widget.port.getP3, false);
-                  await setCoil(widget.port.getP4, true);
+                  await batchCommit([
+                    Indexed(widget.port.getP0, true),
+                    Indexed(widget.port.getP1, false),
+                    Indexed(widget.port.getP3, false),
+                    Indexed(widget.port.getP4, true)
+                  ]);
                 }
               } else {
                 if (ns == LaneIndicatorState.green) {
@@ -426,7 +477,7 @@ class LaneIndicatorUIState extends ConsumerState<LaneIndicatorUI> {
               }
             }
 
-            await refresh();
+            // await refresh();
           },
           child: Container(
             width: 100,

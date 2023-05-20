@@ -3,6 +3,8 @@ import 'package:iot_client/model/chinfo.dart';
 
 import '../ffi.dart';
 
+final mutexLockProvider = StateProvider<bool>((ref) => false);
+
 class AppTitle extends StateNotifier<String> {
   AppTitle() : super("Flutter demo");
 
@@ -46,9 +48,7 @@ class ReadCoils extends StateNotifier<List<bool>> {
   ReadCoils() : super([]);
 
   void change(List<bool> coils) {
-    if (coils.isNotEmpty) {
-      state = coils;
-    }
+    state = coils;
   }
 }
 
@@ -61,9 +61,7 @@ class ReadWriteCoils extends StateNotifier<List<bool>> {
   ReadWriteCoils() : super([]);
 
   void change(List<bool> coils) {
-    if (coils.isNotEmpty) {
-      state = coils;
-    }
+    state = coils;
   }
 }
 

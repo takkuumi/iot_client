@@ -130,7 +130,7 @@ Future<bool> setCoils(int reg, List<bool> values) async {
   return text.contains("011008");
 }
 
-Future<bool> setCoil(int reg, bool value) async {
+Future<bool?> setCoil(int reg, bool value) async {
   final SharedPreferences prefs = await SharedPreferences.getInstance();
 
   int? index = prefs.getInt("no");
@@ -142,15 +142,27 @@ Future<bool> setCoil(int reg, bool value) async {
       await api.halGenerateSetCoil(unitId: 1, reg: reg, value: value ? 1 : 0);
 
   debugPrint("setCoil: $data");
-  SerialResponse sr = await api.bleLesend(index: index, data: data);
-  Uint8List? rdata = sr.data;
-  if (rdata == null) {
-    return false;
-  }
-  String text = String.fromCharCodes(rdata);
-  debugPrint(text);
+  try {
+    SerialResponse sr = await api.bleLesend(index: index, data: data);
+    Uint8List? rdata = sr.data;
+    if (rdata == null) {
+      debugPrint("setCoil response null");
+      return false;
+    }
 
-  return text.contains("011008");
+    Uint8List recoders = sr.recoder;
+    debugPrint("recoders ${String.fromCharCodes(recoders)}");
+
+    debugPrint("==================================");
+
+    String text = String.fromCharCodes(rdata);
+    debugPrint(text);
+
+    return text.contains("011008");
+  } catch (err) {
+    debugPrint(err.toString());
+    return null;
+  }
 }
 
 Future<bool> setHoldings(String data) async {

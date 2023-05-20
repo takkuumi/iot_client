@@ -1,9 +1,10 @@
+use chrono::Utc;
 use regex::bytes::Regex;
-use serialport::{DataBits, FlowControl, SerialPort, StopBits};
+use serialport::{DataBits, FlowControl, SerialPort, StopBits, TTYPort};
 
 use std::{
   io::{Read, Write},
-  sync::Mutex,
+  sync::{Arc, Mutex},
 };
 // serialport::new("/dev/tty.usbserial-1430", 115200)
 // serialport::new("/dev/tty.usbserial-1410", 115200)
@@ -29,11 +30,15 @@ pub enum ErrorKind {
   FailedReadData,
   ReadResponseError,
   FailedWrite,
+  DeviceBusy,
+  ClearBufferError,
+  FlushBufferError,
 }
 #[derive(Debug, Default)]
 pub struct SerialResponse {
   pub state: ResponseState,
   pub data: Option<Vec<u8>>,
+  pub recoder: Vec<u8>,
 }
 
 impl SerialResponse {
@@ -44,8 +49,10 @@ impl SerialResponse {
 
   pub fn set_err(&mut self, err: ErrorKind) {
     self.state = ResponseState::Error(err);
+  }
 
-    self.data = None;
+  pub fn recode(&mut self, err: String) {
+    self.recoder.extend_from_slice(err.as_bytes());
   }
 
   pub fn is_ok(&self) -> bool {
@@ -68,17 +75,22 @@ impl SerialResponse {
 
 lazy_static::lazy_static! {
   static ref CHINFO_REGEX: Regex = Regex::new(r"\+CHINFO=9,\d,\d,(\S{12})").unwrap();
-  static ref DATA_REGEX: Regex = Regex::new(r"\+DATA=(?P<a>\d+),(?P<length>\d+),(?P<data>\S+)").unwrap();
+  static ref DATA_REGEX: Regex = Regex::new(r"\S+=(?P<a>\d+),(?P<length>\d+),(?P<data>\S+)").unwrap();
+  static ref GATTSTAT_REGEX: Regex = Regex::new(r"\+GATTSTAT=(\d+),(?P<stat>\d+)").unwrap();
 
-  static ref TTYPORT_DEVICE: Mutex<Box<dyn SerialPort>> =  {
-    let port = serialport::new("/dev/ttySWK0", 115_200)
+  static ref LOCK_STAT:Mutex<bool> = Mutex::new(false);
+  static ref TTYPORT_DEVICE: Arc<Mutex<TTYPort>> =  {
+    let mut port = serialport::new("/dev/ttySWK0", 115_200)
       .data_bits(DataBits::Eight)
       .stop_bits(StopBits::One)
-      .flow_control(FlowControl::None)
-      .timeout(core::time::Duration::from_millis(80))
-      .open()
+      .flow_control(FlowControl::Software)
+      .timeout(core::time::Duration::from_millis(32))
+      .open_native()
       .unwrap();
-    Mutex::new(port)
+
+   let _ =  port.set_exclusive(false);
+
+   Arc::new(Mutex::new(port))
   };
 }
 
@@ -109,10 +121,11 @@ impl DataType {
   pub fn check_scan(buffer: &[u8]) -> ReadStat {
     let resp_text = String::from_utf8_lossy(buffer);
 
-    if resp_text.contains("ERR")
+    if resp_text.contains("ERROR")
+      || resp_text.contains("ER")
       || resp_text.contains("RR")
-      || resp_text.contains("OR")
       || resp_text.contains("RO")
+      || resp_text.contains("OR")
     {
       return ReadStat::Err;
     }
@@ -126,7 +139,12 @@ impl DataType {
     let resp_text = String::from_utf8_lossy(buffer);
     if resp_text.contains("OK") {
       return ReadStat::Ok;
-    } else if resp_text.contains("RR") || resp_text.contains("OR") || resp_text.contains("RO") {
+    } else if resp_text.contains("ERROR")
+      || resp_text.contains("ER")
+      || resp_text.contains("RR")
+      || resp_text.contains("RO")
+      || resp_text.contains("OR")
+    {
       return ReadStat::Err;
     }
 
@@ -136,36 +154,46 @@ impl DataType {
   pub fn check_data(buffer: &[u8]) -> ReadStat {
     let resp_text = String::from_utf8_lossy(buffer);
 
-    if resp_text.contains("ERR")
+    if resp_text.contains("ERROR")
+      || resp_text.contains("ER")
       || resp_text.contains("RR")
-      || resp_text.contains("OR")
       || resp_text.contains("RO")
+      || resp_text.contains("OR")
     {
       return ReadStat::Err;
     }
-    if resp_text.contains("+DATA") {
-      if let Some(caps) = DATA_REGEX.captures(buffer) {
-        let length = caps.name("length");
-        let data = caps.name("data");
 
-        if let (Some(length), Some(data)) = (length, data) {
-          let length = String::from_utf8_lossy(length.as_bytes())
-            .parse::<usize>()
-            .unwrap();
-          if data.len() == length {
-            return ReadStat::Ok;
-          }
+    if let Some(caps) = DATA_REGEX.captures(buffer) {
+      let length = caps.name("length");
+      let data = caps.name("data");
+
+      if let (Some(length), Some(data)) = (length, data) {
+        let length = String::from_utf8_lossy(length.as_bytes())
+          .parse::<usize>()
+          .unwrap();
+        if data.len() == length {
+          return ReadStat::Ok;
         }
       }
     }
+
     ReadStat::Waiting
   }
 
   pub fn check_gatt_stat(buffer: &[u8]) -> ReadStat {
     let resp_text = String::from_utf8_lossy(buffer);
+
+    if resp_text.contains("ERROR")
+      || resp_text.contains("ER")
+      || resp_text.contains("RR")
+      || resp_text.contains("RO")
+      || resp_text.contains("OR")
+    {
+      return ReadStat::Err;
+    }
+
     if resp_text.contains("+GATTSTAT") {
-      let re: Regex = Regex::new(r"\+GATTSTAT=(\d+),(?P<stat>\d+)").unwrap();
-      let caps = re.captures_iter(buffer);
+      let caps = GATTSTAT_REGEX.captures_iter(buffer);
       let stat = caps
         .last()
         .and_then(|s| s.name("stat"))
@@ -175,21 +203,20 @@ impl DataType {
         let stat = stat.parse::<u8>().unwrap();
         if stat == 3 {
           return ReadStat::Ok;
-        } else if stat == 2 {
-          return ReadStat::Waiting;
         }
       }
     }
-    ReadStat::Err
+    ReadStat::Waiting
   }
 
   pub fn check_chinfo(buffer: &[u8]) -> ReadStat {
     let resp_text = String::from_utf8_lossy(buffer);
 
-    if resp_text.contains("ERR")
+    if resp_text.contains("ERROR")
+      || resp_text.contains("ER")
       || resp_text.contains("RR")
-      || resp_text.contains("OR")
       || resp_text.contains("RO")
+      || resp_text.contains("OR")
     {
       return ReadStat::Err;
     }
@@ -204,16 +231,15 @@ impl DataType {
 // tty.usbserial-1410
 // ttySWK0
 
-fn read_serialport_until(
-  port: &mut Box<dyn SerialPort>,
-  timeout: u64,
-  flag: DataType,
-) -> SerialResponse {
+fn read_serialport_until(port: &mut TTYPort, flag: DataType) -> SerialResponse {
   let mut response = SerialResponse::default();
   let mut buffer = Vec::<u8>::with_capacity(128);
 
-  let start = std::time::Instant::now().elapsed().as_millis();
+  // let start = std::time::Instant::now().elapsed().as_millis();
 
+  // let timeout = timeout as u128;
+
+  // let mut retry = 0;
   loop {
     let mut resp_buf = [0_u8; 128];
     if let Ok(size) = port.read(resp_buf.as_mut_slice()) {
@@ -239,11 +265,17 @@ fn read_serialport_until(
         break;
       }
     }
-    let current = std::time::Instant::now().elapsed().as_millis();
-    if (current - start) > timeout.into() {
-      response.set_err(ErrorKind::Timeout);
-      break;
-    }
+    // if retry >= 100 {
+    //   response.set_err(ErrorKind::Timeout);
+    //   break;
+    // }
+    // let current = std::time::Instant::now().elapsed().as_millis();
+    // if (current - start) > timeout {
+    //   response.set_err(ErrorKind::Timeout);
+    //   break;
+    // }
+    // std::thread::sleep(core::time::Duration::from_millis(10));
+    // retry += 1;
   }
 
   response
@@ -260,26 +292,188 @@ fn wrap_send_data(data: &[u8]) -> Vec<u8> {
 }
 
 #[must_use]
-pub fn send_serialport_until(data: &[u8], timeout: u64, flag: DataType) -> SerialResponse {
+pub fn send_serialport_once(data: &[u8], flag: DataType) -> SerialResponse {
   let mut response = SerialResponse::default();
-  let tty_device = TTYPORT_DEVICE.lock();
 
-  if tty_device.is_err() {
-    response.set_err(ErrorKind::FailedOpenDevice);
-    return response;
+  let arc_tty_device = TTYPORT_DEVICE.clone();
+  {
+    let mut port = arc_tty_device.lock().unwrap();
+    if port.clear(serialport::ClearBuffer::All).is_err() {
+      response.set_err(ErrorKind::ClearBufferError);
+      return response;
+    }
+
+    let data = wrap_send_data(data);
+    std::thread::sleep(core::time::Duration::from_millis(16));
+    let dt = Utc::now();
+    let dtfmt = dt.format("%Y-%m-%d %H:%M:%S %f").to_string();
+    let err = format!(">>>>>>>>>>>>>>>>>>>>>>{}\r\n", dtfmt);
+    response.recode(err);
+    if port.write(&data).is_err() {
+      response.set_err(ErrorKind::FailedWrite);
+      return response;
+    }
+
+    std::thread::sleep(core::time::Duration::from_millis(160));
+
+    let mut buffer = Vec::<u8>::with_capacity(244);
+
+    loop {
+      let Ok(size) = port.bytes_to_read() else {
+        continue;
+      };
+      let mut resp_buf = [0_u8; 244];
+      let dt = Utc::now();
+      let dtfmt = dt.format("%Y-%m-%d %H:%M:%S %f").to_string();
+      let err = format!("{},Size: {:?} \r\n", dtfmt, size);
+      response.recode(err);
+      match port.read(&mut resp_buf) {
+        Ok(size) => {
+          if size > 0 {
+            buffer.extend_from_slice(&resp_buf[..size]);
+          } else {
+            response.set_ok(&buffer);
+            break;
+          }
+        }
+        Err(e) => {
+          let err = format!("Error kind: {}, msg: {}\r\n", e.kind(), e.to_string());
+          response.recode(err);
+
+          let frame_data = format!("Frame: {}\r\r", String::from_utf8_lossy(&buffer));
+          response.recode(frame_data);
+          response.set_err(ErrorKind::Timeout);
+          break;
+        }
+      };
+
+      let result = match flag {
+        DataType::OkOrErr => DataType::check_ok_or_err(&buffer),
+        DataType::Scan => DataType::check_scan(&buffer),
+        DataType::Date => DataType::check_data(&buffer),
+        DataType::GATTStat => DataType::check_gatt_stat(&buffer),
+        DataType::Chinfo => DataType::check_chinfo(&buffer),
+      };
+
+      if result == ReadStat::Ok {
+        response.set_ok(&buffer);
+        break;
+      } else if result == ReadStat::Err {
+        response.set_err(ErrorKind::FailedReadData);
+        break;
+      }
+    }
+
+    drop(port);
   }
+  let dt = Utc::now();
+  let dtfmt = dt.format("%Y-%m-%d %H:%M:%S %f").to_string();
+  let err = format!("<<<<<<<<<<<<<<<<<<<<<<{}\r\n", dtfmt);
+  response.recode(err);
+  response
+}
 
-  let mut port = tty_device.unwrap();
+#[must_use]
+pub fn send_serialport_until(data: &[u8], flag: DataType) -> SerialResponse {
+  let mut response = SerialResponse::default();
 
-  let _ = port.clear(serialport::ClearBuffer::All);
+  let arc_tty_device = TTYPORT_DEVICE.clone();
+  {
+    let mut port = arc_tty_device.lock().unwrap();
 
-  let data = wrap_send_data(data);
-  if port.write(&data).is_err() {
-    response.set_err(ErrorKind::FailedWrite);
-    return response;
+    if port.clear(serialport::ClearBuffer::All).is_err() {
+      response.set_err(ErrorKind::ClearBufferError);
+      return response;
+    }
+
+    let data = wrap_send_data(data);
+    std::thread::sleep(core::time::Duration::from_millis(16));
+    let dt = Utc::now();
+    let dtfmt = dt.format("%Y-%m-%d %H:%M:%S %f").to_string();
+    let err = format!(">>>>>>>>>>>>>>>>>>>>>>{}\r\n", dtfmt);
+    response.recode(err);
+    if port.write(&data).is_err() {
+      response.set_err(ErrorKind::FailedWrite);
+      return response;
+    }
+
+    if port.flush().is_err() {
+      response.set_err(ErrorKind::FlushBufferError);
+      return response;
+    }
+    // read_serialport_until(&mut port, timeout, flag)
+    std::thread::sleep(core::time::Duration::from_millis(160));
+
+    let mut buffer = Vec::<u8>::with_capacity(244);
+
+    // let start = std::time::Instant::now().elapsed().as_millis();
+
+    // let timeout = timeout as u128;
+
+    // let mut retry = 0;
+    let mut waiting_count = 0;
+    loop {
+      let Ok(size) = port.bytes_to_read() else {
+        continue;
+      };
+      let mut resp_buf = [0_u8; 244];
+      let dt = Utc::now();
+      let dtfmt = dt.format("%Y-%m-%d %H:%M:%S %f").to_string();
+      let err = format!("{},Size: {:?} \r\n", dtfmt, size);
+      response.recode(err);
+      match port.read(&mut resp_buf) {
+        Ok(size) => {
+          if size > 0 {
+            buffer.extend_from_slice(&resp_buf[..size]);
+          } else {
+            response.set_ok(&buffer);
+            break;
+          }
+        }
+        Err(e) => {
+          let err = format!("Error kind: {}, msg: {}\r\n", e.kind(), e.to_string());
+          response.recode(err);
+
+          let frame_data = format!("Frame: {}\r\r", String::from_utf8_lossy(&buffer));
+          response.recode(frame_data);
+        }
+      };
+
+      let result = match flag {
+        DataType::OkOrErr => DataType::check_ok_or_err(&buffer),
+        DataType::Scan => DataType::check_scan(&buffer),
+        DataType::Date => DataType::check_data(&buffer),
+        DataType::GATTStat => DataType::check_gatt_stat(&buffer),
+        DataType::Chinfo => DataType::check_chinfo(&buffer),
+      };
+
+      if result == ReadStat::Ok {
+        response.set_ok(&buffer);
+        break;
+      } else if result == ReadStat::Err {
+        response.set_err(ErrorKind::FailedReadData);
+        break;
+      }
+
+      if flag == DataType::Date && result == ReadStat::Waiting && waiting_count >= 200 {
+        response.set_err(ErrorKind::Timeout);
+        break;
+      }
+
+      if result == ReadStat::Waiting {
+        std::thread::sleep(core::time::Duration::from_millis(16));
+      }
+
+      waiting_count += 1;
+    }
+
+    drop(port);
   }
-
-  read_serialport_until(&mut port, timeout, flag)
+  let dt = Utc::now();
+  let dtfmt = dt.format("%Y-%m-%d %H:%M:%S %f").to_string();
+  let err = format!("<<<<<<<<<<<<<<<<<<<<<<{}\r\n", dtfmt);
+  response.recode(err);
+  response
 }
 
 #[cfg(test)]

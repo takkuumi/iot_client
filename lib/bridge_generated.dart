@@ -615,11 +615,12 @@ class NativeImpl implements Native {
 
   SerialResponse _wire2api_serial_response(dynamic raw) {
     final arr = raw as List<dynamic>;
-    if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return SerialResponse(
       state: _wire2api_response_state(arr[0]),
       data: _wire2api_opt_uint_8_list(arr[1]),
+      recoder: _wire2api_uint_8_list(arr[2]),
     );
   }
 

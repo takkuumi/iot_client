@@ -37,6 +37,7 @@ class BluetoothState extends ConsumerState<Bluetooth> {
   }
 
   Future<void> scanBleDevice() async {
+    ref.watch(mutexLockProvider.notifier).state = true;
     isScaning = true;
     setState(() {
       stateMsg = '正在扫描';
@@ -50,6 +51,7 @@ class BluetoothState extends ConsumerState<Bluetooth> {
         setState(() {
           stateMsg = '未发现设备！';
         });
+        ref.watch(mutexLockProvider.notifier).state = false;
         return;
       }
 
@@ -70,6 +72,7 @@ class BluetoothState extends ConsumerState<Bluetooth> {
         stateMsg = '扫描失败，请手动点击扫描按扭重试！';
       });
     }
+    ref.watch(mutexLockProvider.notifier).state = false;
   }
 
   void scanComplete() {
@@ -86,14 +89,23 @@ class BluetoothState extends ConsumerState<Bluetooth> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final SharedPreferences prefs = await _prefs;
 
-      ref.watch(appConnectedProvider.notifier).addListener((chinfos) {
-        debugPrint("监听触发");
-        refreshAlreadyState(prefs, chinfos);
+      ref.read(appConnectedProvider.notifier).addListener((chinfos) {
+        debugPrint("监听触发>>>>>");
+        if (devices.isEmpty) return;
+        if (mounted) {
+          refreshAlreadyState(prefs, chinfos);
+        }
       });
 
       String? responseText = prefs.getString("bluetooths");
 
-      if (responseText != null) {
+      if (responseText == null || responseText.isEmpty) {
+        if (devices.isNotEmpty) {
+          setState(() {
+            devices.clear();
+          });
+        }
+      } else {
         List<Device> items = parseDevices(responseText);
         if (items.isNotEmpty) {
           devices.clear();
@@ -147,7 +159,9 @@ class BluetoothState extends ConsumerState<Bluetooth> {
   Future<void> connectDevice(Device device) async {
     bool? result = await showSettingDialog();
     if (result != null) {
+      ref.watch(mutexLockProvider.notifier).state = true;
       final prefs = await _prefs;
+
       if (result) {
         if (device.connected) {
           return EasyLoading.showError("当前设备已连接");
@@ -176,13 +190,21 @@ class BluetoothState extends ConsumerState<Bluetooth> {
         }
         await api.bleLedisc(index: device.no);
         await refreshStat();
+
         showSnackBar("已断开连接");
       }
+      ref.watch(mutexLockProvider.notifier).state = false;
     }
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+  }
+
+  @override
   void dispose() {
+    ref.watch(mutexLockProvider.notifier).state = false;
     isScaning = false;
     EasyLoading.dismiss();
     super.dispose();
@@ -245,6 +267,16 @@ class BluetoothState extends ConsumerState<Bluetooth> {
 
   @override
   Widget build(BuildContext context) {
+    _prefs.then((prefs) {
+      ref.watch(appConnectedProvider.notifier).addListener((chinfos) {
+        debugPrint("监听触发>>>>>");
+        if (devices.isEmpty) return;
+        if (mounted) {
+          refreshAlreadyState(prefs, chinfos);
+        }
+      });
+    });
+
     return Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,

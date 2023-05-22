@@ -51,10 +51,10 @@ pub fn lecconn(addr: &str, add_type: u8) -> bool {
 
 pub fn ledisc(index: u8) -> bool {
   let data = format!("{}={}", ble_at::AT_LEDISC, index);
-  let resp = send_serialport_until(data.as_bytes(), DataType::GATTStat);
+  let resp = send_serialport_until(data.as_bytes(), DataType::OkOrErr);
   if let Some(buffer) = resp.data {
     let res = DataType::check_gatt_stat(&buffer);
-    return res == ReadStat::Err;
+    return res == ReadStat::Ok;
   }
 
   false

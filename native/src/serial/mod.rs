@@ -188,6 +188,8 @@ impl DataType {
   pub fn check_gatt_stat(buffer: &[u8]) -> ReadStat {
     let resp_text = String::from_utf8_lossy(buffer);
 
+    tracing::info!("check_gatt_stat: {}", resp_text);
+
     if resp_text.contains("ERROR")
       || resp_text.contains("ER")
       || resp_text.contains("RR")

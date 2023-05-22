@@ -1,9 +1,21 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:iot_client/model/chinfo.dart';
 
 import '../ffi.io.dart';
 
-final mutexLockProvider = StateProvider<bool>((ref) => false);
+class MutexLock extends StateNotifier<bool> {
+  MutexLock() : super(false);
+
+  void lock() {
+    state = true;
+  }
+
+  void unlock() {
+    state = false;
+  }
+}
+
+final mutexLockProvider =
+    StateNotifierProvider<MutexLock, bool>((ref) => MutexLock());
 
 class AppTitle extends StateNotifier<String> {
   AppTitle() : super("Flutter demo");
@@ -27,21 +39,6 @@ class AppPageTitle extends StateNotifier<String> {
 
 final appPageTitleProvider = StateNotifierProvider<AppPageTitle, String>((ref) {
   return AppPageTitle();
-});
-
-class BleChinfos extends StateNotifier<List<Chinfo>> {
-  BleChinfos() : super([]);
-
-  void changeDevice(List<Chinfo> chinfos) {
-    if (chinfos.isNotEmpty) {
-      state = chinfos;
-    }
-  }
-}
-
-final appConnectedProvider =
-    StateNotifierProvider<BleChinfos, List<Chinfo>>((ref) {
-  return BleChinfos();
 });
 
 class ReadCoils extends StateNotifier<List<bool>> {

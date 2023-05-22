@@ -1,15 +1,13 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:iot_client/ffi.io.dart';
 import 'package:flutter/material.dart';
-import 'package:iot_client/model/chinfo.dart';
 import 'package:iot_client/model/device.dart';
 import 'package:iot_client/provider/app_provider.dart';
+import 'package:iot_client/provider/ble_provider.dart';
 import 'package:material_symbols_icons/symbols.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
 
@@ -21,12 +19,6 @@ class Bluetooth extends StatefulHookConsumerWidget {
 }
 
 class BluetoothState extends ConsumerState<Bluetooth> {
-  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-
-  List<Device> devices = [];
-
-  bool isScaning = false;
-
   String stateMsg = '';
 
   @override
@@ -36,134 +28,27 @@ class BluetoothState extends ConsumerState<Bluetooth> {
     }
   }
 
-  Future<void> scanBleDevice() async {
-    ref.watch(mutexLockProvider.notifier).state = true;
-    isScaning = true;
-    setState(() {
-      stateMsg = '正在扫描';
-    });
-    try {
-      SerialResponse resp = await api.bleScan(typee: 1);
-
-      Uint8List? data = resp.data;
-
-      if (data == null) {
-        setState(() {
-          stateMsg = '未发现设备！';
-        });
-        ref.watch(mutexLockProvider.notifier).state = false;
-        return;
-      }
-
-      String responseText = String.fromCharCodes(data);
-
-      final SharedPreferences prefs = await _prefs;
-
-      prefs.setString("bluetooths", responseText);
-
-      List<Device> items = parseDevices(responseText);
-      for (Device element in items) {
-        devices.removeWhere((e) => e.mac == element.mac);
-
-        devices.add(element);
-      }
-    } catch (_) {
-      setState(() {
-        stateMsg = '扫描失败，请手动点击扫描按扭重试！';
-      });
-    }
-    ref.watch(mutexLockProvider.notifier).state = false;
-  }
-
-  void scanComplete() {
-    isScaning = false;
-    setState(() {
-      stateMsg = '';
-    });
-  }
-
   @override
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final SharedPreferences prefs = await _prefs;
-
-      ref.read(appConnectedProvider.notifier).addListener((chinfos) {
-        debugPrint("监听触发>>>>>");
-        if (devices.isEmpty) return;
-        if (mounted) {
-          refreshAlreadyState(prefs, chinfos);
-        }
-      });
-
-      String? responseText = prefs.getString("bluetooths");
-
-      if (responseText == null || responseText.isEmpty) {
-        if (devices.isNotEmpty) {
-          setState(() {
-            devices.clear();
-          });
-        }
-      } else {
-        List<Device> items = parseDevices(responseText);
-        if (items.isNotEmpty) {
-          devices.clear();
-        }
-        for (Device element in items) {
-          devices.add(element);
-        }
-
-        List<Chinfo> chinfos = ref.read(appConnectedProvider);
-        refreshAlreadyState(prefs, chinfos);
-      }
-
-      Future.delayed(const Duration(milliseconds: 300), () async {
-        if (devices.isEmpty) {
-          await scanBleDevice().whenComplete(scanComplete);
-
-          refreshStat();
-        }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(mutexLockProvider.notifier).lock();
+      ref.refresh(deviceFutureProvider.future).whenComplete(() {
+        ref.read(mutexLockProvider.notifier).unlock();
       });
     });
-  }
-
-  void refreshAlreadyState(SharedPreferences prefs, List<Chinfo> chinfos) {
-    // int? no2;
-    for (Device device in devices) {
-      bool hasConnected =
-          chinfos.any((e) => e.mac == device.mac && e.state == 3);
-      device.connected = hasConnected;
-      if (hasConnected) {
-        //  no2 = device.no;
-        prefs.setInt("no", device.no);
-        prefs.setString("mac", device.mac);
-        prefs.setString("blename", device.name);
-        prefs.setInt("addressType", device.addressType);
-      }
-    }
-    setState(() {});
-  }
-
-  Future<void> refreshStat() async {
-    SerialResponse response = await api.bleChinfo();
-    Uint8List? data = response.data;
-    if (data == null) return;
-    String responseText = String.fromCharCodes(data);
-
-    List<Chinfo> chinfos = parseChinfos(responseText);
-
-    ref.read(appConnectedProvider.notifier).changeDevice(chinfos);
   }
 
   Future<void> connectDevice(Device device) async {
     bool? result = await showSettingDialog();
     if (result != null) {
-      ref.watch(mutexLockProvider.notifier).state = true;
-      final prefs = await _prefs;
+      debugPrint("connectDevice: $result");
+      ref.read(mutexLockProvider.notifier).lock();
 
       if (result) {
         if (device.connected) {
+          ref.read(mutexLockProvider.notifier).unlock();
           return EasyLoading.showError("当前设备已连接");
         }
 
@@ -171,29 +56,25 @@ class BluetoothState extends ConsumerState<Bluetooth> {
             await api.bleLecconn(addr: device.mac, addType: device.addressType);
 
         if (!conn) {
+          ref.read(mutexLockProvider.notifier).unlock();
           return showSnackBar("连接失败");
         }
 
         showSnackBar("连接成功");
-
-        // 设置连接状态
-        devices.where((d) => d.mac == device.mac).first.connected = true;
-        setState(() {});
-        //设置新连接的地址
-        await prefs.setInt("addressType", device.addressType);
-        await prefs.setString("mac", device.mac);
-        await prefs.setString("blename", device.name);
-        await prefs.setInt("no", device.no);
       } else {
         if (!device.connected) {
+          ref.read(mutexLockProvider.notifier).unlock();
           return EasyLoading.showError("当前设备已断开连接");
         }
-        await api.bleLedisc(index: device.no);
-        await refreshStat();
+        try {
+          await api.bleLedisc(index: device.no);
+        } catch (e) {
+          debugPrint("bleLedisc error: $e");
+        }
 
         showSnackBar("已断开连接");
       }
-      ref.watch(mutexLockProvider.notifier).state = false;
+      ref.read(mutexLockProvider.notifier).unlock();
     }
   }
 
@@ -204,8 +85,7 @@ class BluetoothState extends ConsumerState<Bluetooth> {
 
   @override
   void dispose() {
-    ref.watch(mutexLockProvider.notifier).state = false;
-    isScaning = false;
+    ref.watch(mutexLockProvider.notifier).unlock();
     EasyLoading.dismiss();
     super.dispose();
   }
@@ -267,15 +147,7 @@ class BluetoothState extends ConsumerState<Bluetooth> {
 
   @override
   Widget build(BuildContext context) {
-    _prefs.then((prefs) {
-      ref.watch(appConnectedProvider.notifier).addListener((chinfos) {
-        debugPrint("监听触发>>>>>");
-        if (devices.isEmpty) return;
-        if (mounted) {
-          refreshAlreadyState(prefs, chinfos);
-        }
-      });
-    });
+    final devices = ref.watch(bleDevicesProvider).devices;
 
     return Scaffold(
       body: Column(
@@ -284,44 +156,38 @@ class BluetoothState extends ConsumerState<Bluetooth> {
           Expanded(
             child: Container(
               padding: EdgeInsets.symmetric(vertical: 20, horizontal: 30),
-              child: devices.isEmpty
-                  ? emptyWidget
-                  : ListView.builder(
-                      itemCount: devices.length,
-                      itemBuilder: (BuildContext context, int index) {
-                        final Device device = devices[index];
+              child: ListView.builder(
+                itemCount: devices.length,
+                itemBuilder: (BuildContext context, int index) {
+                  final Device device = devices[index];
 
-                        return Container(
-                          margin: EdgeInsets.only(bottom: 15),
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: decoration,
-                          child: ListTile(
-                            leading: device.connected
-                                ? Icon(Symbols.bluetooth_connected,
-                                    color: Colors.blueAccent)
-                                : Icon(Symbols.bluetooth, color: Colors.grey),
-                            title: Text(
-                              '${device.name}',
-                              style: TextStyle(fontSize: 16),
-                            ),
-                            subtitle: Text('MAC: ${device.mac}'),
-                            trailing: Text('RSSI:${device.rssi}'),
-                            dense: true,
-                            onTap: () {
-                              if (isScaning) {
-                                EasyLoading.showInfo('当前正在扫描设备,请等待扫描完成...');
-                                return;
-                              }
-                              // 清理定时器
-                              connectDevice(device);
-                            },
-                          ),
-                        );
+                  return Container(
+                    margin: EdgeInsets.only(bottom: 15),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: decoration,
+                    child: ListTile(
+                      leading: device.connected
+                          ? Icon(Symbols.bluetooth_connected,
+                              color: Colors.blueAccent)
+                          : Icon(Symbols.bluetooth, color: Colors.grey),
+                      title: Text(
+                        '${device.name}',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                      subtitle: Text('MAC: ${device.mac}'),
+                      trailing: Text('RSSI:${device.rssi}'),
+                      dense: true,
+                      onTap: () {
+                        // 清理定时器
+                        connectDevice(device);
                       },
                     ),
+                  );
+                },
+              ),
             ),
           ),
           Container(
@@ -341,10 +207,10 @@ class BluetoothState extends ConsumerState<Bluetooth> {
         child: Icon(Symbols.bluetooth_searching),
         tooltip: "扫描",
         onPressed: () {
-          if (isScaning) {
-            return showSnackBar("正在扫描中,请稍后");
-          }
-          scanBleDevice().whenComplete(scanComplete);
+          ref.read(mutexLockProvider.notifier).lock();
+          ref.refresh(deviceFutureProvider.future).whenComplete(() {
+            ref.read(mutexLockProvider.notifier).unlock();
+          });
         },
       ),
     );

@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import '../ffi.dart';
+import '../ffi.io.dart';
 
 class Logic {
   int index;

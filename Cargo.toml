@@ -1,0 +1,12 @@
+[workspace]
+members = [
+	"native"
+]
+
+[workspace.dependencies]
+anyhow = "1.0"
+chrono = "0.4"
+flutter_rust_bridge = "1"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+uuid = "1"

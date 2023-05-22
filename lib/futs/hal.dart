@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
-import 'package:iot_client/ffi.dart';
+import 'package:iot_client/ffi.io.dart';
 import 'package:iot_client/model/logic.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

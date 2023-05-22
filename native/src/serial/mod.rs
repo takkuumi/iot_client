@@ -10,6 +10,11 @@ use std::{
 // serialport::new("/dev/tty.usbserial-1410", 115200)
 // ttySWK0
 
+#[cfg(target_os = "macos")]
+static DEVICE_PATH: &str = "/dev/tty.usbserial-1410";
+#[cfg(target_os = "android")]
+static DEVICE_PATH: &str = "/dev/ttySWK0";
+
 #[derive(Debug, PartialEq)]
 pub enum ResponseState {
   Ok,
@@ -80,7 +85,7 @@ lazy_static::lazy_static! {
 
   static ref LOCK_STAT:Mutex<bool> = Mutex::new(false);
   static ref TTYPORT_DEVICE: Arc<Mutex<TTYPort>> =  {
-    let mut port = serialport::new("/dev/ttySWK0", 115_200)
+    let mut port = serialport::new(DEVICE_PATH, 115_200)
       .data_bits(DataBits::Eight)
       .stop_bits(StopBits::One)
       .flow_control(FlowControl::Software)

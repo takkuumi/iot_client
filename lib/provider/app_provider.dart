@@ -1,7 +1,7 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:iot_client/model/chinfo.dart';
 
-import '../ffi.dart';
+import '../ffi.io.dart';
 
 final mutexLockProvider = StateProvider<bool>((ref) => false);
 

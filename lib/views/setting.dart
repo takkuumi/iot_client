@@ -5,7 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:iot_client/ffi.dart';
+import 'package:iot_client/ffi.io.dart';
 import 'package:flutter/material.dart';
 import 'package:iot_client/futs/hal.dart';
 import 'package:iot_client/provider/app_provider.dart';

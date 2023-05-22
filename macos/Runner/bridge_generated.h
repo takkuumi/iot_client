@@ -247,6 +247,8 @@ uintptr_t new_dart_opaque(Dart_Handle handle);
 
 intptr_t init_frb_dart_api_dl(void *obj);
 
+void wire_init_log(int64_t port_);
+
 void wire_ble_validate_response(int64_t port_, struct wire_uint_8_list *data);
 
 void wire_ble_response_parse_u16(int64_t port_, struct wire_uint_8_list *data);
@@ -316,6 +318,7 @@ void free_WireSyncReturn(WireSyncReturn ptr);
 
 static int64_t dummy_method_to_enforce_bundling(void) {
     int64_t dummy_var = 0;
+    dummy_var ^= ((int64_t) (void*) wire_init_log);
     dummy_var ^= ((int64_t) (void*) wire_ble_validate_response);
     dummy_var ^= ((int64_t) (void*) wire_ble_response_parse_u16);
     dummy_var ^= ((int64_t) (void*) wire_ble_response_parse_bool);

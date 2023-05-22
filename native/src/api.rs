@@ -1,10 +1,17 @@
-use crate::hal::device::{DeviceDisplay, DeviceSetting};
+use flutter_rust_bridge::StreamSink;
 
 use super::{
   ble::{at_command, BytesParse},
-  hal::LogicControl,
+  hal::{
+    device::{DeviceDisplay, DeviceSetting},
+    LogicControl,
+  },
   serial::SerialResponse,
 };
+
+pub fn init_log(sink: StreamSink<String>) -> anyhow::Result<()> {
+  super::log::setup_logs(sink)
+}
 
 pub fn ble_validate_response(data: Vec<u8>) -> bool {
   BytesParse::new(&data).validate()

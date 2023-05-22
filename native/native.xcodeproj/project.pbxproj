@@ -208,6 +208,7 @@
 				CARGO_XCODE_CARGO_DEP_FILE_NAME = libnative.d;
 				CARGO_XCODE_CARGO_FILE_NAME = libnative.dylib;
 				DYLIB_COMPATIBILITY_VERSION = 0;
+				INSTALL_PATH = build/macos/Build/Products/Release;
 				PRODUCT_NAME = native;
 				SUPPORTED_PLATFORMS = macosx;
 			};
@@ -282,6 +283,7 @@
 				CARGO_XCODE_CARGO_DEP_FILE_NAME = libnative.d;
 				CARGO_XCODE_CARGO_FILE_NAME = libnative.dylib;
 				DYLIB_COMPATIBILITY_VERSION = 0;
+				INSTALL_PATH = build/macos/Build/Products/Debug;
 				PRODUCT_NAME = native;
 				SUPPORTED_PLATFORMS = macosx;
 			};

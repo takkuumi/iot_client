@@ -4,7 +4,7 @@ import 'package:iot_client/constants.dart';
 import 'package:iot_client/provider/app_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../ffi.dart';
+import '../../ffi.io.dart';
 
 class SharedServiceInfo extends StatefulHookConsumerWidget {
   const SharedServiceInfo({Key? key}) : super(key: key);

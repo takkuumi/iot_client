@@ -2,6 +2,11 @@ use super::*;
 // Section: wire functions
 
 #[no_mangle]
+pub extern "C" fn wire_init_log(port_: i64) {
+  wire_init_log_impl(port_)
+}
+
+#[no_mangle]
 pub extern "C" fn wire_ble_validate_response(port_: i64, data: *mut wire_uint_8_list) {
   wire_ble_validate_response_impl(port_, data)
 }

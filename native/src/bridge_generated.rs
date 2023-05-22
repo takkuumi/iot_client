@@ -38,6 +38,16 @@ use crate::{
 
 // Section: wire functions
 
+fn wire_init_log_impl(port_: MessagePort) {
+  FLUTTER_RUST_BRIDGE_HANDLER.wrap(
+    WrapInfo {
+      debug_name: "init_log",
+      port: Some(port_),
+      mode: FfiCallMode::Stream,
+    },
+    move || move |task_callback| init_log(task_callback.stream_sink()),
+  )
+}
 fn wire_ble_validate_response_impl(port_: MessagePort, data: impl Wire2Api<Vec<u8>> + UnwindSafe) {
   FLUTTER_RUST_BRIDGE_HANDLER.wrap(
     WrapInfo {
@@ -631,6 +641,13 @@ impl support::IntoDartExceptPrimitive for Undefine {}
 support::lazy_static! {
     pub static ref FLUTTER_RUST_BRIDGE_HANDLER: support::DefaultHandler = Default::default();
 }
+
+/// cbindgen:ignore
+#[cfg(target_family = "wasm")]
+#[path = "bridge_generated.web.rs"]
+mod web;
+#[cfg(target_family = "wasm")]
+pub use web::*;
 
 #[cfg(not(target_family = "wasm"))]
 #[path = "bridge_generated.io.rs"]

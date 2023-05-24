@@ -42,7 +42,7 @@ pub fn lecconn(addr: &str, add_type: u8) -> bool {
   let data = format!("{}={}{},FFF0,FFF2,FFF1", ble_at::AT_LECCONN, addr, add_type);
   let resp = send_serialport_until(data.as_bytes(), DataType::GATTStat);
   if let Some(buffer) = resp.data {
-    let res = DataType::check_gatt_stat(&buffer);
+    let res = DataType::check_gatt_stat_with(&buffer, 3);
     return res == ReadStat::Ok;
   }
 
@@ -51,9 +51,9 @@ pub fn lecconn(addr: &str, add_type: u8) -> bool {
 
 pub fn ledisc(index: u8) -> bool {
   let data = format!("{}={}", ble_at::AT_LEDISC, index);
-  let resp = send_serialport_until(data.as_bytes(), DataType::OkOrErr);
+  let resp = send_serialport_until(data.as_bytes(), DataType::GATTStat);
   if let Some(buffer) = resp.data {
-    let res = DataType::check_gatt_stat(&buffer);
+    let res = DataType::check_gatt_stat_with(&buffer, 1);
     return res == ReadStat::Ok;
   }
 

@@ -150,11 +150,6 @@ Future<bool?> setCoil(int reg, bool value) async {
       return false;
     }
 
-    Uint8List recoders = sr.recoder;
-    debugPrint("recoders ${String.fromCharCodes(recoders)}");
-
-    debugPrint("==================================");
-
     String text = String.fromCharCodes(rdata);
     debugPrint(text);
 

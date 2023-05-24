@@ -43,7 +43,6 @@ pub enum ErrorKind {
 pub struct SerialResponse {
   pub state: ResponseState,
   pub data: Option<Vec<u8>>,
-  pub recoder: Vec<u8>,
 }
 
 impl SerialResponse {
@@ -54,10 +53,6 @@ impl SerialResponse {
 
   pub fn set_err(&mut self, err: ErrorKind) {
     self.state = ResponseState::Error(err);
-  }
-
-  pub fn recode(&mut self, err: String) {
-    self.recoder.extend_from_slice(err.as_bytes());
   }
 
   pub fn is_ok(&self) -> bool {
@@ -185,6 +180,28 @@ impl DataType {
     ReadStat::Waiting
   }
 
+  pub fn check_gatt_stat_with(buffer: &[u8], state: u8) -> ReadStat {
+    let resp_text = String::from_utf8_lossy(buffer);
+
+    if resp_text.contains("+GATTSTAT") {
+      let caps = GATTSTAT_REGEX.captures_iter(buffer);
+      let stat = caps
+        .last()
+        .and_then(|s| s.name("stat"))
+        .map(|m| String::from_utf8_lossy(m.as_bytes()));
+
+      tracing::info!("check_gatt_stat_with: {:?}", stat);
+
+      if let Some(stat) = stat {
+        let stat = stat.parse::<u8>().unwrap();
+        if stat == state {
+          return ReadStat::Ok;
+        }
+      }
+    }
+    ReadStat::Err
+  }
+
   pub fn check_gatt_stat(buffer: &[u8]) -> ReadStat {
     let resp_text = String::from_utf8_lossy(buffer);
 
@@ -208,7 +225,7 @@ impl DataType {
 
       if let Some(stat) = stat {
         let stat = stat.parse::<u8>().unwrap();
-        if stat == 3 {
+        if stat == 3 || stat == 1 {
           return ReadStat::Ok;
         }
       }
@@ -312,10 +329,7 @@ pub fn send_serialport_once(data: &[u8], flag: DataType) -> SerialResponse {
 
     let data = wrap_send_data(data);
     std::thread::sleep(core::time::Duration::from_millis(16));
-    let dt = Utc::now();
-    let dtfmt = dt.format("%Y-%m-%d %H:%M:%S %f").to_string();
-    let err = format!(">>>>>>>>>>>>>>>>>>>>>>{}\r\n", dtfmt);
-    response.recode(err);
+
     if port.write(&data).is_err() {
       response.set_err(ErrorKind::FailedWrite);
       return response;
@@ -330,10 +344,7 @@ pub fn send_serialport_once(data: &[u8], flag: DataType) -> SerialResponse {
         continue;
       };
       let mut resp_buf = [0_u8; 244];
-      let dt = Utc::now();
-      let dtfmt = dt.format("%Y-%m-%d %H:%M:%S %f").to_string();
-      let err = format!("{},Size: {:?} \r\n", dtfmt, size);
-      response.recode(err);
+
       match port.read(&mut resp_buf) {
         Ok(size) => {
           if size > 0 {
@@ -344,11 +355,6 @@ pub fn send_serialport_once(data: &[u8], flag: DataType) -> SerialResponse {
           }
         }
         Err(e) => {
-          let err = format!("Error kind: {}, msg: {}\r\n", e.kind(), e.to_string());
-          response.recode(err);
-
-          let frame_data = format!("Frame: {}\r\r", String::from_utf8_lossy(&buffer));
-          response.recode(frame_data);
           response.set_err(ErrorKind::Timeout);
           break;
         }
@@ -373,10 +379,6 @@ pub fn send_serialport_once(data: &[u8], flag: DataType) -> SerialResponse {
 
     drop(port);
   }
-  let dt = Utc::now();
-  let dtfmt = dt.format("%Y-%m-%d %H:%M:%S %f").to_string();
-  let err = format!("<<<<<<<<<<<<<<<<<<<<<<{}\r\n", dtfmt);
-  response.recode(err);
   response
 }
 
@@ -395,10 +397,7 @@ pub fn send_serialport_until(data: &[u8], flag: DataType) -> SerialResponse {
 
     let data = wrap_send_data(data);
     std::thread::sleep(core::time::Duration::from_millis(16));
-    let dt = Utc::now();
-    let dtfmt = dt.format("%Y-%m-%d %H:%M:%S %f").to_string();
-    let err = format!(">>>>>>>>>>>>>>>>>>>>>>{}\r\n", dtfmt);
-    response.recode(err);
+
     if port.write(&data).is_err() {
       response.set_err(ErrorKind::FailedWrite);
       return response;
@@ -408,26 +407,17 @@ pub fn send_serialport_until(data: &[u8], flag: DataType) -> SerialResponse {
       response.set_err(ErrorKind::FlushBufferError);
       return response;
     }
-    // read_serialport_until(&mut port, timeout, flag)
     std::thread::sleep(core::time::Duration::from_millis(160));
 
     let mut buffer = Vec::<u8>::with_capacity(244);
 
-    // let start = std::time::Instant::now().elapsed().as_millis();
-
-    // let timeout = timeout as u128;
-
-    // let mut retry = 0;
     let mut waiting_count = 0;
     loop {
       let Ok(size) = port.bytes_to_read() else {
         continue;
       };
       let mut resp_buf = [0_u8; 244];
-      let dt = Utc::now();
-      let dtfmt = dt.format("%Y-%m-%d %H:%M:%S %f").to_string();
-      let err = format!("{},Size: {:?} \r\n", dtfmt, size);
-      response.recode(err);
+
       match port.read(&mut resp_buf) {
         Ok(size) => {
           if size > 0 {
@@ -438,11 +428,7 @@ pub fn send_serialport_until(data: &[u8], flag: DataType) -> SerialResponse {
           }
         }
         Err(e) => {
-          let err = format!("Error kind: {}, msg: {}\r\n", e.kind(), e.to_string());
-          response.recode(err);
-
-          let frame_data = format!("Frame: {}\r\r", String::from_utf8_lossy(&buffer));
-          response.recode(frame_data);
+          tracing::error!("Error kind: {}, msg: {}", e.kind(), e.to_string());
         }
       };
 
@@ -476,10 +462,6 @@ pub fn send_serialport_until(data: &[u8], flag: DataType) -> SerialResponse {
 
     drop(port);
   }
-  let dt = Utc::now();
-  let dtfmt = dt.format("%Y-%m-%d %H:%M:%S %f").to_string();
-  let err = format!("<<<<<<<<<<<<<<<<<<<<<<{}\r\n", dtfmt);
-  response.recode(err);
   response
 }
 

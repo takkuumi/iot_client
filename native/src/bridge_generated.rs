@@ -591,12 +591,7 @@ impl support::IntoDart for ResponseState {
 impl support::IntoDartExceptPrimitive for ResponseState {}
 impl support::IntoDart for SerialResponse {
   fn into_dart(self) -> support::DartAbi {
-    vec![
-      self.state.into_dart(),
-      self.data.into_dart(),
-      self.recoder.into_dart(),
-    ]
-    .into_dart()
+    vec![self.state.into_dart(), self.data.into_dart()].into_dart()
   }
 }
 impl support::IntoDartExceptPrimitive for SerialResponse {}

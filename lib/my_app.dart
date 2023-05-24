@@ -53,6 +53,7 @@ class AppMainViewState extends ConsumerState<AppMainView>
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
   Stream<String> logger = api.initLog();
+  late StreamSubscription _streamSubscription;
   late Timer _timer;
   bool _isTaskScheduling = false;
 
@@ -79,7 +80,7 @@ class AppMainViewState extends ConsumerState<AppMainView>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      logger.handleError((e) {
+      _streamSubscription = logger.handleError((e) {
         debugPrint("Failed to set up native logs: $e");
       }).listen((logRow) {
         debugPrint("[native] $logRow");
@@ -93,6 +94,7 @@ class AppMainViewState extends ConsumerState<AppMainView>
   void dispose() {
     stopTimer();
     WidgetsBinding.instance.removeObserver(this);
+    _streamSubscription.cancel();
 
     ///关闭
     super.dispose();

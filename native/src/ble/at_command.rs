@@ -50,6 +50,7 @@ pub fn lecconn(addr: &str, add_type: u8) -> bool {
 }
 
 pub fn ledisc(index: u8) -> bool {
+  tracing::info!("ledisc: {}", index);
   let data = format!("{}={}", ble_at::AT_LEDISC, index);
   let resp = send_serialport_until(data.as_bytes(), DataType::GATTStat);
   if let Some(buffer) = resp.data {
@@ -84,7 +85,7 @@ pub fn tpmode() {
 }
 
 pub fn reboot() {
-  let _ = send_serialport_until(ble_at::AT_REBOOT.as_bytes(), DataType::OkOrErr);
+  let _ = send_serialport_once(ble_at::AT_REBOOT.as_bytes(), DataType::OkOrErr);
 }
 
 #[cfg(test)]

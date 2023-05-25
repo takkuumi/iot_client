@@ -6,6 +6,10 @@ import 'package:iot_client/ffi.io.dart';
 import 'package:iot_client/model/chinfo.dart';
 import 'package:iot_client/model/device.dart';
 
+final currentConnectionProvider = StateProvider<Device?>((ref) {
+  return null;
+});
+
 class Connection extends StateNotifier<Device?> {
   Connection(super.state);
 

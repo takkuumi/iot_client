@@ -255,56 +255,6 @@ impl DataType {
 // tty.usbserial-1410
 // ttySWK0
 
-fn read_serialport_until(port: &mut TTYPort, flag: DataType) -> SerialResponse {
-  let mut response = SerialResponse::default();
-  let mut buffer = Vec::<u8>::with_capacity(128);
-
-  // let start = std::time::Instant::now().elapsed().as_millis();
-
-  // let timeout = timeout as u128;
-
-  // let mut retry = 0;
-  loop {
-    let mut resp_buf = [0_u8; 128];
-    if let Ok(size) = port.read(resp_buf.as_mut_slice()) {
-      if size > 0 {
-        buffer.extend_from_slice(&resp_buf[..size]);
-      }
-    }
-
-    if buffer.len() > 2 {
-      let result = match flag {
-        DataType::OkOrErr => DataType::check_ok_or_err(&buffer),
-        DataType::Scan => DataType::check_scan(&buffer),
-        DataType::Date => DataType::check_data(&buffer),
-        DataType::GATTStat => DataType::check_gatt_stat(&buffer),
-        DataType::Chinfo => DataType::check_chinfo(&buffer),
-      };
-
-      if result == ReadStat::Ok {
-        response.set_ok(&buffer);
-        break;
-      } else if result == ReadStat::Err {
-        response.set_err(ErrorKind::FailedReadData);
-        break;
-      }
-    }
-    // if retry >= 100 {
-    //   response.set_err(ErrorKind::Timeout);
-    //   break;
-    // }
-    // let current = std::time::Instant::now().elapsed().as_millis();
-    // if (current - start) > timeout {
-    //   response.set_err(ErrorKind::Timeout);
-    //   break;
-    // }
-    // std::thread::sleep(core::time::Duration::from_millis(10));
-    // retry += 1;
-  }
-
-  response
-}
-
 fn wrap_send_data(data: &[u8]) -> Vec<u8> {
   if data.ends_with(b"\r\n") {
     return data.to_vec();
@@ -409,13 +359,11 @@ pub fn send_serialport_until(data: &[u8], flag: DataType) -> SerialResponse {
     }
     std::thread::sleep(core::time::Duration::from_millis(160));
 
+    let start = std::time::SystemTime::now();
+
     let mut buffer = Vec::<u8>::with_capacity(244);
 
-    let mut waiting_count = 0;
     loop {
-      let Ok(size) = port.bytes_to_read() else {
-        continue;
-      };
       let mut resp_buf = [0_u8; 244];
 
       match port.read(&mut resp_buf) {
@@ -429,6 +377,20 @@ pub fn send_serialport_until(data: &[u8], flag: DataType) -> SerialResponse {
         }
         Err(e) => {
           tracing::error!("Error kind: {}, msg: {}", e.kind(), e.to_string());
+
+          if flag == DataType::Scan {
+            continue;
+          }
+
+          let current = std::time::SystemTime::now()
+            .duration_since(start)
+            .unwrap()
+            .as_millis();
+          tracing::info!("read_serialport_until: {}", current);
+          if current > 10000 {
+            response.set_err(ErrorKind::Timeout);
+            break;
+          }
         }
       };
 
@@ -448,16 +410,9 @@ pub fn send_serialport_until(data: &[u8], flag: DataType) -> SerialResponse {
         break;
       }
 
-      if flag == DataType::Date && result == ReadStat::Waiting && waiting_count >= 200 {
-        response.set_err(ErrorKind::Timeout);
-        break;
-      }
-
       if result == ReadStat::Waiting {
-        std::thread::sleep(core::time::Duration::from_millis(16));
+        std::thread::sleep(core::time::Duration::from_millis(5));
       }
-
-      waiting_count += 1;
     }
 
     drop(port);

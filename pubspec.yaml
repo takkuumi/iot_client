@@ -37,7 +37,7 @@ dependencies:
   hooks_riverpod: ^2.3.6
   material_symbols_icons: ^4.39.5
   ffi: ^2.0.2
-  flutter_rust_bridge: ^1.75.3
+  flutter_rust_bridge: ^1.76.0
   freezed_annotation: ^2.2.0
   uuid: ^3.0.7
   meta: ^1.9.1
@@ -45,7 +45,7 @@ dependencies:
   permission_handler: ^10.2.0
   settings_ui: ^2.0.2
   shared_preferences: ^2.0.18
-  webview_flutter: ^4.1.0
+  webview_flutter: ^4.2.1
   carousel_slider: ^4.2.1
   circular_reveal_animation: ^2.0.1
   json_theme: ^5.0.2+6
@@ -63,7 +63,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^2.0.0
-  ffigen: ^7.2.11
+  ffigen: ^8.0.2
   build_runner: ^2.4.2
   freezed: ^2.3.3
 

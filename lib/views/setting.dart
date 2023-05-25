@@ -9,6 +9,7 @@ import 'package:iot_client/ffi.io.dart';
 import 'package:flutter/material.dart';
 import 'package:iot_client/futs/hal.dart';
 import 'package:iot_client/provider/app_provider.dart';
+import 'package:iot_client/provider/ble_provider.dart';
 import 'package:iot_client/utils/navigation.dart';
 import 'package:iot_client/views/logic_control_setting.dart';
 import 'package:iot_client/views/rs485_setting.dart';
@@ -28,6 +29,9 @@ class SettingApp extends StatefulHookConsumerWidget {
 }
 
 class SettingAppState extends ConsumerState<SettingApp> {
+  final GlobalKey<ScaffoldMessengerState> key =
+      GlobalKey<ScaffoldMessengerState>(debugLabel: 'setting');
+
   bool useCustomTheme = false;
 
   final platformsMap = <DevicePlatform, String>{
@@ -92,15 +96,12 @@ class SettingAppState extends ConsumerState<SettingApp> {
   }
 
   Future<void> readHoldings1() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    int? index = prefs.getInt("no");
-    if (index == null) {
-      return showSnackBar("未设置连接");
+    int? no = ref.read(currentConnectionProvider)?.no;
+    if (no == null) {
+      return showSnackBar("请先连接设备");
     }
     try {
-      DeviceDisplay? deviceDisplay =
-          await api.halReadDeviceSettings(index: index);
+      DeviceDisplay? deviceDisplay = await api.halReadDeviceSettings(index: no);
 
       if (deviceDisplay == null) {
         return showSnackBar("读取设备出错");
@@ -477,7 +478,9 @@ class SettingAppState extends ConsumerState<SettingApp> {
 
   @override
   Widget build(BuildContext context) {
+    final device = ref.watch(currentConnectionProvider.notifier).state;
     return Scaffold(
+      key: key,
       resizeToAvoidBottomInset: true,
       body: SettingsList(
         platform: selectedPlatform,
@@ -487,24 +490,10 @@ class SettingAppState extends ConsumerState<SettingApp> {
             tiles: <SettingsTile>[
               SettingsTile.navigation(
                 leading: Icon(Icons.network_cell),
-                title: Text('当前连接地址'),
-                value: FutureBuilder(
-                  future: _prefs.then((SharedPreferences prefs) {
-                    String? blename = prefs.getString("blename");
-                    String? mac = prefs.getString('mac');
-                    return (blename ?? '') + '         ' + (mac ?? '');
-                  }),
-                  initialData: 'MAC=',
-                  builder: (context, AsyncSnapshot<String?> snapshot) {
-                    if (snapshot.hasData &&
-                        snapshot.connectionState == ConnectionState.done) {
-                      String id = snapshot.data ?? '';
-                      return Text(id);
-                    }
-
-                    return Text('MAC=');
-                  },
-                ),
+                title: Text('切换蓝牙连接'),
+                value: device != null
+                    ? Text('${device.name}        ${device.mac}')
+                    : Text('MAC='),
               ),
             ],
           ),

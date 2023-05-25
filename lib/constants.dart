@@ -5,7 +5,6 @@ final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>(debugLabel: 'main_scaffold');
 
 void showSnackBar(String msg, [GlobalKey<ScaffoldMessengerState>? key]) {
-  debugPrint(key == null ? 'null' : 'not null');
   rootScaffoldMessengerKey.currentState?.hideCurrentSnackBar();
   if (key != null) {
     key.currentState?.showSnackBar(SnackBar(

@@ -6,7 +6,8 @@ members = [
 [workspace.dependencies]
 anyhow = "1.0"
 chrono = "0.4"
-flutter_rust_bridge = "1"
+flutter_rust_bridge = "1.76.0"
 tracing = "0.1"
 tracing-subscriber = "0.3"
 uuid = "1"
+serialport = "4.2.1"

@@ -19,6 +19,8 @@ class Bluetooth extends StatefulHookConsumerWidget {
 }
 
 class BluetoothState extends ConsumerState<Bluetooth> {
+  final GlobalKey<ScaffoldMessengerState> key =
+      GlobalKey<ScaffoldMessengerState>(debugLabel: 'bluetooth');
   String stateMsg = '';
 
   @override
@@ -42,8 +44,8 @@ class BluetoothState extends ConsumerState<Bluetooth> {
 
   Future<void> connectDevice(Device device) async {
     bool? result = await showSettingDialog();
+    String msg = '';
     if (result != null) {
-      debugPrint("connectDevice: $result");
       ref.read(mutexLockProvider.notifier).lock();
 
       if (result) {
@@ -57,24 +59,27 @@ class BluetoothState extends ConsumerState<Bluetooth> {
 
         if (!conn) {
           ref.read(mutexLockProvider.notifier).unlock();
-          return showSnackBar("连接失败");
+          msg = "连接失败";
+        } else {
+          ref.read(currentConnectionProvider.notifier).state = device;
+          msg = "连接成功";
         }
-
-        showSnackBar("连接成功");
       } else {
         if (!device.connected) {
           ref.read(mutexLockProvider.notifier).unlock();
           return EasyLoading.showError("当前设备已断开连接");
         }
-        try {
-          await api.bleLedisc(index: device.no);
-        } catch (e) {
-          debugPrint("bleLedisc error: $e");
-        }
 
-        showSnackBar("已断开连接");
+        final result = await api.bleLedisc(index: device.no);
+        if (result) {
+          ref.read(currentConnectionProvider.notifier).state = null;
+          msg = "断开连接成功";
+        } else {
+          msg = "断开连接失败";
+        }
       }
       ref.read(mutexLockProvider.notifier).unlock();
+      showSnackBar(msg, key);
     }
   }
 
@@ -150,6 +155,7 @@ class BluetoothState extends ConsumerState<Bluetooth> {
     final devices = ref.watch(bleDevicesProvider).devices;
 
     return Scaffold(
+      key: key,
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
@@ -157,6 +163,7 @@ class BluetoothState extends ConsumerState<Bluetooth> {
             child: Container(
               padding: EdgeInsets.symmetric(vertical: 20, horizontal: 30),
               child: ListView.builder(
+                cacheExtent: 0,
                 itemCount: devices.length,
                 itemBuilder: (BuildContext context, int index) {
                   final Device device = devices[index];

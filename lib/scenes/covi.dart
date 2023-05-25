@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:iot_client/model/device.dart';
 import 'package:iot_client/futs/hal.dart';
 import 'package:iot_client/scenes/widgets/shared_service_info.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
 
@@ -24,7 +23,6 @@ class _CoViState extends State<CoVi> with TickerProviderStateMixin {
 
   Timer? timer;
 
-  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   late TabController tabController;
   Future<String?> sn = Future.value(null);
   Future<String?> ip = Future.value(null);

@@ -1,11 +1,4 @@
-import 'dart:async';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:iot_client/ffi.io.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import '../constants.dart';
 
 Map<int, String> _kDataBitOptions = Map.from({0: '8位', 1: '9位'});
 
@@ -48,8 +41,6 @@ class RS485Setting extends StatefulWidget {
 class _RS485SettingState extends State<RS485Setting> {
   final GlobalKey<ScaffoldMessengerState> key =
       GlobalKey<ScaffoldMessengerState>(debugLabel: 'logic_control_setting');
-
-  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
   Widget _customLayout(String label, Widget child) {
     return Row(

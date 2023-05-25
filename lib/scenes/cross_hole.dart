@@ -1,6 +1,3 @@
-import 'dart:typed_data';
-
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -9,8 +6,6 @@ import 'package:iot_client/model/logic.dart';
 import 'package:iot_client/scenes/traffic_light.dart';
 import 'package:iot_client/scenes/widgets/shared_service_info.dart';
 import 'package:iot_client/scenes/widgets/util.dart';
-import 'package:iot_client/views/components/banner.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class CrossHole extends StatefulWidget {
   const CrossHole({Key? key}) : super(key: key);

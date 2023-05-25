@@ -1,14 +1,7 @@
 import 'dart:async';
-import 'dart:typed_data';
-
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:iot_client/scenes/widgets/shared_service_info.dart';
-import 'package:iot_client/utils/at_parse.dart';
-import 'package:iot_client/views/components/banner.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
 import '../futs/hal.dart';
@@ -26,7 +19,6 @@ class _LightInsideState extends State<LightInside>
       GlobalKey<ScaffoldMessengerState>(debugLabel: 'light_outside');
 
   late TabController tabController;
-  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   Future<String?> sn = Future.value(null);
   Future<String?> ip = Future.value(null);
 

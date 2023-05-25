@@ -5,8 +5,6 @@
 // Param3 连接角色 (0：从机，1：主机)
 // Param4 对端地址
 
-import 'package:flutter/foundation.dart';
-
 class Chinfo {
   int no;
   int state;

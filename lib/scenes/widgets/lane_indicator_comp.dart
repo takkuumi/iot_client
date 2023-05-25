@@ -94,7 +94,7 @@ class LaneIndicatorUIState extends ConsumerState<LaneIndicatorUI> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(mutexLockProvider.notifier).state = true;
+      ref.read(mutexLockProvider.notifier).lock();
       ref.watch(appReadWriteCoilsProvider.notifier).addListener((state) {
         if (mounted) {
           List<bool> coils = ref.read(appReadCoilsProvider);
@@ -108,7 +108,7 @@ class LaneIndicatorUIState extends ConsumerState<LaneIndicatorUI> {
 
   @override
   void dispose() {
-    ref.read(mutexLockProvider.notifier).state = false;
+    ref.read(mutexLockProvider.notifier).unlock();
     super.dispose();
   }
 

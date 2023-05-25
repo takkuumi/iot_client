@@ -1,5 +1,3 @@
-import 'package:iot_client/ffi.io.dart';
-
 class SerialPort {
   //私有构造函数
   SerialPort._internal();

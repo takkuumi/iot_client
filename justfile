@@ -10,7 +10,6 @@ gen:
         -c ios/Runner/bridge_generated.h \
         -e macos/Runner/ \
         --dart-decl-output lib/bridge_definitions.dart \
-        --no-use-bridge-in-method \
         --wasm
 
 lint:

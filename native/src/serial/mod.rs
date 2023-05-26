@@ -368,17 +368,16 @@ pub fn send_serialport_until(data: &[u8], flag: DataType) -> SerialResponse {
 
       match port.read(&mut resp_buf) {
         Ok(size) => {
+          tracing::info!("read: {:?} {}", flag, size);
           if size > 0 {
             buffer.extend_from_slice(&resp_buf[..size]);
-          } else {
-            response.set_ok(&buffer);
-            break;
           }
         }
         Err(e) => {
           tracing::error!("Error kind: {}, msg: {}", e.kind(), e.to_string());
 
           if flag == DataType::Scan {
+            std::thread::sleep(core::time::Duration::from_millis(128));
             continue;
           }
 
@@ -393,6 +392,11 @@ pub fn send_serialport_until(data: &[u8], flag: DataType) -> SerialResponse {
           }
         }
       };
+
+      if !buffer.ends_with(b"\r\n") {
+        std::thread::sleep(core::time::Duration::from_millis(16));
+        continue;
+      }
 
       let result = match flag {
         DataType::OkOrErr => DataType::check_ok_or_err(&buffer),
@@ -411,7 +415,7 @@ pub fn send_serialport_until(data: &[u8], flag: DataType) -> SerialResponse {
       }
 
       if result == ReadStat::Waiting {
-        std::thread::sleep(core::time::Duration::from_millis(5));
+        std::thread::sleep(core::time::Duration::from_millis(32));
       }
     }
 

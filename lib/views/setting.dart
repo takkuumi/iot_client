@@ -460,10 +460,9 @@ class SettingAppState extends ConsumerState<SettingApp> {
                       bool res = await prefs.setString(
                           "appTitle", _appTitleEditingController.text);
                       if (res) {
-                        showSnackBar("修改成功");
-                        await readHoldings1();
+                        showSnackBar("修改成功", key);
                       } else {
-                        showSnackBar("修改失败，请重试");
+                        showSnackBar("修改失败，请重试", key);
                       }
                       Navigator.of(context).maybePop();
                     }

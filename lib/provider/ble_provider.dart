@@ -66,6 +66,7 @@ final deviceFutureProvider = FutureProvider<List<Device>?>((ref) async {
   Uint8List? data = response.data;
   if (data == null) return null;
   String responseText = String.fromCharCodes(data);
+  debugPrint(responseText);
   List<Device> devices = parseDevices(responseText);
   for (final device in devices) {
     ref.read(bleDevicesProvider).addDevice(device);

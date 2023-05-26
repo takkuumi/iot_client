@@ -61,6 +61,7 @@ class BluetoothState extends ConsumerState<Bluetooth> {
           ref.read(mutexLockProvider.notifier).unlock();
           msg = "连接失败";
         } else {
+          debugPrint("${device.toString()}");
           ref.read(currentConnectionProvider.notifier).state = device;
           msg = "连接成功";
         }
@@ -161,7 +162,7 @@ class BluetoothState extends ConsumerState<Bluetooth> {
         children: <Widget>[
           Expanded(
             child: Container(
-              padding: EdgeInsets.symmetric(vertical: 20, horizontal: 30),
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 30),
               child: ListView.builder(
                 cacheExtent: 0,
                 itemCount: devices.length,
@@ -169,8 +170,8 @@ class BluetoothState extends ConsumerState<Bluetooth> {
                   final Device device = devices[index];
 
                   return Container(
-                    margin: EdgeInsets.only(bottom: 15),
-                    padding: EdgeInsets.symmetric(
+                    margin: const EdgeInsets.only(bottom: 15),
+                    padding: const EdgeInsets.symmetric(
                       horizontal: 10,
                       vertical: 6,
                     ),
@@ -198,20 +199,19 @@ class BluetoothState extends ConsumerState<Bluetooth> {
             ),
           ),
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.black12,
             ),
             height: 40,
-            padding: EdgeInsets.symmetric(horizontal: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [Text('状态信息:'), Text(stateMsg)],
+              children: [const Text('状态信息:'), Text(stateMsg)],
             ),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        child: Icon(Symbols.bluetooth_searching),
         tooltip: "扫描",
         onPressed: () {
           ref.read(mutexLockProvider.notifier).lock();
@@ -219,6 +219,7 @@ class BluetoothState extends ConsumerState<Bluetooth> {
             ref.read(mutexLockProvider.notifier).unlock();
           });
         },
+        child: const Icon(Symbols.bluetooth_searching),
       ),
     );
   }

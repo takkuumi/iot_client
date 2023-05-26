@@ -22,6 +22,17 @@ class Device {
 
   @override
   int get hashCode => name.hashCode ^ mac.hashCode;
+
+  toJSON() {
+    return {
+      'no': no,
+      'addressType': addressType,
+      'mac': mac,
+      'rssi': rssi,
+      'name': name,
+      'connected': connected
+    };
+  }
 }
 
 List<Device> parseDevices(String text) {

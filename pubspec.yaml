@@ -47,7 +47,7 @@ dependencies:
   webview_flutter: ^4.2.1
   carousel_slider: ^4.2.1
   circular_reveal_animation: ^2.0.1
-  json_theme: ^5.0.2+6
+  json_theme: ^6.0.0
   flutter_easyloading: ^3.0.5
   path_provider: ^2.0.15
   about: ^2.1.3
